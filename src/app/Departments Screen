@@ -1,0 +1,82 @@
+import React from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+
+type Department = {
+  id: string;
+  name: string;
+  workers: number;
+  head: string;
+};
+
+const departments: Department[] = [
+  { id: '1', name: 'Cutting', workers: 12, head: 'Attuah Jessica' },
+  { id: '2', name: 'Assembly', workers: 18, head: 'Apossan Akologo' },
+  { id: '3', name: 'Packaging', workers: 9, head: 'Akoto Bosky' },
+];
+
+export default function DepartmentsScreen() {
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Departments</Text>
+
+      <FlatList
+        data={departments}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <View style={styles.card}>
+            <Text style={styles.name}>{item.name}</Text>
+            <Text style={styles.detail}>Workers: {item.workers}</Text>
+            <Text style={styles.detail}>Head: {item.head}</Text>
+          </View>
+        )}
+      />
+
+      <TouchableOpacity style={styles.button}>
+        <Text style={styles.buttonText}>+ Create Department</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#E6F0FA', // light blue background
+    padding: 20,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#004080', // dark blue text
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  card: {
+    backgroundColor: '#cce6ff', // soft blue card
+    padding: 15,
+    borderRadius: 8,
+    marginBottom: 15,
+  },
+  name: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#003366',
+  },
+  detail: {
+    fontSize: 14,
+    color: '#0059b3',
+  },
+  button: {
+    backgroundColor: '#004080', // solid blue button
+    padding: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+});
+
