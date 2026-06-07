@@ -1,54 +1,81 @@
-import { useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React from 'react';
+import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-export default function RegisterScreen() {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+type Department = {
+  id: string;
+  name: string;
+  workers: number;
+  head: string;
+};
 
-  const handleRegister = () => {
-    console.log('Name:', name);
-    console.log('Email:', email);
-    console.log('Password:', password);
-  };
+const departments: Department[] = [
+  { id: '1', name: 'Cutting', workers: 12, head: 'Attuah Jessica' },
+  { id: '2', name: 'Assembly', workers: 18, head: 'Apossan Akologo' },
+  { id: '3', name: 'Packaging', workers: 9, head: 'Akoto Bosky' },
+];
 
+export default function DepartmentsScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Register</Text>
+      <Text style={styles.title}>Departments</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Full Name"
-        value={name}
-        onChangeText={setName}
+      <FlatList
+        data={departments}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <View style={styles.card}>
+            <Text style={styles.name}>{item.name}</Text>
+            <Text style={styles.detail}>Workers: {item.workers}</Text>
+            <Text style={styles.detail}>Head: {item.head}</Text>
+          </View>
+        )}
       />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-      />
-
-      <TouchableOpacity style={styles.button} onPress={handleRegister}>
-        <Text style={styles.buttonText}>Sign Up</Text>
+      <TouchableOpacity style={styles.button}>
+        <Text style={styles.buttonText}>+ Create Department</Text>
       </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', paddingHorizontal: 20 },
-  title: { fontSize: 28, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 },
-  input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 12, marginBottom: 15 },
-  button: { backgroundColor: '#28a745', padding: 15, borderRadius: 8, alignItems: 'center' },
-  buttonText: { color: '#fff', fontWeight: 'bold' },
+  container: {
+    flex: 1,
+    backgroundColor: '#E6F0FA', // light blue background
+    padding: 20,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#004080', // dark blue text
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  card: {
+    backgroundColor: '#cce6ff', // soft blue card
+    padding: 15,
+    borderRadius: 8,
+    marginBottom: 15,
+  },
+  name: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#003366',
+  },
+  detail: {
+    fontSize: 14,
+    color: '#0059b3',
+  },
+  button: {
+    backgroundColor: '#004080', // solid blue button
+    padding: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
 });
