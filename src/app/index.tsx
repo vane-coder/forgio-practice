@@ -1,6 +1,7 @@
+import React from "react";
 import { Redirect } from "expo-router";
 
 export default function Index() {
-  
-  return <Redirect href="./machines" />;
+  // TODO: Check if user is logged in, redirect accordingly
+  return <Redirect href="/(auth)/register" />;
 }
