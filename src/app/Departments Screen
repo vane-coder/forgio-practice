@@ -11,7 +11,7 @@ type Department = {
 const departments: Department[] = [
   { id: '1', name: 'Cutting', workers: 12, head: 'Attuah Jessica' },
   { id: '2', name: 'Assembly', workers: 18, head: 'Apossan Akologo' },
-  { id: '3', name: 'Packaging', workers: 9, head: 'Akoto Bosky' },
+  { id: '3', name: 'Packaging', workers: 9, head: 'Akoto Boakye' },
 ];
 
 export default function DepartmentsScreen() {
