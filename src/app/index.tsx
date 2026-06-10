@@ -1,81 +1,180 @@
 import React from 'react';
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
-type Department = {
-  id: string;
-  name: string;
-  workers: number;
-  head: string;
+const BranchesScreen = () => {
+  return (
+    <SafeAreaView style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Branches</Text>
+      </View>
+
+      {/* Content */}
+      <View style={styles.content}>
+        {/* Kumasi HQ */}
+        <View style={styles.card}>
+          <View style={styles.cardRow}>
+            <View style={styles.textSection}>
+              <Text style={styles.branchName}>Kumasi HQ</Text>
+              <Text style={styles.location}>Adum, Kumasi</Text>
+              <Text style={styles.details}>
+                39 workers - 8 machines
+              </Text>
+            </View>
+
+            <View style={styles.mainBadge}>
+              <Text style={styles.mainBadgeText}>Main</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Accra Branch */}
+        <View style={styles.card}>
+          <View style={styles.cardRow}>
+            <View style={styles.textSection}>
+              <Text style={styles.branchName}>Accra Branch</Text>
+              <Text style={styles.location}>Tema Industrial Area</Text>
+              <Text style={styles.details}>
+                21 workers - 5 machines
+              </Text>
+            </View>
+
+            <View style={styles.branchBadge}>
+              <Text style={styles.branchBadgeText}>Branch</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Add Branch Button */}
+        <TouchableOpacity style={styles.addButton}>
+          <Text style={styles.addButtonText}>
+            + Add branch
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
+  );
 };
 
-const departments: Department[] = [
-  { id: '1', name: 'Cutting', workers: 12, head: 'Attuah Jessica' },
-  { id: '2', name: 'Assembly', workers: 18, head: 'Apossan Akologo' },
-  { id: '3', name: 'Packaging', workers: 9, head: 'Akoto Bosky' },
-];
-
-export default function DepartmentsScreen() {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Departments</Text>
-
-      <FlatList
-        data={departments}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            <Text style={styles.name}>{item.name}</Text>
-            <Text style={styles.detail}>Workers: {item.workers}</Text>
-            <Text style={styles.detail}>Head: {item.head}</Text>
-          </View>
-        )}
-      />
-
-      <TouchableOpacity style={styles.button}>
-        <Text style={styles.buttonText}>+ Create Department</Text>
-      </TouchableOpacity>
-    </View>
-  );
-}
+export default BranchesScreen;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#E6F0FA', // light blue background
-    padding: 20,
+    backgroundColor: '#FFFFFF',
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#004080', // dark blue text
-    marginBottom: 20,
-    textAlign: 'center',
+
+  header: {
+    backgroundColor: '#0E1733',
+    paddingTop: 50,
+    paddingBottom: 25,
+    paddingHorizontal: 24,
   },
+
+  headerTitle: {
+    color: '#FFFFFF',
+    fontSize: 30,
+    fontWeight: '700',
+  },
+
+  content: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingTop: 20,
+  },
+
   card: {
-    backgroundColor: '#cce6ff', // soft blue card
-    padding: 15,
-    borderRadius: 8,
-    marginBottom: 15,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E6EAF0',
+    borderRadius: 20,
+    padding: 18,
+    marginBottom: 18,
+
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
   },
-  name: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#003366',
+
+  cardRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
   },
-  detail: {
-    fontSize: 14,
-    color: '#0059b3',
+
+  textSection: {
+    flex: 1,
   },
-  button: {
-    backgroundColor: '#004080', // solid blue button
-    padding: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 20,
+
+  branchName: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 5,
   },
-  buttonText: {
-    color: '#fff',
+
+  location: {
     fontSize: 16,
-    fontWeight: 'bold',
+    color: '#6B7280',
+    marginBottom: 8,
+  },
+
+  details: {
+    fontSize: 16,
+    color: '#374151',
+  },
+
+  mainBadge: {
+    backgroundColor: '#E7F7EA',
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+
+  mainBadgeText: {
+    color: '#2E9E44',
+    fontWeight: '700',
+    fontSize: 14,
+  },
+
+  branchBadge: {
+    backgroundColor: '#E8F2FF',
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+
+  branchBadgeText: {
+    color: '#4A8CFF',
+    fontWeight: '700',
+    fontSize: 14,
+  },
+
+  addButton: {
+    marginTop: 10,
+    borderWidth: 2,
+    borderColor: '#4A8CFF',
+    borderRadius: 16,
+    height: 58,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+
+  addButtonText: {
+    color: '#4A8CFF',
+    fontSize: 18,
+    fontWeight: '600',
   },
 });
