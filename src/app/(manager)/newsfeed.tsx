@@ -1,371 +1,246 @@
 import React, { useState } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  StyleSheet,
-  Modal,
-  TextInput,
-  KeyboardAvoidingView,
-  Platform,
-  StatusBar,
+import { 
+  StyleSheet, 
+  Text, 
+  View, 
+  TouchableOpacity, 
+  TextInput, 
+  ScrollView, 
+  Alert, 
+  StatusBar 
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Stack } from 'expo-router';
+import { Heart, ThumbsUp, MessageSquare, Plus, Search, X } from 'lucide-react-native';
 
-// ─── Team Standard Config Imports (Section 4 & 5 — Forgio Setup Guide) ───────
-import { colors, fontSizes } from '../../config/theme';
+export default function FactoryNewsFeed() {
+  const [showInput, setShowInput] = useState(false);
+  const [postText, setPostText] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
-// ─── Types ───────────────────────────────────────────────────────────────────
-type Role = 'Manager' | 'Dept Head' | 'Supervisor' | 'Operator';
+  const [posts, setPosts] = useState([
+    {
+      id: '1',
+      initials: 'RP',
+      name: 'Raina Pryce',
+      role: 'Manager · 2h ago',
+      content: "Production target for this week is 5,000 units. Let's push through!",
+      likes: 12,
+      hasLiked: false,
+    },
+    {
+      id: '2',
+      initials: 'AJ',
+      name: 'Attuah Jessica',
+      role: 'Dept Head · 5h ago',
+      content: 'Cutting dept hit 800 units today. Great work team!',
+      likes: 8,
+      hasLiked: false,
+    },
+  ]);
 
-interface Post {
-  id: string;
-  author: string;
-  initials: string;
-  role: Role;
-  timeAgo: string;
-  message: string;
-}
+  const handleLike = (targetId: string) => { 
+    setPosts((prevPosts) =>
+      prevPosts.map((item) => {
+        if (item.id === targetId) {
+          return {
+            ...item,
+            likes: item.hasLiked ? item.likes - 1 : item.likes + 1,
+            hasLiked: !item.hasLiked,
+          };
+        }
+        return item;
+      })
+    );
+  };
 
-// ─── Seed Data ────────────────────────────────────────────────────────────────
-const INITIAL_POSTS: Post[] = [
-  {
-    id: '1',
-    author: 'Raina Pryce',
-    initials: 'RP',
-    role: 'Manager',
-    timeAgo: '2h ago',
-    message: "Production target for this week is 5,000 units. Let's push through!",
-  },
-  {
-    id: '2',
-    author: 'Attuah Jessica',
-    initials: 'AJ',
-    role: 'Dept Head',
-    timeAgo: '5h ago',
-    message: 'Cutting dept hit 800 units today. Great work team!',
-  },
-];
+  const handleCommentPress = (authorName: string) => {
+    Alert.alert('Comments', `Opening discussion thread for ${authorName}'s post...`);
+  };
 
-// ─── Role → accent colour mapping ────────────────────────────────────────────
-const roleColor: Record<Role, string> = {
-  Manager: colors.primaryBlue,
-  'Dept Head': colors.secondaryBlue,
-  Supervisor: colors.success,
-  Operator: colors.textSecondary,
-};
+  const handlePublishPost = () => {
+    if (!postText.trim()) {
+      Alert.alert('Empty Post', 'Please write a message before publishing.');
+      return;
+    }
 
-// ─── Avatar component ─────────────────────────────────────────────────────────
-function Avatar({ initials, role }: { initials: string; role: Role }) {
-  return (
-    <View style={[styles.avatar, { backgroundColor: roleColor[role] }]}>
-      <Text style={styles.avatarText}>{initials}</Text>
-    </View>
-  );
-}
-
-// ─── Post Card component ──────────────────────────────────────────────────────
-function PostCard({ item }: { item: Post }) {
-  return (
-    <View style={styles.card}>
-      <View style={styles.cardHeader}>
-        <Avatar initials={item.initials} role={item.role} />
-        <View style={styles.cardMeta}>
-          <Text style={styles.authorName}>{item.author}</Text>
-          <Text style={styles.authorRole}>
-            {item.role} · {item.timeAgo}
-          </Text>
-        </View>
-      </View>
-      <Text style={styles.cardMessage}>{item.message}</Text>
-    </View>
-  );
-}
-
-// ─── New Post Modal ────────────────────────────────────────────────────────────
-interface NewPostModalProps {
-  visible: boolean;
-  onClose: () => void;
-  onSubmit: (message: string) => void;
-}
-
-function NewPostModal({ visible, onClose, onSubmit }: NewPostModalProps) {
-  const [text, setText] = useState('');
-
-  function handleSubmit() {
-    if (text.trim().length === 0) return;
-    onSubmit(text.trim());
-    setText('');
-  }
-
-  return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <KeyboardAvoidingView
-        style={styles.modalOverlay}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
-        <View style={styles.modalSheet}>
-          <Text style={styles.modalTitle}>New Post</Text>
-
-          <TextInput
-            style={styles.textArea}
-            placeholder="What's happening on the floor?"
-            placeholderTextColor={colors.textSecondary}
-            value={text}
-            onChangeText={setText}
-            multiline
-            numberOfLines={4}
-            textAlignVertical="top"
-            autoFocus
-          />
-
-          <View style={styles.modalActions}>
-            <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
-              <Text style={styles.cancelBtnText}>Cancel</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.postBtn, !text.trim() && styles.postBtnDisabled]}
-              onPress={handleSubmit}
-              disabled={!text.trim()}
-            >
-              <Text style={styles.postBtnText}>Post</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </KeyboardAvoidingView>
-    </Modal>
-  );
-}
-
-// ─── Main Screen ──────────────────────────────────────────────────────────────
-export default function NewsFeedScreen() {
-  const [posts, setPosts] = useState<Post[]>(INITIAL_POSTS);
-  const [modalVisible, setModalVisible] = useState(false);
-
-  function handleNewPost(message: string) {
-    const newPost: Post = {
+    const newPostItem = {
       id: Date.now().toString(),
-      author: 'You',
-      initials: 'YO',
-      role: 'Operator',
-      timeAgo: 'just now',
-      message,
+      initials: 'ME', 
+      name: 'Myself',
+      role: 'Staff · Just now',
+      content: postText,
+      likes: 0,
+      hasLiked: false,
     };
-    setPosts([newPost, ...posts]);
-    setModalVisible(false);
-  }
+
+    setPosts([newPostItem, ...posts]);
+    setPostText('');
+    setShowInput(false);
+  };
+
+  const filteredPosts = posts.filter((item) => 
+    item.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
-    <SafeAreaView style={styles.screen}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
+    <View style={styles.screenWrapper}>
+      <Stack.Screen options={{ headerShown: false }} />
+      <StatusBar barStyle="light-content" backgroundColor="#2552b4" />
 
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Factory News Feed</Text>
-      </View>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.headerContainer}>
+          <Text style={styles.headerTitle}>Factory News Feed</Text>
+        </View>
 
-      {/* Posts */}
-      <FlatList
-        data={posts}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <PostCard item={item} />}
-        contentContainerStyle={styles.listContent}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
-        showsVerticalScrollIndicator={false}
-      />
+        <View style={styles.mainContentContainer}>
+          {/* Search Box */}
+          <View style={styles.searchBarContainer}>
+            <Search color="#94a3b8" size={18} style={styles.searchIcon} />
+            <TextInput
+              style={styles.searchField}
+              placeholder="Search posts or names..."
+              placeholderTextColor="#94a3b8"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+          </View>
 
-      {/* New Post Button */}
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={styles.newPostBtn}
-          onPress={() => setModalVisible(true)}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.newPostBtnText}>+ New post</Text>
-        </TouchableOpacity>
-      </View>
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollPadding}>
+            {/* New Post Toggle */}
+            <TouchableOpacity style={styles.newPostButton} onPress={() => setShowInput(!showInput)}>
+              <View style={styles.buttonInlineRow}>
+                {showInput ? (
+                  <>
+                    <X color="#2552b4" size={16} style={styles.inlineIcon} />
+                    <Text style={styles.newPostButtonText}>Cancel</Text>
+                  </>
+                ) : (
+                  <>
+                    <Plus color="#2552b4" size={16} style={styles.inlineIcon} />
+                    <Text style={styles.newPostButtonText}>New post</Text>
+                  </>
+                )}
+              </View>
+            </TouchableOpacity>
 
-      {/* Modal */}
-      <NewPostModal
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-        onSubmit={handleNewPost}
-      />
-    </SafeAreaView>
+            {/* Post Input Form */}
+            {showInput && (
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.textField}
+                  placeholder="Write your update here..."
+                  placeholderTextColor="#94a3b8"
+                  multiline
+                  value={postText}
+                  onChangeText={setPostText}
+                />
+                <TouchableOpacity style={styles.submitButton} onPress={handlePublishPost}>
+                  <Text style={styles.submitButtonText}>Publish Post</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {/* Posts Loop */}
+            {filteredPosts.map((item) => (
+              <View key={item.id} style={styles.postCard}>
+                <View style={styles.profileRow}>
+                  <View style={styles.avatar}>
+                    <Text style={styles.avatarText}>{item.initials}</Text>
+                  </View>
+                  <View style={styles.nameContainer}>
+                    <Text style={styles.profileName}>{item.name}</Text>
+                    <Text style={styles.profileRole}>{item.role}</Text>
+                  </View>
+                </View>
+                <Text style={styles.postContent}>{item.content}</Text>
+                
+                <View style={styles.divider} />
+
+                {/* Like & Comment Row */}
+                <View style={styles.actionsRow}>
+                  <TouchableOpacity style={styles.actionButton} onPress={() => handleLike(item.id)}>
+  <View style={styles.actionButtonContent}>
+    {/* Always use ThumbsUp, only toggle the color and inner fill based on state */}
+    <ThumbsUp 
+      color={item.hasLiked ? '#2552b4' : '#64748b'} 
+      fill={item.hasLiked ? '#2552b4' : 'none'} 
+      size={18} 
+      style={styles.inlineIcon} 
+    />
+    <Text style={[styles.actionText, item.hasLiked && { color: '#2552b4' }]}>
+      {item.hasLiked ? `Liked (${item.likes})` : `Like (${item.likes})`}
+    </Text>
+  </View>
+</TouchableOpacity>
+
+                  <TouchableOpacity style={styles.actionButton} onPress={() => handleCommentPress(item.name)}>
+                    <View style={styles.actionButtonContent}>
+                      <MessageSquare color="#64748b" size={18} style={styles.inlineIcon} />
+                      <Text style={styles.actionText}>Comment</Text>
+                    </View>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))}
+
+            {filteredPosts.length === 0 && (
+              <Text style={styles.emptyText}>No matches found.</Text>
+            )}
+          </ScrollView>
+        </View>
+      </SafeAreaView>
+    </View>
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  // 1. Base Screen Layout
-  screen: {
-    flex: 1,
-    backgroundColor: colors.primaryBlue, // This keeps the safe area background seamless blue!
-  },
-
-  // 2. The Header Panel Fix
-  header: {
-    paddingHorizontal: 20,
-    paddingVertical: 18,
-    backgroundColor: colors.primaryBlue, // Matches standard guide usage for headers
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    fontSize: 24,                        // Scale: 2xl per Section 5.3
-    fontWeight: '700',                   // Inter Bold per Section 5.1
-    color: '#FFFFFF',                    // High-contrast clean white text over blue
-    letterSpacing: -0.3,
-  },
-
-  // 3. The Main Feed Content Backdrop
-  listContent: {
-    padding: 16,
-    paddingBottom: 32,
-    backgroundColor: colors.background,  // Standard gray background palette
-    borderTopLeftRadius: 24,             // Smoothly transitions into the blue header
-    borderTopRightRadius: 24,
-    minHeight: '100%',
-  },
-  separator: {
-    height: 12,
-  },
-
-  // 4. Cards
-  card: {
-    backgroundColor: colors.surface,     // Surfaces are white per instructions
-    borderRadius: 16,
+  screenWrapper: { flex: 1, backgroundColor: '#2552b4' },
+  safeArea: { flex: 1 },
+  headerContainer: { width: '100%', paddingTop: 16, paddingBottom: 10, alignItems: 'center', backgroundColor: '#2552b4' },
+  headerTitle: { fontSize: 22, fontWeight: '700', color: '#ffffff' },
+  mainContentContainer: { flex: 1, backgroundColor: '#f4f6f9', paddingHorizontal: 16 },
+  scrollPadding: { paddingBottom: 24 },
+  
+  searchBarContainer: {
+    marginVertical: 12,
+    backgroundColor: '#ffffff',
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: colors.border,
-    padding: 16,
-  },
-  cardHeader: {
+    borderColor: '#cbd5e1',
+    paddingHorizontal: 12,
+    height: 44,
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
   },
-  cardMeta: {
-    marginLeft: 10,
-    flex: 1,
-  },
-  authorName: {
-    fontSize: 16,                        // Scale: base per Section 5.3
-    fontWeight: '600',                   // Inter SemiBold per Section 5.1
-    color: colors.textPrimary,
-  },
-  authorRole: {
-    fontSize: 12,                        // Scale: xs per Section 5.3
-    fontWeight: '400',                   // Inter Regular per Section 5.1
-    color: colors.textSecondary,
-    marginTop: 1,
-  },
-  cardMessage: {
-    fontSize: 14,                        // Scale: sm per Section 5.3
-    fontWeight: '400',                   // Inter Regular per Section 5.1
-    color: colors.textPrimary,
-    lineHeight: 21,
-  },
+  searchIcon: { marginRight: 8 },
+  searchField: { flex: 1, color: '#0f172a', fontSize: 14 },
 
-  // 5. Avatars
-  avatar: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: '#E2E8F0',          
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: {
-    color: colors.secondaryBlue,         
-    fontSize: 14,
-    fontWeight: '700',
-  },
+  postCard: { backgroundColor: '#ffffff', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: '#e2e8f0', marginBottom: 14 },
+  profileRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
+  avatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#99c2f5', justifyContent: 'center', alignItems: 'center', marginRight: 12 },
+  avatarText: { color: '#2b65b6', fontSize: 13, fontWeight: '700' },
+  nameContainer: { justifyContent: 'center' },
+  profileName: { fontSize: 15, fontWeight: '700', color: '#0f172a' },
+  profileRole: { fontSize: 12, color: '#64748b', marginTop: 2 },
+  postContent: { fontSize: 14, color: '#1e293b', lineHeight: 20 },
+  
+  divider: { height: 1, backgroundColor: '#f1f5f9', marginVertical: 12 },
+  actionsRow: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center' },
+  actionButton: { paddingVertical: 4, paddingHorizontal: 12 },
+  actionButtonContent: { flexDirection: 'row', alignItems: 'center' },
+  inlineIcon: { marginRight: 6 },
+  actionText: { fontSize: 13, fontWeight: '600', color: '#64748b' },
+  likedText: { color: '#ef4444' },
 
-  // 6. Action Footer Panel
-  footer: {
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    backgroundColor: colors.surface,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  newPostBtn: {
-    borderWidth: 1.5,
-    borderColor: colors.secondaryBlue,
-    borderRadius: 12,
-    paddingVertical: 12,
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-  },
-  newPostBtnText: {
-    color: colors.secondaryBlue,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-
-  // 7. Interactive Creation Drawer Modal
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'flex-end',
-  },
-  modalSheet: {
-    backgroundColor: colors.surface,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 24,
-    paddingBottom: Platform.OS === 'ios' ? 36 : 24,
-  },
-  modalTitle: {
-    fontSize: 20,                        // Scale: xl per Section 5.3
-    fontWeight: '700',
-    color: colors.textPrimary,
-    marginBottom: 16,
-  },
-  textArea: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    color: colors.textPrimary,
-    minHeight: 100,
-    backgroundColor: colors.background,
-    fontWeight: '400',
-  },
-  modalActions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginTop: 16,
-    gap: 12,
-  },
-  cancelBtn: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  cancelBtnText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.textSecondary,
-  },
-  postBtn: {
-    paddingHorizontal: 24,
-    paddingVertical: 10,
-    borderRadius: 8,
-    backgroundColor: colors.primaryBlue,
-  },
-  postBtnDisabled: {
-    backgroundColor: colors.border,
-  },
-  postBtnText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.surface,
-  },
+  newPostButton: { borderWidth: 1.5, borderColor: '#2552b4', borderRadius: 10, paddingVertical: 12, alignItems: 'center', marginVertical: 8 },
+  buttonInlineRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
+  newPostButtonText: { color: '#2552b4', fontSize: 14, fontWeight: '600' },
+  
+  inputContainer: { backgroundColor: '#ffffff', borderRadius: 12, padding: 12, marginBottom: 14, borderWidth: 1, borderColor: '#cbd5e1' },
+  textField: { height: 80, color: '#0f172a', fontSize: 14, textAlignVertical: 'top' },
+  submitButton: { backgroundColor: '#2552b4', borderRadius: 8, paddingVertical: 8, alignItems: 'center', marginTop: 8 },
+  submitButtonText: { color: '#ffffff', fontSize: 13, fontWeight: '600' },
+  emptyText: { textAlign: 'center', color: '#64748b', marginTop: 20, fontSize: 14 },
 });
-
-
