@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   departmentCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#ffffff80',
     borderWidth: 1,
     borderColor: '#E5E7EB', // Soft thin grey border
     borderRadius: 16, // Rounded box corners
@@ -116,13 +116,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   createButton: {
-    marginTop: 10,
+    flex : 1,
+    marginTop: 100,
     borderWidth: 1,
     borderColor: '#1D4ED8', // Blue outline border
     borderRadius: 16,
     paddingVertical: 14,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-end',
   },
   createButtonText: {
     color: '#1D4ED8', // Blue text
