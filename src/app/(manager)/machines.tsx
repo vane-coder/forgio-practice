@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import React, { useState } from "react";
 import { View, Text, StyleSheet, ScrollView, Pressable, Dimensions } from "react-native";
 
@@ -65,10 +64,7 @@ interface MachineProps {
 function MachineCard({ machine }: {machine : any}) {
   const cfg = statusConfig[machine.status as keyof typeof statusConfig];
   
-=======
-import { View, Text, StyleSheet } from "react-native";
-import React from "react";
->>>>>>> 329c28004768e3ee19a8f29d040ba98193aec946
+
 
   return (
     <Pressable 
