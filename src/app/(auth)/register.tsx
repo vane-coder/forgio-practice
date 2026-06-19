@@ -24,7 +24,7 @@ export default function RegisterScreen() {
       <TextInput style={styles.input} placeholder="Factory Name" value={factoryName} onChangeText={setFactoryName} />
       <TextInput style={styles.input} placeholder="Password" value={password} onChangeText={setPassword} secureTextEntry />
 
-      <TouchableOpacity style={styles.button} onPress={handleRegister}>
+      <TouchableOpacity style={styles.button} >
         <Text style={styles.buttonText}>Register</Text>
       </TouchableOpacity>
     </View>
