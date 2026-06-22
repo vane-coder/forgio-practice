@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 
-// Dummy AI suggestions — replace with real API call from ai.service.ts later
 const suggestions = [
   {
     id: 1,
@@ -73,7 +73,6 @@ export default function AIAssistantScreen() {
 
   const handleRefresh = () => {
     setLoading(true);
-    // TODO: call ai.service.ts getAISuggestions() here
     setTimeout(() => {
       setLoading(false);
       setLastRefreshed("Just now");
@@ -87,25 +86,28 @@ export default function AIAssistantScreen() {
 
           {/* HEADER */}
           <View style={styles.header}>
-            <View>
-              <Text style={styles.headerTitle}>AI Assistant</Text>
-              <Text style={styles.headerSub}>Powered by Forgio Intelligence</Text>
-            </View>
-            <View style={styles.aiBadge}>
-              <Ionicons name="sparkles-outline" size={14} color="#0C447C" />
-              <Text style={styles.aiBadgeText}>AI</Text>
+            <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: 8 }}>
+              <Ionicons name="arrow-back" size={20} color="#fff" />
+            </TouchableOpacity>
+            <View style={styles.headerRow}>
+              <View>
+                <Text style={styles.headerTitle}>AI Assistant</Text>
+                <Text style={styles.headerSub}>Powered by Forgio Intelligence</Text>
+              </View>
+              <View style={styles.aiBadge}>
+                <Ionicons name="sparkles-outline" size={14} color="#0C447C" />
+                <Text style={styles.aiBadgeText}>AI</Text>
+              </View>
             </View>
           </View>
 
           <View style={styles.body}>
 
-            {/* Last refreshed */}
             <View style={styles.refreshRow}>
               <Ionicons name="time-outline" size={13} color="#888" />
               <Text style={styles.refreshTime}>Last updated: {lastRefreshed}</Text>
             </View>
 
-            {/* Suggestion cards */}
             {suggestions.map((item) => (
               <View
                 key={item.id}
@@ -130,7 +132,6 @@ export default function AIAssistantScreen() {
               </View>
             ))}
 
-            {/* Refresh button */}
             <TouchableOpacity
               style={styles.refreshBtn}
               onPress={handleRefresh}
@@ -146,7 +147,14 @@ export default function AIAssistantScreen() {
               </Text>
             </TouchableOpacity>
 
-            {/* Info note */}
+            <TouchableOpacity
+              style={styles.dashboardBtn}
+              onPress={() => router.push("/(manager)/dashboard")}
+            >
+              <Ionicons name="home-outline" size={16} color="#1565C0" />
+              <Text style={styles.dashboardBtnText}>Back to dashboard</Text>
+            </TouchableOpacity>
+
             <View style={styles.infoNote}>
               <Ionicons name="information-circle-outline" size={14} color="#888" />
               <Text style={styles.infoText}>
@@ -162,120 +170,25 @@ export default function AIAssistantScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F5F7FA",
-  },
-
-  // Header
-  header: {
-    backgroundColor: "#1565C0",
-    paddingHorizontal: 16,
-    paddingTop: 14,
-    paddingBottom: 16,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  headerTitle: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: "#fff",
-  },
-  headerSub: {
-    fontSize: 11,
-    color: "#90CAF9",
-    marginTop: 2,
-  },
-  aiBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    backgroundColor: "#E3F2FD",
-    borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  aiBadgeText: {
-    fontSize: 11,
-    fontWeight: "500",
-    color: "#0C447C",
-  },
-
-  // Body
-  body: {
-    padding: 16,
-  },
-
-  // Refresh row
-  refreshRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    marginBottom: 12,
-  },
-  refreshTime: {
-    fontSize: 11,
-    color: "#888",
-  },
-
-  // Cards
-  card: {
-    borderRadius: 12,
-    borderWidth: 0.5,
-    padding: 12,
-    marginBottom: 10,
-  },
-  insightCard: {
-    borderLeftWidth: 3,
-    borderRadius: 0,
-    borderTopRightRadius: 12,
-    borderBottomRightRadius: 12,
-  },
-  cardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginBottom: 6,
-  },
-  cardTitle: {
-    fontSize: 12,
-    fontWeight: "500",
-  },
-  cardText: {
-    fontSize: 11,
-    lineHeight: 17,
-  },
-
-  // Refresh button
-  refreshBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    backgroundColor: "#E3F2FD",
-    borderRadius: 10,
-    padding: 14,
-    marginTop: 4,
-    marginBottom: 14,
-  },
-  refreshBtnText: {
-    fontSize: 13,
-    fontWeight: "500",
-    color: "#0C447C",
-  },
-
-  // Info note
-  infoNote: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 6,
-    marginBottom: 24,
-  },
-  infoText: {
-    flex: 1,
-    fontSize: 11,
-    color: "#888",
-    lineHeight: 16,
-  },
+  container: { flex: 1, backgroundColor: "#F5F7FA" },
+  header: { backgroundColor: "#1565C0", paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16 },
+  headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  headerTitle: { fontSize: 16, fontWeight: "500", color: "#fff" },
+  headerSub: { fontSize: 11, color: "#90CAF9", marginTop: 2 },
+  aiBadge: { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "#E3F2FD", borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
+  aiBadgeText: { fontSize: 11, fontWeight: "500", color: "#0C447C" },
+  body: { padding: 16 },
+  refreshRow: { flexDirection: "row", alignItems: "center", gap: 5, marginBottom: 12 },
+  refreshTime: { fontSize: 11, color: "#888" },
+  card: { borderRadius: 12, borderWidth: 0.5, padding: 12, marginBottom: 10 },
+  insightCard: { borderLeftWidth: 3, borderRadius: 0, borderTopRightRadius: 12, borderBottomRightRadius: 12 },
+  cardHeader: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 6 },
+  cardTitle: { fontSize: 12, fontWeight: "500" },
+  cardText: { fontSize: 11, lineHeight: 17 },
+  refreshBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: "#E3F2FD", borderRadius: 10, padding: 14, marginTop: 4, marginBottom: 10 },
+  refreshBtnText: { fontSize: 13, fontWeight: "500", color: "#0C447C" },
+  dashboardBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: "#fff", borderWidth: 0.5, borderColor: "#1565C0", borderRadius: 10, padding: 14, marginBottom: 14 },
+  dashboardBtnText: { fontSize: 13, fontWeight: "500", color: "#1565C0" },
+  infoNote: { flexDirection: "row", alignItems: "flex-start", gap: 6, marginBottom: 24 },
+  infoText: { flex: 1, fontSize: 11, color: "#888", lineHeight: 16 },
 });

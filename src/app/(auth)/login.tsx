@@ -1,14 +1,17 @@
 import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import React from "react";
+import { router } from "expo-router";
+
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const handleLogin = async () => {
-    // TODO: call auth.service.ts login function
-    Alert.alert("Login pressed");
+    // TODO: call auth.service.ts login function when backend is ready
+    // For now, just navigate straight to dashboard
+    router.replace("/(manager)/dashboard");
   };
 
   return (

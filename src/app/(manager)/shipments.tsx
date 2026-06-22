@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 
 const shipments = [
   { id: "SH-0042", from: "Kumasi HQ", to: "Accra Branch", status: "IN_TRANSIT", eta: "~45 mins", driver: "Kofi Owusu" },
@@ -25,14 +26,19 @@ export default function ShipmentsScreen() {
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
 
           <View style={styles.header}>
-            <View>
-              <Text style={styles.headerTitle}>Shipments</Text>
-              <Text style={styles.headerSub}>{shipments.length} total shipments</Text>
-            </View>
-            <TouchableOpacity style={styles.newBtn}>
-              <Ionicons name="add" size={18} color="#fff" />
-              <Text style={styles.newBtnText}>New</Text>
+            <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: 8 }}>
+              <Ionicons name="arrow-back" size={20} color="#fff" />
             </TouchableOpacity>
+            <View style={styles.headerRow}>
+              <View>
+                <Text style={styles.headerTitle}>Shipments</Text>
+                <Text style={styles.headerSub}>{shipments.length} total shipments</Text>
+              </View>
+              <TouchableOpacity style={styles.newBtn} onPress={() => router.push("/(manager)/branches")}>
+                <Ionicons name="add" size={18} color="#fff" />
+                <Text style={styles.newBtnText}>New</Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           <View style={styles.body}>
@@ -84,7 +90,10 @@ export default function ShipmentsScreen() {
                     </View>
                   </View>
                   {s.status === "IN_TRANSIT" && (
-                    <TouchableOpacity style={styles.trackBtn}>
+                    <TouchableOpacity
+                      style={styles.trackBtn}
+                      onPress={() => router.push("/(manager)/live-tracking")}
+                    >
                       <Ionicons name="navigate-outline" size={14} color="#1565C0" />
                       <Text style={styles.trackBtnText}>Track live</Text>
                     </TouchableOpacity>
@@ -102,7 +111,8 @@ export default function ShipmentsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F5F7FA" },
-  header: { backgroundColor: "#1565C0", paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  header: { backgroundColor: "#1565C0", paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16 },
+  headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   headerTitle: { fontSize: 16, fontWeight: "500", color: "#fff" },
   headerSub: { fontSize: 11, color: "#90CAF9", marginTop: 2 },
   newBtn: { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(255,255,255,0.2)", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },

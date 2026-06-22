@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 
 const branches = [
   { id: 1, name: "Kumasi HQ", address: "Adum, Kumasi", workers: 39, machines: 8, isMain: true },
@@ -16,10 +17,11 @@ export default function BranchesScreen() {
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
 
           <View style={styles.header}>
-            <View>
-              <Text style={styles.headerTitle}>Branches</Text>
-              <Text style={styles.headerSub}>{branches.length} locations</Text>
-            </View>
+            <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: 8 }}>
+              <Ionicons name="arrow-back" size={20} color="#fff" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Branches</Text>
+            <Text style={styles.headerSub}>{branches.length} locations</Text>
           </View>
 
           <View style={styles.body}>
@@ -65,7 +67,10 @@ export default function BranchesScreen() {
                     <Ionicons name="eye-outline" size={14} color="#1565C0" />
                     <Text style={styles.actionBtnText}>View details</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.actionBtn}>
+                  <TouchableOpacity
+                    style={styles.actionBtn}
+                    onPress={() => router.push("/(manager)/shipments")}
+                  >
                     <Ionicons name="swap-horizontal-outline" size={14} color="#1565C0" />
                     <Text style={styles.actionBtnText}>Switch to branch</Text>
                   </TouchableOpacity>

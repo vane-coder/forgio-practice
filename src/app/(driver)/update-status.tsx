@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 
 const steps = [
   { key: "PENDING", label: "Pending", icon: "time-outline", desc: "Shipment assigned, not yet departed" },
@@ -20,6 +21,9 @@ export default function UpdateStatusScreen() {
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
 
           <View style={styles.header}>
+            <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: 8 }}>
+              <Ionicons name="arrow-back" size={20} color="#fff" />
+            </TouchableOpacity>
             <Text style={styles.headerTitle}>Update status</Text>
             <Text style={styles.headerSub}>Shipment #SH-0042</Text>
           </View>
@@ -64,6 +68,15 @@ export default function UpdateStatusScreen() {
                         <Ionicons name="arrow-forward" size={14} color="#1565C0" />
                       </TouchableOpacity>
                     )}
+                    {step.key === "ARRIVED" && isActive && (
+                      <TouchableOpacity
+                        style={styles.doneBtn}
+                        onPress={() => router.push("/(driver)/shipment-assignment")}
+                      >
+                        <Text style={styles.doneBtnText}>Done</Text>
+                        <Ionicons name="checkmark" size={14} color="#fff" />
+                      </TouchableOpacity>
+                    )}
                   </View>
                 </View>
               );
@@ -91,4 +104,6 @@ const styles = StyleSheet.create({
   stepDesc: { fontSize: 11, color: "#aaa" },
   nextBtn: { flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: "#E3F2FD", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, marginTop: 10, alignSelf: "flex-start" },
   nextBtnText: { fontSize: 12, color: "#1565C0", fontWeight: "500" },
+  doneBtn: { flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: "#2E7D32", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, marginTop: 10, alignSelf: "flex-start" },
+  doneBtnText: { fontSize: 12, color: "#fff", fontWeight: "500" },
 });

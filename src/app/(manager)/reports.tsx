@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 
 const reportData = {
   totalProduced: "6,240",
@@ -25,13 +26,18 @@ export default function ReportsScreen() {
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
 
           <View style={styles.header}>
-            <View>
-              <Text style={styles.headerTitle}>Reports</Text>
-              <Text style={styles.headerSub}>Production and waste summary</Text>
-            </View>
-            <TouchableOpacity style={styles.downloadBtn}>
-              <Ionicons name="download-outline" size={18} color="#fff" />
+            <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: 8 }}>
+              <Ionicons name="arrow-back" size={20} color="#fff" />
             </TouchableOpacity>
+            <View style={styles.headerRow}>
+              <View>
+                <Text style={styles.headerTitle}>Reports</Text>
+                <Text style={styles.headerSub}>Production and waste summary</Text>
+              </View>
+              <TouchableOpacity style={styles.downloadBtn}>
+                <Ionicons name="download-outline" size={18} color="#fff" />
+              </TouchableOpacity>
+            </View>
           </View>
 
           <View style={styles.body}>
@@ -73,7 +79,10 @@ export default function ReportsScreen() {
               </View>
             </View>
 
-            <TouchableOpacity style={styles.generateBtn}>
+            <TouchableOpacity
+              style={styles.generateBtn}
+              onPress={() => router.push("/(manager)/ai-assistant")}
+            >
               <Ionicons name="document-text-outline" size={18} color="#fff" />
               <Text style={styles.generateBtnText}>Generate new report</Text>
             </TouchableOpacity>
@@ -105,7 +114,8 @@ export default function ReportsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F5F7FA" },
-  header: { backgroundColor: "#1565C0", paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  header: { backgroundColor: "#1565C0", paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16 },
+  headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   headerTitle: { fontSize: 20, fontWeight: "500", color: "#fff" },
   headerSub: { fontSize: 11, color: "#90CAF9", marginTop: 2 },
   downloadBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: "rgba(255,255,255,0.2)", justifyContent: "center", alignItems: "center" },

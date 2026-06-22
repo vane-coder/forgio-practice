@@ -1,6 +1,8 @@
 import React from "react";
 import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { router } from "expo-router";
+
 
 export default function RegisterScreen() {
   const [name, setName] = useState("");
@@ -10,9 +12,11 @@ export default function RegisterScreen() {
   const [factoryName, setFactoryName] = useState("");
 
   const handleRegister = async () => {
-    // TODO: call auth.service.ts register function
-    Alert.alert("Register pressed");
+    // TODO: call auth.service.ts register function when backend is ready
+    // For now, just navigate straight to dashboard
+    router.replace("/(manager)/dashboard");
   };
+
 
   return (
     <View style={styles.container}>

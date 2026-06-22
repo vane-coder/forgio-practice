@@ -5,6 +5,7 @@ import {
 } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 
 const sentNotifications = [
   { id: 1, message: "Team meeting today at 2PM in the assembly hall.", type: "MEETING", target: "All workers", sentAt: "2h ago" },
@@ -31,6 +32,9 @@ export default function NotificationsScreen() {
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
 
           <View style={styles.header}>
+            <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: 8 }}>
+              <Ionicons name="arrow-back" size={20} color="#fff" />
+            </TouchableOpacity>
             <Text style={styles.headerTitle}>Notifications</Text>
             <Text style={styles.headerSub}>Send messages to your team</Text>
           </View>
@@ -89,7 +93,13 @@ export default function NotificationsScreen() {
                   numberOfLines={4}
                 />
 
-                <TouchableOpacity style={styles.sendBtn}>
+                <TouchableOpacity
+                  style={styles.sendBtn}
+                  onPress={() => {
+                    setMessage("");
+                    setTab("HISTORY");
+                  }}
+                >
                   <Ionicons name="send-outline" size={18} color="#fff" />
                   <Text style={styles.sendBtnText}>Send notification</Text>
                 </TouchableOpacity>

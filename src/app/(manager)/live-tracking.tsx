@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-nati
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import MapView, { Marker, Polyline } from "react-native-maps";
+import { router } from "expo-router";
 
 const shipment = {
   id: "SH-0042",
@@ -37,7 +38,7 @@ export default function LiveTrackingScreen() {
 
           {/* HEADER */}
           <View style={styles.header}>
-            <TouchableOpacity style={styles.backRow}>
+            <TouchableOpacity style={styles.backRow} onPress={() => router.back()}>
               <Ionicons name="arrow-back" size={18} color="#90CAF9" />
               <Text style={styles.headerTitle}>Live tracking</Text>
             </TouchableOpacity>
@@ -126,7 +127,10 @@ export default function LiveTrackingScreen() {
             </View>
 
             {/* BUTTONS */}
-            <TouchableOpacity style={styles.arrivedBtn}>
+            <TouchableOpacity
+              style={styles.arrivedBtn}
+              onPress={() => router.push("/(manager)/shipments")}
+            >
               <Ionicons name="checkmark-circle-outline" size={18} color="#fff" />
               <Text style={styles.arrivedBtnText}>Mark as arrived</Text>
             </TouchableOpacity>
@@ -144,206 +148,38 @@ export default function LiveTrackingScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F5F7FA",
-  },
-  header: {
-    backgroundColor: "#1565C0",
-    paddingHorizontal: 16,
-    paddingTop: 14,
-    paddingBottom: 16,
-  },
-  backRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 4,
-  },
-  headerTitle: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: "#fff",
-  },
-  headerSub: {
-    fontSize: 11,
-    color: "#90CAF9",
-    marginLeft: 26,
-  },
-  body: {
-    padding: 16,
-  },
-  mapContainer: {
-    borderRadius: 12,
-    overflow: "hidden",
-    marginBottom: 14,
-    borderWidth: 0.5,
-    borderColor: "#e0e0e0",
-  },
-  map: {
-    height: 220,
-    width: "100%",
-  },
-  progressContainer: {
-    marginBottom: 14,
-  },
-  progressLabels: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 8,
-  },
-  progressLabel: {
-    fontSize: 11,
-    color: "#888",
-  },
-  progressTrack: {
-    height: 4,
-    backgroundColor: "#E3F2FD",
-    borderRadius: 4,
-    position: "relative",
-  },
-  progressFill: {
-    height: 4,
-    backgroundColor: "#1565C0",
-    borderRadius: 4,
-    width: "55%",
-  },
-  progressDot: {
-    width: 12,
-    height: 12,
-    backgroundColor: "#1565C0",
-    borderRadius: 6,
-    position: "absolute",
-    top: -4,
-    left: "55%",
-    marginLeft: -6,
-    borderWidth: 2,
-    borderColor: "#F5F7FA",
-  },
-  progressStops: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 6,
-  },
-  stopActive: {
-    fontSize: 10,
-    color: "#1565C0",
-    fontWeight: "500",
-  },
-  stopInactive: {
-    fontSize: 10,
-    color: "#888",
-  },
-  driverCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    borderWidth: 0.5,
-    borderColor: "#e0e0e0",
-    padding: 12,
-    marginBottom: 10,
-  },
-  avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "#E3F2FD",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  avatarText: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: "#0C447C",
-  },
-  driverInfo: {
-    flex: 1,
-  },
-  driverName: {
-    fontSize: 13,
-    fontWeight: "500",
-    color: "#1A1A1A",
-  },
-  driverRole: {
-    fontSize: 10,
-    color: "#888",
-    marginTop: 2,
-  },
-  callBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#E3F2FD",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    borderWidth: 0.5,
-    borderColor: "#e0e0e0",
-    padding: 12,
-    marginBottom: 14,
-  },
-  detailRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 7,
-    borderBottomWidth: 0.5,
-    borderBottomColor: "#f0f0f0",
-  },
-  detailLabel: {
-    fontSize: 11,
-    color: "#888",
-  },
-  detailValue: {
-    fontSize: 11,
-    fontWeight: "500",
-    color: "#1A1A1A",
-  },
-  badgeOrange: {
-    backgroundColor: "#FFF3E0",
-    borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-  },
-  badgeOrangeText: {
-    fontSize: 10,
-    color: "#854F0B",
-  },
-  arrivedBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    backgroundColor: "#2E7D32",
-    borderRadius: 10,
-    padding: 14,
-    marginBottom: 10,
-  },
-  arrivedBtnText: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#fff",
-  },
-  refreshBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    borderWidth: 0.5,
-    borderColor: "#1565C0",
-    padding: 14,
-    marginBottom: 20,
-  },
-  refreshBtnText: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#1565C0",
-  },
+  container: { flex: 1, backgroundColor: "#F5F7FA" },
+  header: { backgroundColor: "#1565C0", paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16 },
+  backRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 4 },
+  headerTitle: { fontSize: 16, fontWeight: "500", color: "#fff" },
+  headerSub: { fontSize: 11, color: "#90CAF9", marginLeft: 26 },
+  body: { padding: 16 },
+  mapContainer: { borderRadius: 12, overflow: "hidden", marginBottom: 14, borderWidth: 0.5, borderColor: "#e0e0e0" },
+  map: { height: 220, width: "100%" },
+  progressContainer: { marginBottom: 14 },
+  progressLabels: { flexDirection: "row", justifyContent: "space-between", marginBottom: 8 },
+  progressLabel: { fontSize: 11, color: "#888" },
+  progressTrack: { height: 4, backgroundColor: "#E3F2FD", borderRadius: 4, position: "relative" },
+  progressFill: { height: 4, backgroundColor: "#1565C0", borderRadius: 4, width: "55%" },
+  progressDot: { width: 12, height: 12, backgroundColor: "#1565C0", borderRadius: 6, position: "absolute", top: -4, left: "55%", marginLeft: -6, borderWidth: 2, borderColor: "#F5F7FA" },
+  progressStops: { flexDirection: "row", justifyContent: "space-between", marginTop: 6 },
+  stopActive: { fontSize: 10, color: "#1565C0", fontWeight: "500" },
+  stopInactive: { fontSize: 10, color: "#888" },
+  driverCard: { flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: "#fff", borderRadius: 12, borderWidth: 0.5, borderColor: "#e0e0e0", padding: 12, marginBottom: 10 },
+  avatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: "#E3F2FD", justifyContent: "center", alignItems: "center" },
+  avatarText: { fontSize: 12, fontWeight: "500", color: "#0C447C" },
+  driverInfo: { flex: 1 },
+  driverName: { fontSize: 13, fontWeight: "500", color: "#1A1A1A" },
+  driverRole: { fontSize: 10, color: "#888", marginTop: 2 },
+  callBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: "#E3F2FD", justifyContent: "center", alignItems: "center" },
+  card: { backgroundColor: "#fff", borderRadius: 12, borderWidth: 0.5, borderColor: "#e0e0e0", padding: 12, marginBottom: 14 },
+  detailRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 7, borderBottomWidth: 0.5, borderBottomColor: "#f0f0f0" },
+  detailLabel: { fontSize: 11, color: "#888" },
+  detailValue: { fontSize: 11, fontWeight: "500", color: "#1A1A1A" },
+  badgeOrange: { backgroundColor: "#FFF3E0", borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3 },
+  badgeOrangeText: { fontSize: 10, color: "#854F0B" },
+  arrivedBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: "#2E7D32", borderRadius: 10, padding: 14, marginBottom: 10 },
+  arrivedBtnText: { fontSize: 14, fontWeight: "500", color: "#fff" },
+  refreshBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: "#fff", borderRadius: 10, borderWidth: 0.5, borderColor: "#1565C0", padding: 14, marginBottom: 20 },
+  refreshBtnText: { fontSize: 14, fontWeight: "500", color: "#1565C0" },
 });

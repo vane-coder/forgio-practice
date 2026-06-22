@@ -4,6 +4,7 @@ import {
 } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 
 const shipment = {
   id: "SH-0042",
@@ -29,24 +30,26 @@ export default function ShipmentAssignmentScreen() {
 
           {/* HEADER */}
           <View style={styles.header}>
-            <View>
-              <Text style={styles.headerTitle}>My Shipment</Text>
-              <Text style={styles.headerSub}>Shipment #{shipment.id}</Text>
-            </View>
-            <View style={[
-              styles.statusBadge,
-              status === "PENDING" && { backgroundColor: "#FFF3E0" },
-              status === "IN_TRANSIT" && { backgroundColor: "#E3F2FD" },
-              status === "ARRIVED" && { backgroundColor: "#E8F5E9" },
-            ]}>
-              <Text style={[
-                styles.statusText,
-                status === "PENDING" && { color: "#E65100" },
-                status === "IN_TRANSIT" && { color: "#0C447C" },
-                status === "ARRIVED" && { color: "#1B5E20" },
+            <View style={styles.headerRow}>
+              <View>
+                <Text style={styles.headerTitle}>My Shipment</Text>
+                <Text style={styles.headerSub}>Shipment #{shipment.id}</Text>
+              </View>
+              <View style={[
+                styles.statusBadge,
+                status === "PENDING" && { backgroundColor: "#FFF3E0" },
+                status === "IN_TRANSIT" && { backgroundColor: "#E3F2FD" },
+                status === "ARRIVED" && { backgroundColor: "#E8F5E9" },
               ]}>
-                {status === "PENDING" ? "Pending" : status === "IN_TRANSIT" ? "In transit" : "Arrived"}
-              </Text>
+                <Text style={[
+                  styles.statusText,
+                  status === "PENDING" && { color: "#E65100" },
+                  status === "IN_TRANSIT" && { color: "#0C447C" },
+                  status === "ARRIVED" && { color: "#1B5E20" },
+                ]}>
+                  {status === "PENDING" ? "Pending" : status === "IN_TRANSIT" ? "In transit" : "Arrived"}
+                </Text>
+              </View>
             </View>
           </View>
 
@@ -109,6 +112,16 @@ export default function ShipmentAssignmentScreen() {
             )}
 
             {status === "IN_TRANSIT" && (
+              <TouchableOpacity
+                style={styles.updateStatusBtn}
+                onPress={() => router.push("/(driver)/update-status")}
+              >
+                <Ionicons name="navigate-outline" size={18} color="#1565C0" />
+                <Text style={styles.updateStatusBtnText}>Update status</Text>
+              </TouchableOpacity>
+            )}
+
+            {status === "IN_TRANSIT" && (
               <TouchableOpacity style={styles.arrivedBtn} onPress={() => setStatus("ARRIVED")}>
                 <Ionicons name="checkmark-circle-outline" size={18} color="#fff" />
                 <Text style={styles.arrivedBtnText}>Mark as arrived</Text>
@@ -131,7 +144,8 @@ export default function ShipmentAssignmentScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F5F7FA" },
-  header: { backgroundColor: "#1565C0", paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  header: { backgroundColor: "#1565C0", paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16 },
+  headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   headerTitle: { fontSize: 20, fontWeight: "500", color: "#fff" },
   headerSub: { fontSize: 11, color: "#90CAF9", marginTop: 2 },
   statusBadge: { borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
@@ -158,6 +172,8 @@ const styles = StyleSheet.create({
   assignedText: { fontSize: 14, color: "#888" },
   departBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: "#1565C0", borderRadius: 10, padding: 14, marginBottom: 10 },
   departBtnText: { fontSize: 14, fontWeight: "500", color: "#fff" },
+  updateStatusBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: "#E3F2FD", borderRadius: 10, padding: 14, marginBottom: 10 },
+  updateStatusBtnText: { fontSize: 14, fontWeight: "500", color: "#1565C0" },
   arrivedBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: "#2E7D32", borderRadius: 10, padding: 14, marginBottom: 10 },
   arrivedBtnText: { fontSize: 14, fontWeight: "500", color: "#fff" },
   successCard: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, backgroundColor: "#E8F5E9", borderRadius: 10, padding: 16, marginBottom: 10 },
