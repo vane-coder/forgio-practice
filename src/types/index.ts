@@ -3,33 +3,32 @@
 export type Role = "MANAGER" | "DEPT_HEAD" | "WORKER" | "DRIVER";
 
 export interface User {
-  userId: number;
+  userId: string;
   name: string;
   phone: string;
-  email: string;
   role: Role;
-  factoryId: number;
-  departmentId?: number;
+  factoryId: string;
+  departmentId?: string;
 }
 
 export interface Factory {
-  factoryId: number;
+  factoryId: string;
   name: string;
   location: string;
   industry: string;
-  managerId: number;
+  managerId: string;
 }
 
 export interface Department {
-  deptId: number;
-  factoryId: number;
+  deptId: string;
+  factoryId: string;
   name: string;
-  headUserId?: number;
+  headUserId?: string;
 }
 
 export interface RawMaterial {
-  materialId: number;
-  factoryId: number;
+  materialId: string;
+  factoryId: string;
   name: string;
   unit: string;
   quantityInStock: number;
@@ -38,9 +37,9 @@ export interface RawMaterial {
 }
 
 export interface ProductionEntry {
-  entryId: number;
-  workerId: number;
-  factoryId: number;
+  entryId: string;
+  workerId: string;
+  factoryId: string;
   date: string;
   productName: string;
   quantityProduced: number;
@@ -48,32 +47,36 @@ export interface ProductionEntry {
 }
 
 export interface Machine {
-  machineId: number;
-  factoryId: number;
+  machineId: string;
+  factoryId: string;
   name: string;
   status: "RUNNING" | "STOPPED" | "MAINTENANCE";
   lastServiceDate: string;
 }
 
 export interface Shipment {
-  shipmentId: number;
-  fromBranchId: number;
-  toBranchId: number;
-  driverId: number;
+  shipmentId: string;
+  fromBranchId: string;
+  toBranchId: string;
+  driverId: string;
   status: "PENDING" | "DEPARTED" | "IN_TRANSIT" | "ARRIVED";
   departedAt?: string;
   arrivedAt?: string;
 }
 
 export interface Branch {
-  branchId: number;
-  companyId: number;
+  branchId: string;
+  companyId: string;
   name: string;
   location: string;
-  managerId: number;
+  managerId: string;
 }
 
 export interface AuthResponse {
-  token: string;
-  user: User;
+  accessToken: string;
+  refreshToken: string;
+  userId: string;
+  factoryId: string;
+  name: string;
+  role: Role;
 }

@@ -1,25 +1,43 @@
 import { useState } from "react";
 import {
   View, Text, TextInput, TouchableOpacity,
-  StyleSheet, ScrollView
+  StyleSheet, ScrollView, Alert
 } from "react-native";
 import React from "react";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { register } from "../../services/auth.service";
+import { saveToken } from "../../auth";
 
 export default function RegisterScreen() {
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [factoryName, setFactoryName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [role, setRole] = useState("MANAGER");
+  const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
-    if (role === "MANAGER") router.replace("/(manager)/dashboard");
-    if (role === "WORKER") router.replace("/(worker)/home");
-    if (role === "DRIVER") router.replace("/(driver)/shipment-assignment");
+    if (!name || !phone || !password || !factoryName) {
+      Alert.alert("Missing fields", "Please fill in all fields.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await register({
+        managerName: name,
+        phone,
+        password,
+        factoryName,
+      });
+      await saveToken(res.accessToken);
+      // a new registration is always a manager (creates the factory)
+      router.replace("/(manager)/dashboard");
+    } catch (e) {
+      Alert.alert("Registration failed", "Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -36,8 +54,6 @@ export default function RegisterScreen() {
       <Text style={styles.label}>Full name</Text>
       <TextInput style={styles.input} placeholder="e.g. Vanessa Oware" value={name} onChangeText={setName} />
 
-      <Text style={styles.label}>Email</Text>
-      <TextInput style={styles.input} placeholder="you@example.com" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
 
       <Text style={styles.label}>Phone number</Text>
       <TextInput style={styles.input} placeholder="e.g. 0244000000" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
@@ -58,23 +74,6 @@ export default function RegisterScreen() {
           <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color="#888" />
         </TouchableOpacity>
       </View>
-
-      {/* Temporary role selector */}
-      <Text style={styles.label}>Register as (temporary)</Text>
-      <View style={styles.roleRow}>
-        {["MANAGER", "WORKER", "DRIVER"].map((r) => (
-          <TouchableOpacity
-            key={r}
-            style={[styles.roleBtn, role === r && styles.roleBtnActive]}
-            onPress={() => setRole(r)}
-          >
-            <Text style={[styles.roleBtnText, role === r && styles.roleBtnTextActive]}>
-              {r.charAt(0) + r.slice(1).toLowerCase()}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
       <TouchableOpacity style={styles.button} onPress={handleRegister}>
         <Text style={styles.buttonText}>Create account</Text>
       </TouchableOpacity>

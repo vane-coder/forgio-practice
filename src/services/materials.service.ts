@@ -1,8 +1,8 @@
 import { API_BASE_URL, getHeaders } from "./api.config";
 import { RawMaterial } from "../types";
 
-export const getMaterials = async (token: string, factoryId: number): Promise<RawMaterial[]> => {
-  const response = await fetch(`${API_BASE_URL}/materials/factory/${factoryId}`, {
+export const getMaterials = async (token: string): Promise<RawMaterial[]> => {
+  const response = await fetch(`${API_BASE_URL}/materials`, {
     headers: getHeaders(token),
   });
   if (!response.ok) throw new Error("Failed to fetch materials");
@@ -19,7 +19,7 @@ export const addMaterial = async (token: string, data: Partial<RawMaterial>) => 
   return response.json();
 };
 
-export const updateMaterial = async (token: string, id: number, data: Partial<RawMaterial>) => {
+export const updateMaterial = async (token: string, id: string, data: Partial<RawMaterial>) => {
   const response = await fetch(`${API_BASE_URL}/materials/${id}`, {
     method: "PUT",
     headers: getHeaders(token),

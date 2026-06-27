@@ -11,8 +11,8 @@ export const submitProduction = async (token: string, data: Partial<ProductionEn
   return response.json();
 };
 
-export const getProductionByFactory = async (token: string, factoryId: number) => {
-  const response = await fetch(`${API_BASE_URL}/production/factory/${factoryId}`, {
+export const getProductionByFactory = async (token: string) => {
+  const response = await fetch(`${API_BASE_URL}/production/factory`, {
     headers: getHeaders(token),
   });
   if (!response.ok) throw new Error("Failed to fetch production records");

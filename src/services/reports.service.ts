@@ -1,7 +1,6 @@
 import { API_BASE_URL, getHeaders } from "./api.config";
 
 export const generateReport = async (token: string, data: {
-  factoryId: number;
   startDate: string;
   endDate: string;
 }) => {
@@ -14,8 +13,8 @@ export const generateReport = async (token: string, data: {
   return response.json();
 };
 
-export const getReports = async (token: string, factoryId: number) => {
-  const response = await fetch(`${API_BASE_URL}/reports/factory/${factoryId}`, {
+export const getReports = async (token: string) => {
+  const response = await fetch(`${API_BASE_URL}/reports`, {
     headers: getHeaders(token),
   });
   if (!response.ok) throw new Error("Failed to fetch reports");
