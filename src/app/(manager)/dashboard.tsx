@@ -22,9 +22,12 @@ export default function DashboardScreen() {
                 <Text style={styles.greeting}>Good morning</Text>
                 <Text style={styles.username}>{username}</Text>
               </View>
-              <View style={styles.avatar}>
+              <TouchableOpacity
+                style={styles.avatar}
+                onPress={() => router.push("/(manager)/profile")}
+              >
                 <Text style={styles.avatarText}>{initials}</Text>
-              </View>
+              </TouchableOpacity>
             </View>
 
             <View style={styles.productionCard}>
@@ -70,10 +73,7 @@ export default function DashboardScreen() {
 
             <Text style={styles.sectionTitle}>Quick actions</Text>
             <View style={styles.actionsRow}>
-              <TouchableOpacity style={styles.actionCard} onPress={() => router.push("/(manager)/reports")}>
-                <Ionicons name="bar-chart-outline" size={24} color="#1565C0" />
-                <Text style={styles.actionText}>Reports</Text>
-              </TouchableOpacity>
+             
               <TouchableOpacity style={styles.actionCard} onPress={() => router.push("/(manager)/permissions")}>
                 <Ionicons name="people-outline" size={24} color="#1565C0" />
                 <Text style={styles.actionText}>Workers</Text>
@@ -85,6 +85,11 @@ export default function DashboardScreen() {
               <TouchableOpacity style={styles.actionCard} onPress={() => router.push("/(manager)/marketplace")}>
                 <Ionicons name="cart-outline" size={24} color="#1565C0" />
                 <Text style={styles.actionText}>Market</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.actionCard} onPress={() => router.push("/(manager)/materials")}>
+                <Ionicons name="cube-outline" size={24} color="#1565C0" />
+                <Text style={styles.actionText}>Materials</Text>
               </TouchableOpacity>
             </View>
 
@@ -155,7 +160,7 @@ export default function DashboardScreen() {
             <Ionicons name="business-outline" size={22} color="#999" />
             <Text style={styles.navText}>Factory</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem}>
+          <TouchableOpacity style={styles.navItem} onPress={() => router.push("/(manager)/profile")}>
             <Ionicons name="person-outline" size={22} color="#999" />
             <Text style={styles.navText}>Profile</Text>
           </TouchableOpacity>

@@ -105,6 +105,32 @@ export default function RootLayout() {
         name="(driver)/update-status"
         options={{ headerShown: false }}
       />
+      <Stack.Screen 
+      name="(manager)/profile"
+       options={{ headerShown: false }} 
+       />
+      <Stack.Screen 
+      name="(manager)/edit-profile" 
+      options={{ headerShown: false }} 
+      />
+      <Stack.Screen
+       name="(manager)/change-password"
+        options={{ headerShown: false }} 
+        />
+      <Stack.Screen 
+      name="(manager)/help"
+       options={{ headerShown: false }} 
+       />
+      <Stack.Screen 
+      name="(auth)/forgot-password" 
+      options={{ headerShown: false }} 
+      />
+      <Stack.Screen name="(worker)/profile" options={{ headerShown: false }} />
+<Stack.Screen name="(worker)/edit-profile" options={{ headerShown: false }} />
+<Stack.Screen name="(worker)/change-password" options={{ headerShown: false }} />
+<Stack.Screen name="(worker)/help" options={{ headerShown: false }} />
+<Stack.Screen name="(worker)/notifications" options={{ headerShown: false }} />
+<Stack.Screen name="(worker)/newsfeed" options={{ headerShown: false }} />
 
     </Stack>
   );
