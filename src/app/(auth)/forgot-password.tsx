@@ -5,8 +5,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 
 export default function ForgotPasswordScreen() {
-  const [email, setEmail] = useState("");
-  const [sent, setSent] = useState(false);
+  const [phone, setPhone] = useState("");
+  const [submitted, setSubmitted] = useState(false);
 
   return (
     <SafeAreaProvider>
@@ -25,32 +25,34 @@ export default function ForgotPasswordScreen() {
 
           <Text style={styles.title}>Forgot password?</Text>
           <Text style={styles.subtitle}>
-            Enter the email address linked to your Forgio account and we will send you a reset link.
+            Enter the phone number linked to your Forgio account. Password reset
+            by SMS is coming soon. In the meantime, please contact your factory
+            manager or administrator to reset your password.
           </Text>
 
-          {!sent ? (
+          {!submitted ? (
             <>
-              <Text style={styles.label}>Email address</Text>
+              <Text style={styles.label}>Phone number</Text>
               <TextInput
                 style={styles.input}
-                placeholder="you@example.com"
+                placeholder="e.g. 0244000000"
                 placeholderTextColor="#aaa"
-                value={email}
-                onChangeText={setEmail}
-                autoCapitalize="none"
-                keyboardType="email-address"
+                value={phone}
+                onChangeText={setPhone}
+                keyboardType="phone-pad"
               />
 
-              <TouchableOpacity style={styles.sendBtn} onPress={() => setSent(true)}>
-                <Text style={styles.sendBtnText}>Send reset link</Text>
+              <TouchableOpacity style={styles.sendBtn} onPress={() => setSubmitted(true)}>
+                <Text style={styles.sendBtnText}>Continue</Text>
               </TouchableOpacity>
             </>
           ) : (
             <View style={styles.successCard}>
-              <Ionicons name="checkmark-circle" size={40} color="#2E7D32" />
-              <Text style={styles.successTitle}>Email sent!</Text>
+              <Ionicons name="information-circle" size={40} color="#1565C0" />
+              <Text style={styles.successTitle}>Coming soon</Text>
               <Text style={styles.successText}>
-                Check your inbox at {email} for a password reset link.
+                SMS password reset isn't available yet. Please ask your factory
+                manager or administrator to reset the password for {phone}.
               </Text>
               <TouchableOpacity style={styles.backBtn} onPress={() => router.replace("/(auth)/login")}>
                 <Text style={styles.backBtnText}>Back to login</Text>
@@ -78,10 +80,10 @@ const styles = StyleSheet.create({
   input: { borderWidth: 1, borderColor: "#e0e0e0", borderRadius: 10, padding: 12, fontSize: 14, color: "#1A1A1A", backgroundColor: "#F5F7FA", marginBottom: 20 },
   sendBtn: { backgroundColor: "#1565C0", borderRadius: 10, padding: 16, alignItems: "center", marginBottom: 16 },
   sendBtnText: { fontSize: 15, fontWeight: "bold", color: "#fff" },
-  successCard: { alignItems: "center", gap: 10, backgroundColor: "#E8F5E9", borderRadius: 12, padding: 24, marginBottom: 20 },
-  successTitle: { fontSize: 18, fontWeight: "500", color: "#2E7D32" },
+  successCard: { alignItems: "center", gap: 10, backgroundColor: "#E3F2FD", borderRadius: 12, padding: 24, marginBottom: 20 },
+  successTitle: { fontSize: 18, fontWeight: "500", color: "#1565C0" },
   successText: { fontSize: 13, color: "#444", textAlign: "center", lineHeight: 19 },
-  backBtn: { backgroundColor: "#2E7D32", borderRadius: 10, paddingHorizontal: 24, paddingVertical: 12, marginTop: 8 },
+  backBtn: { backgroundColor: "#1565C0", borderRadius: 10, paddingHorizontal: 24, paddingVertical: 12, marginTop: 8 },
   backBtnText: { fontSize: 14, fontWeight: "500", color: "#fff" },
   loginLink: { alignItems: "center", marginTop: 10 },
   loginLinkText: { fontSize: 13, color: "#888" },

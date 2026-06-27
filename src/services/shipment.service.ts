@@ -11,7 +11,7 @@ export const createShipment = async (token: string, data: Partial<Shipment>) => 
   return response.json();
 };
 
-export const updateShipmentStatus = async (token: string, id: number, status: string) => {
+export const updateShipmentStatus = async (token: string, id: string, status: string) => {
   const response = await fetch(`${API_BASE_URL}/shipments/${id}/status`, {
     method: "PATCH",
     headers: getHeaders(token),
@@ -21,7 +21,7 @@ export const updateShipmentStatus = async (token: string, id: number, status: st
   return response.json();
 };
 
-export const getShipmentsByBranch = async (token: string, branchId: number) => {
+export const getShipmentsByBranch = async (token: string, branchId: string) => {
   const response = await fetch(`${API_BASE_URL}/shipments/branch/${branchId}`, {
     headers: getHeaders(token),
   });

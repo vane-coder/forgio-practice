@@ -1,19 +1,33 @@
 import { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import React from "react";
 import { router } from "expo-router";
+import { login } from "../../services/auth.service";
+import { saveToken } from "../../auth";
 
 export default function LoginScreen() {
-  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("MANAGER");
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
-    // TODO: call auth.service.ts login function when backend is ready
-    // For now navigate based on selected role
-    if (role === "MANAGER") router.replace("/(manager)/dashboard");
-    if (role === "WORKER") router.replace("/(worker)/home");
-    if (role === "DRIVER") router.replace("/(driver)/shipment-assignment");
+    if (!phone || !password) {
+      Alert.alert("Missing fields", "Please enter your phone number and password.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await login(phone, password);
+      await saveToken(res.accessToken);           // save the token for other screens
+      // navigate based on the role the BACKEND returned (not a manual picker)
+      if (res.role === "MANAGER") router.replace("/(manager)/dashboard");
+      else if (res.role === "WORKER") router.replace("/(worker)/home");
+      else if (res.role === "DRIVER") router.replace("/(driver)/shipment-assignment");
+    } catch (e) {
+      Alert.alert("Login failed", "Check your phone number and password.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -23,9 +37,10 @@ export default function LoginScreen() {
 
       <TextInput
         style={styles.input}
-        placeholder="Email or Phone"
-        value={email}
-        onChangeText={setEmail}
+        placeholder="Phone number"
+        value={phone}
+        onChangeText={setPhone}
+        keyboardType="phone-pad"
         autoCapitalize="none"
       />
 
@@ -37,24 +52,21 @@ export default function LoginScreen() {
         secureTextEntry
       />
 
-      {/* Temporary role selector — remove when backend is ready */}
-      <Text style={styles.roleLabel}>Login as (temporary)</Text>
-      <View style={styles.roleRow}>
-        {["MANAGER", "WORKER", "DRIVER"].map((r) => (
-          <TouchableOpacity
-            key={r}
-            style={[styles.roleBtn, role === r && styles.roleBtnActive]}
-            onPress={() => setRole(r)}
-          >
-            <Text style={[styles.roleBtnText, role === r && styles.roleBtnTextActive]}>
-              {r.charAt(0) + r.slice(1).toLowerCase()}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+      <TouchableOpacity
+        style={styles.forgotLink}
+        onPress={() => router.push("/(auth)/forgot-password")}
+      >
+        <Text style={styles.forgotLinkText}>Forgot password?</Text>
+      </TouchableOpacity>
 
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Login</Text>
+      <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
+        <Text style={styles.buttonText}>{loading ? "Signing in..." : "Login"}</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.registerLink} onPress={() => router.push("/(auth)/register")}>
+        <Text style={styles.registerLinkText}>
+          No account? <Text style={styles.registerLinkBold}>Create one</Text>
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -65,12 +77,11 @@ const styles = StyleSheet.create({
   title: { fontSize: 32, fontWeight: "bold", color: "#1565C0", textAlign: "center", marginBottom: 8 },
   subtitle: { fontSize: 16, color: "#666", textAlign: "center", marginBottom: 32 },
   input: { borderWidth: 1, borderColor: "#ccc", borderRadius: 8, padding: 12, marginBottom: 16, fontSize: 16 },
-  roleLabel: { fontSize: 13, fontWeight: "500", color: "#888", marginBottom: 10 },
-  roleRow: { flexDirection: "row", gap: 10, marginBottom: 20 },
-  roleBtn: { flex: 1, borderRadius: 8, padding: 10, alignItems: "center", backgroundColor: "#F5F5F5", borderWidth: 0.5, borderColor: "#e0e0e0" },
-  roleBtnActive: { backgroundColor: "#1565C0", borderColor: "#1565C0" },
-  roleBtnText: { fontSize: 13, color: "#888" },
-  roleBtnTextActive: { color: "#fff", fontWeight: "500" },
+  forgotLink: { alignSelf: "flex-end", marginBottom: 16 },
+  forgotLinkText: { fontSize: 13, color: "#1565C0", fontWeight: "500" },
   button: { backgroundColor: "#1565C0", padding: 16, borderRadius: 8, alignItems: "center" },
   buttonText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
+  registerLink: { alignItems: "center", marginTop: 16 },
+  registerLinkText: { fontSize: 13, color: "#888" },
+  registerLinkBold: { color: "#1565C0", fontWeight: "500" },
 });

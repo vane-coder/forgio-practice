@@ -1,6 +1,6 @@
 import { API_BASE_URL, getHeaders } from "./api.config";
 
-export const postGPSCoordinates = async (token: string, shipmentId: number, latitude: number, longitude: number) => {
+export const postGPSCoordinates = async (token: string, shipmentId: string, latitude: number, longitude: number) => {
   const response = await fetch(`${API_BASE_URL}/shipments/${shipmentId}/gps`, {
     method: "POST",
     headers: getHeaders(token),
@@ -10,7 +10,7 @@ export const postGPSCoordinates = async (token: string, shipmentId: number, lati
   return response.json();
 };
 
-export const trackShipment = async (token: string, shipmentId: number) => {
+export const trackShipment = async (token: string, shipmentId: string) => {
   const response = await fetch(`${API_BASE_URL}/shipments/${shipmentId}/track`, {
     headers: getHeaders(token),
   });

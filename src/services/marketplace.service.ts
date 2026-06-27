@@ -9,7 +9,7 @@ export const getListings = async (token: string) => {
 };
 
 export const createListing = async (token: string, data: {
-  materialId: number;
+  materialId: string;
   quantity: number;
   pricePerUnit: number;
 }) => {
@@ -22,7 +22,7 @@ export const createListing = async (token: string, data: {
   return response.json();
 };
 
-export const buyFromMarketplace = async (token: string, data: { listingId: number; quantity: number }) => {
+export const buyFromMarketplace = async (token: string, data: { listingId: string; quantity: number }) => {
   const response = await fetch(`${API_BASE_URL}/marketplace/buy`, {
     method: "POST",
     headers: getHeaders(token),
