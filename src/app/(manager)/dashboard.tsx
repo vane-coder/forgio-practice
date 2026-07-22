@@ -1,35 +1,78 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { getToken } from "../../auth";
+import { getMaterials } from "../../services/materials.service";
+import { getMachines } from "../../services/machines.service";
 
 const username = "Vanessa Oware";
 const initials = "VO";
 
 export default function DashboardScreen() {
+  const [materialCount, setMaterialCount] = useState(0);
+  const [lowStockCount, setLowStockCount] = useState(0);
+  const [machineCount, setMachineCount] = useState(0);
+  const [aiInsight, setAiInsight] = useState("Loading insights...");
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const token = await getToken();
+        if (!token) return;
+
+        // materials
+        try {
+          const mats = await getMaterials(token);
+          if (Array.isArray(mats)) {
+            setMaterialCount(mats.length);
+            setLowStockCount(mats.filter((m: any) => m.lowStock).length);
+          }
+        } catch {}
+
+        // machines
+        try {
+          const machines = await getMachines(token);
+          if (Array.isArray(machines)) setMachineCount(machines.length);
+        } catch {}
+
+        // AI insight
+        try {
+          const res = await fetch(
+            `${(await import("../../services/api.config")).API_BASE_URL}/ai/suggestions`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          if (res.ok) {
+            const data = await res.json();
+            setAiInsight(data.suggestion || "No insights available right now.");
+          } else {
+            setAiInsight("No insights available right now.");
+          }
+        } catch {
+          setAiInsight("No insights available right now.");
+        }
+      } catch (e) {
+        console.log("Dashboard load error", e);
+      }
+    })();
+  }, []);
+
   return (
     <SafeAreaProvider>
       <SafeAreaView style={{ flex: 1, backgroundColor: "#1565C0" }}>
-
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
 
-          {/* HEADER */}
           <View style={styles.header}>
-
             <View style={styles.subheader}>
               <View>
                 <Text style={styles.greeting}>Good morning</Text>
                 <Text style={styles.username}>{username}</Text>
               </View>
-              <TouchableOpacity
-                style={styles.avatar}
-                onPress={() => router.push("/(manager)/profile")}
-              >
+              <TouchableOpacity style={styles.avatar} onPress={() => router.push("/(manager)/profile")}>
                 <Text style={styles.avatarText}>{initials}</Text>
               </TouchableOpacity>
             </View>
-
             <View style={styles.productionCard}>
               <Text style={styles.productionLabel}>Today's production</Text>
               <Text style={styles.productionRow}>
@@ -37,26 +80,24 @@ export default function DashboardScreen() {
                 <Text style={styles.productionUnit}>units</Text>
               </Text>
             </View>
-
           </View>
 
-          {/* BODY */}
           <View style={styles.body}>
 
             <View style={styles.statRow}>
               <View style={styles.statCard}>
                 <Text style={styles.statLabel}>Materials</Text>
-                <Text style={styles.statNumber}>12</Text>
-                <Text style={styles.statSub}>2 low stock</Text>
+                <Text style={styles.statNumber}>{materialCount}</Text>
+                <Text style={styles.statSub}>{lowStockCount} low stock</Text>
               </View>
               <View style={styles.statCard}>
                 <Text style={styles.statLabel}>Machines</Text>
-                <Text style={styles.statNumber}>8</Text>
-                <Text style={[styles.statSub, { color: "#E65100" }]}>1 stopped</Text>
+                <Text style={styles.statNumber}>{machineCount}</Text>
+                <Text style={styles.statSub}>Total</Text>
               </View>
               <View style={styles.statCard}>
                 <Text style={styles.statLabel}>Workers</Text>
-                <Text style={styles.statNumber}>39</Text>
+                <Text style={styles.statNumber}>—</Text>
                 <Text style={styles.statSub}>On shift</Text>
               </View>
             </View>
@@ -66,14 +107,11 @@ export default function DashboardScreen() {
                 <Ionicons name="bulb-outline" size={16} color="#E65100" />
                 <Text style={styles.aiTitle}>AI Insight</Text>
               </View>
-              <Text style={styles.aiText}>
-                Fabric stock will run out in approximately 3 days based on current usage. Consider ordering at least 200kg this week.
-              </Text>
+              <Text style={styles.aiText}>{aiInsight}</Text>
             </View>
 
             <Text style={styles.sectionTitle}>Quick actions</Text>
             <View style={styles.actionsRow}>
-             
               <TouchableOpacity style={styles.actionCard} onPress={() => router.push("/(manager)/permissions")}>
                 <Ionicons name="people-outline" size={24} color="#1565C0" />
                 <Text style={styles.actionText}>Workers</Text>
@@ -86,7 +124,6 @@ export default function DashboardScreen() {
                 <Ionicons name="cart-outline" size={24} color="#1565C0" />
                 <Text style={styles.actionText}>Market</Text>
               </TouchableOpacity>
-
               <TouchableOpacity style={styles.actionCard} onPress={() => router.push("/(manager)/materials")}>
                 <Ionicons name="cube-outline" size={24} color="#1565C0" />
                 <Text style={styles.actionText}>Materials</Text>
@@ -101,36 +138,10 @@ export default function DashboardScreen() {
               </View>
               <View style={styles.activityContent}>
                 <Text style={styles.activityTitle}>Production entry submitted</Text>
-                <Text style={styles.activitySub}>Vanessa · Cutting dept · 2h ago</Text>
+                <Text style={styles.activitySub}>Cutting dept · 2h ago</Text>
               </View>
               <View style={styles.badgeGreen}>
                 <Text style={styles.badgeGreenText}>Done</Text>
-              </View>
-            </View>
-
-            <View style={styles.activityItem}>
-              <View style={styles.activityIcon}>
-                <Ionicons name="alert-circle-outline" size={20} color="#C62828" />
-              </View>
-              <View style={styles.activityContent}>
-                <Text style={styles.activityTitle}>Machine breakdown reported</Text>
-                <Text style={styles.activitySub}>Sewing Machine 3 · 4h ago</Text>
-              </View>
-              <View style={styles.badgeRed}>
-                <Text style={styles.badgeRedText}>Alert</Text>
-              </View>
-            </View>
-
-            <View style={styles.activityItem}>
-              <View style={styles.activityIcon}>
-                <Ionicons name="cube-outline" size={20} color="#E65100" />
-              </View>
-              <View style={styles.activityContent}>
-                <Text style={styles.activityTitle}>Low stock alert</Text>
-                <Text style={styles.activitySub}>Cotton Fabric · 48kg remaining</Text>
-              </View>
-              <View style={styles.badgeOrange}>
-                <Text style={styles.badgeOrangeText}>Low</Text>
               </View>
             </View>
 
@@ -143,10 +154,8 @@ export default function DashboardScreen() {
             </View>
 
           </View>
-
         </ScrollView>
 
-        {/* BOTTOM NAV */}
         <View style={styles.bottomNav}>
           <TouchableOpacity style={styles.navItem}>
             <Ionicons name="home" size={22} color="#1565C0" />
@@ -205,10 +214,6 @@ const styles = StyleSheet.create({
   activitySub: { fontSize: 10, color: "#888", marginTop: 2 },
   badgeGreen: { backgroundColor: "#E8F5E9", borderRadius: 20, paddingHorizontal: 8, paddingVertical: 3 },
   badgeGreenText: { fontSize: 10, color: "#2E7D32" },
-  badgeRed: { backgroundColor: "#FFEBEE", borderRadius: 20, paddingHorizontal: 8, paddingVertical: 3 },
-  badgeRedText: { fontSize: 10, color: "#C62828" },
-  badgeOrange: { backgroundColor: "#FFF3E0", borderRadius: 20, paddingHorizontal: 8, paddingVertical: 3 },
-  badgeOrangeText: { fontSize: 10, color: "#E65100" },
   weatherCard: { flexDirection: "row", alignItems: "flex-start", backgroundColor: "#E3F2FD", borderRadius: 10, padding: 14, marginTop: 6, marginBottom: 20 },
   weatherTitle: { fontSize: 12, fontWeight: "500", color: "#1565C0" },
   weatherText: { fontSize: 11, color: "#0C447C", marginTop: 2, lineHeight: 16 },

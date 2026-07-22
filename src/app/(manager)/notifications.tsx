@@ -6,12 +6,10 @@ import {
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-
-const sentNotifications = [
-  { id: 1, message: "Team meeting today at 2PM in the assembly hall.", type: "MEETING", target: "All workers", sentAt: "2h ago" },
-  { id: 2, message: "Cotton fabric stock is critically low. Cutting dept please reduce usage.", type: "ALERT", target: "Cutting dept", sentAt: "5h ago" },
-  { id: 3, message: "Heavy rain expected tomorrow. Secure all outdoor materials.", type: "WEATHER", target: "All workers", sentAt: "Yesterday" },
-];
+import { useEffect } from "react";
+import { Alert, ActivityIndicator } from "react-native";
+import { getToken } from "../../auth";
+import { sendBulkNotification } from "../../services/notifications.service";
 
 const getTypeStyle = (type: string) => {
   if (type === "MEETING") return { bg: "#E3F2FD", color: "#0C447C", icon: "people-outline" };
@@ -25,6 +23,26 @@ export default function NotificationsScreen() {
   const [target, setTarget] = useState("ALL");
   const [type, setType] = useState("GENERAL");
   const [tab, setTab] = useState("SEND");
+  const [sending, setSending] = useState(false);
+
+  const handleSend = async () => {
+    if (!message.trim()) { Alert.alert("Empty message", "Please type a message."); return; }
+    setSending(true);
+    try {
+      const token = await getToken();
+      if (token) {
+        await sendBulkNotification(token, {
+          message,
+          type: (type as any),
+          targetRole: target === "ALL" ? undefined : target,
+        });
+        Alert.alert("Sent", "Your notification was sent.");
+        setMessage("");
+      }
+    } catch (e) {
+      Alert.alert("Failed", "Could not send notification.");
+    } finally { setSending(false); }
+  };
 
   return (
     <SafeAreaProvider>
@@ -95,36 +113,20 @@ export default function NotificationsScreen() {
 
                 <TouchableOpacity
                   style={styles.sendBtn}
-                  onPress={() => {
-                    setMessage("");
-                    setTab("HISTORY");
-                  }}
+                  onPress={handleSend}
+                  disabled={sending}
                 >
                   <Ionicons name="send-outline" size={18} color="#fff" />
-                  <Text style={styles.sendBtnText}>Send notification</Text>
+                  <Text style={styles.sendBtnText}>{sending ? "Sending..." : "Send notification"}</Text>
                 </TouchableOpacity>
               </>
             ) : (
               <>
                 <Text style={styles.sectionTitle}>Previously sent</Text>
                 <View style={styles.historyList}>
-                  {sentNotifications.map((n, i) => {
-                    const s = getTypeStyle(n.type);
-                    return (
-                      <View key={n.id} style={[styles.historyItem, i === sentNotifications.length - 1 && { borderBottomWidth: 0 }]}>
-                        <View style={[styles.historyIcon, { backgroundColor: s.bg }]}>
-                          <Ionicons name={s.icon as any} size={16} color={s.color} />
-                        </View>
-                        <View style={styles.historyContent}>
-                          <Text style={styles.historyMessage}>{n.message}</Text>
-                          <View style={styles.historyMeta}>
-                            <Text style={styles.historyTarget}>{n.target}</Text>
-                            <Text style={styles.historySentAt}>{n.sentAt}</Text>
-                          </View>
-                        </View>
-                      </View>
-                    );
-                  })}
+                  <Text style={{ textAlign: "center", color: "#888", padding: 20 }}>
+                    Sent notifications will appear here.
+                  </Text>
                 </View>
               </>
             )}

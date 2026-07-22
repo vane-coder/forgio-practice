@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import {
   View, Text, TextInput, TouchableOpacity,
@@ -34,7 +35,7 @@ export default function RegisterScreen() {
       // a new registration is always a manager (creates the factory)
       router.replace("/(manager)/dashboard");
     } catch (e) {
-      Alert.alert("Registration failed", "Please try again.");
+      Alert.alert("Registration failed",String(e));
     } finally {
       setLoading(false);
     }

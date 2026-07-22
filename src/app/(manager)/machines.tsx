@@ -3,13 +3,10 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, TextInput 
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-
-const machines = [
-  { id: 1, name: "Cutting Machine 1", type: "Cutting", status: "RUNNING", lastService: "12 Apr 2026", breakdowns: 1 },
-  { id: 2, name: "Sewing Machine 3", type: "Sewing", status: "STOPPED", lastService: "2 Apr 2026", breakdowns: 4 },
-  { id: 3, name: "Packaging Unit 2", type: "Packaging", status: "MAINTENANCE", lastService: "1 Apr 2026", breakdowns: 2 },
-  { id: 4, name: "Cutting Machine 2", type: "Cutting", status: "RUNNING", lastService: "15 Apr 2026", breakdowns: 0 },
-];
+import { useEffect } from "react";
+import { ActivityIndicator } from "react-native";
+import { getToken } from "../../auth";
+import { getMachines } from "../../services/machines.service";
 
 const getStatusStyle = (status: string) => {
   if (status === "RUNNING") return { bg: "#E8F5E9", color: "#2E7D32", label: "Running", icon: "checkmark-circle-outline" };
@@ -20,6 +17,21 @@ const getStatusStyle = (status: string) => {
 export default function MachinesScreen() {
   const [showModal, setShowModal] = useState(false);
   const [selectedMachine, setSelectedMachine] = useState<any>(null);
+  const [machines, setMachines] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const token = await getToken();
+        if (token) {
+          const data = await getMachines(token);
+          setMachines(Array.isArray(data) ? data : []);
+        }
+      } catch (e) { console.log("machines load failed", e); }
+      finally { setLoading(false); }
+    })();
+  }, []);
 
   const stoppedCount = machines.filter((m) => m.status === "STOPPED").length;
 
@@ -55,17 +67,21 @@ export default function MachinesScreen() {
             </View>
 
             {/* Machine cards */}
-            {machines.map((machine) => {
+            {loading && <ActivityIndicator size="large" color="#1565C0" style={{ marginVertical: 30 }} />}
+            {!loading && machines.length === 0 && (
+              <Text style={{ textAlign: "center", color: "#888", marginVertical: 30 }}>No machines yet</Text>
+            )}
+            {!loading && machines.map((machine) => {
               const badge = getStatusStyle(machine.status);
               return (
-                <View key={machine.id} style={styles.card}>
+                <View key={machine.machineId} style={styles.card}>
                   <View style={styles.cardTop}>
                     <View style={styles.machineIcon}>
                       <Ionicons name="settings-outline" size={20} color="#1565C0" />
                     </View>
                     <View style={styles.machineInfo}>
                       <Text style={styles.machineName}>{machine.name}</Text>
-                      <Text style={styles.machineType}>{machine.type}</Text>
+                      <Text style={styles.machineType}>Machine</Text>
                     </View>
                     <View style={[styles.badge, { backgroundColor: badge.bg }]}>
                       <Text style={[styles.badgeText, { color: badge.color }]}>{badge.label}</Text>
@@ -77,11 +93,11 @@ export default function MachinesScreen() {
                   <View style={styles.cardFooter}>
                     <View style={styles.footerItem}>
                       <Ionicons name="calendar-outline" size={13} color="#888" />
-                      <Text style={styles.footerText}>Last service: {machine.lastService}</Text>
+                      <Text style={styles.footerText}>Last service: {machine.lastServiceDate || "N/A"}</Text>
                     </View>
                     <View style={styles.footerItem}>
                       <Ionicons name="alert-circle-outline" size={13} color="#888" />
-                      <Text style={styles.footerText}>{machine.breakdowns} breakdown{machine.breakdowns !== 1 ? "s" : ""}</Text>
+                      <Text style={styles.footerText}>{machine.status}</Text>
                     </View>
                   </View>
 
