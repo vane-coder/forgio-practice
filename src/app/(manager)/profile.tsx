@@ -1,8 +1,11 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { getToken, clearToken } from "../../auth";
+import { API_BASE_URL } from "../../services/api.config";
+
 const menuItems = [
   { id: 1, icon: "person-outline", label: "Edit profile", route: "/(manager)/edit-profile" },
   { id: 2, icon: "business-outline", label: "Factory settings", route: "/(manager)/branches" },
@@ -19,6 +22,52 @@ const menuItems = [
 ];
 
 export default function ProfileScreen() {
+  const [name, setName] = useState("");
+  const [role, setRole] = useState("");
+  const [factoryName, setFactoryName] = useState("");
+  const [initials, setInitials] = useState("");
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const token = await getToken();
+        if (!token) return;
+        const res = await fetch(`${API_BASE_URL}/profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const p = await res.json();
+          setName(p.name || "");
+          setRole(p.role || "");
+          setFactoryName(p.factoryName || "");
+          setInitials(
+            (p.name || "?")
+              .split(" ")
+              .map((n: string) => n[0])
+              .join("")
+              .substring(0, 2)
+              .toUpperCase()
+          );
+        }
+      } catch (e) {
+        console.log("profile load failed", e);
+      }
+    })();
+  }, []);
+
+  const handleLogout = async () => {
+    await clearToken();
+    router.replace("/welcome");
+  };
+
+  const prettyRole = (r: string) => {
+    if (r === "MANAGER") return "Factory Manager";
+    if (r === "WORKER") return "Worker";
+    if (r === "DRIVER") return "Driver";
+    if (r === "DEPT_HEAD") return "Department Head";
+    return r;
+  };
+
   return (
     <SafeAreaProvider>
       <SafeAreaView style={{ flex: 1, backgroundColor: "#1565C0" }}>
@@ -31,12 +80,12 @@ export default function ProfileScreen() {
             </TouchableOpacity>
             <View style={styles.profileTop}>
               <View style={styles.avatar}>
-                <Text style={styles.avatarText}>VO</Text>
+                <Text style={styles.avatarText}>{initials || "?"}</Text>
               </View>
               <View style={styles.profileInfo}>
-                <Text style={styles.profileName}>Vanessa Oware</Text>
-                <Text style={styles.profileRole}>Factory Manager</Text>
-                <Text style={styles.profileFactory}>Kate Best Company Ltd</Text>
+                <Text style={styles.profileName}>{name || "Loading..."}</Text>
+                <Text style={styles.profileRole}>{prettyRole(role)}</Text>
+                <Text style={styles.profileFactory}>{factoryName}</Text>
               </View>
             </View>
           </View>
@@ -61,16 +110,13 @@ export default function ProfileScreen() {
             </View>
 
             {/* Forgot password */}
-            <TouchableOpacity style={styles.forgotBtn}  onPress={() => router.push("/(auth)/forgot-password")}>
+            <TouchableOpacity style={styles.forgotBtn} onPress={() => router.push("/(auth)/forgot-password")}>
               <Ionicons name="key-outline" size={16} color="#1565C0" />
               <Text style={styles.forgotBtnText}>Forgot password?</Text>
             </TouchableOpacity>
 
             {/* Logout */}
-            <TouchableOpacity
-              style={styles.logoutBtn}
-              onPress={() => router.replace("/welcome")}
-            >
+            <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
               <Ionicons name="log-out-outline" size={18} color="#C62828" />
               <Text style={styles.logoutBtnText}>Log out</Text>
             </TouchableOpacity>

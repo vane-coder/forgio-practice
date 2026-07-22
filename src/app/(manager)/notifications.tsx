@@ -9,7 +9,8 @@ import { router } from "expo-router";
 import { useEffect } from "react";
 import { Alert, ActivityIndicator } from "react-native";
 import { getToken } from "../../auth";
-import { sendBulkNotification } from "../../services/notifications.service";
+import { sendBulkNotification, getSentNotifications } from "../../services/notifications.service";
+
 
 const getTypeStyle = (type: string) => {
   if (type === "MEETING") return { bg: "#E3F2FD", color: "#0C447C", icon: "people-outline" };
@@ -25,6 +26,20 @@ export default function NotificationsScreen() {
   const [tab, setTab] = useState("SEND");
   const [sending, setSending] = useState(false);
 
+  const [sent, setSent] = useState<any[]>([]);
+
+  const loadSent = async () => {
+    try {
+      const token = await getToken();
+      if (token) {
+        const data = await getSentNotifications(token);
+        setSent(Array.isArray(data) ? data : []);
+      }
+    } catch (e) { console.log("sent load failed", e); }
+  };
+
+  useEffect(() => { if (tab === "HISTORY") loadSent(); }, [tab]);
+
   const handleSend = async () => {
     if (!message.trim()) { Alert.alert("Empty message", "Please type a message."); return; }
     setSending(true);
@@ -38,6 +53,7 @@ export default function NotificationsScreen() {
         });
         Alert.alert("Sent", "Your notification was sent.");
         setMessage("");
+        await loadSent();
       }
     } catch (e) {
       Alert.alert("Failed", "Could not send notification.");
@@ -120,17 +136,37 @@ export default function NotificationsScreen() {
                   <Text style={styles.sendBtnText}>{sending ? "Sending..." : "Send notification"}</Text>
                 </TouchableOpacity>
               </>
-            ) : (
+        ) : (
               <>
                 <Text style={styles.sectionTitle}>Previously sent</Text>
                 <View style={styles.historyList}>
-                  <Text style={{ textAlign: "center", color: "#888", padding: 20 }}>
-                    Sent notifications will appear here.
-                  </Text>
+                  {sent.length === 0 && (
+                    <Text style={{ textAlign: "center", color: "#888", padding: 20 }}>
+                      No notifications sent yet.
+                    </Text>
+                  )}
+                  {sent.map((n, i) => {
+                    const st = getTypeStyle(n.type);
+                    return (
+                      <View key={n.notifId} style={[styles.historyItem, i === sent.length - 1 && { borderBottomWidth: 0 }]}>
+                        <View style={[styles.historyIcon, { backgroundColor: st.bg }]}>
+                          <Ionicons name={st.icon as any} size={16} color={st.color} />
+                        </View>
+                        <View style={styles.historyContent}>
+                          <Text style={styles.historyMessage}>{n.message}</Text>
+                          <View style={styles.historyMeta}>
+                            <Text style={styles.historyTarget}>{n.targetRole || "All"}</Text>
+                            <Text style={styles.historySentAt}>
+                              {n.sentAt ? new Date(n.sentAt).toLocaleString() : ""}
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+                    );
+                  })}
                 </View>
               </>
             )}
-
           </View>
         </ScrollView>
       </SafeAreaView>

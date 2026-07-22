@@ -1,90 +1,40 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-
-const suggestions = [
-  {
-    id: 1,
-    type: "insight",
-    icon: "bulb-outline",
-    iconColor: "#E65100",
-    title: "Today's insight",
-    text: "Production dropped 28% this week. Machine 3 downtime on Wednesday is likely the cause. Schedule maintenance now.",
-    bgColor: "#FFF8E1",
-    borderColor: "#E65100",
-    titleColor: "#854F0B",
-    textColor: "#633806",
-  },
-  {
-    id: 2,
-    type: "restock",
-    icon: "cube-outline",
-    iconColor: "#1565C0",
-    title: "Restock suggestion",
-    text: "Fabric will run out in approximately 3 days based on current usage. Order at least 200kg this week.",
-    bgColor: "#fff",
-    borderColor: "#e0e0e0",
-    titleColor: "#0C447C",
-    textColor: "#185FA5",
-  },
-  {
-    id: 3,
-    type: "waste",
-    icon: "warning-outline",
-    iconColor: "#E65100",
-    title: "Waste alert",
-    text: "Cutting department waste is 22% above your monthly average. Review material handling in that shift.",
-    bgColor: "#fff",
-    borderColor: "#e0e0e0",
-    titleColor: "#854F0B",
-    textColor: "#633806",
-  },
-  {
-    id: 4,
-    type: "maintenance",
-    icon: "construct-outline",
-    iconColor: "#C62828",
-    title: "Maintenance prediction",
-    text: "Machine 3 has broken down 4 times this month. Based on the pattern, the next failure is likely within 5 days. Schedule a service now.",
-    bgColor: "#fff",
-    borderColor: "#e0e0e0",
-    titleColor: "#791F1F",
-    textColor: "#501313",
-  },
-  {
-    id: 5,
-    type: "profit",
-    icon: "trending-down-outline",
-    iconColor: "#1565C0",
-    title: "Profit insight",
-    text: "Estimated profit per unit dropped this week due to a 15% increase in material waste. Reducing waste in the packaging stage could recover GHS 800 weekly.",
-    bgColor: "#fff",
-    borderColor: "#e0e0e0",
-    titleColor: "#0C447C",
-    textColor: "#185FA5",
-  },
-];
+import { getToken } from "../../auth";
+import { getAISuggestions } from "../../services/ai.service";
 
 export default function AIAssistantScreen() {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [lastRefreshed, setLastRefreshed] = useState("Just now");
+  const [insight, setInsight] = useState("");
 
-  const handleRefresh = () => {
+  const loadInsight = async () => {
     setLoading(true);
-    setTimeout(() => {
+    try {
+      const token = await getToken();
+      if (token) {
+        const data = await getAISuggestions(token);
+        setInsight(data.suggestion || "No insights available right now.");
+        setLastRefreshed(new Date().toLocaleTimeString());
+      }
+    } catch (e) {
+      setInsight("Could not load insights.");
+      console.log("ai load failed", e);
+    } finally {
       setLoading(false);
-      setLastRefreshed("Just now");
-    }, 2000);
+    }
   };
+
+  useEffect(() => { loadInsight(); }, []);
 
   return (
     <SafeAreaProvider>
       <SafeAreaView style={{ flex: 1, backgroundColor: "#1565C0" }}>
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
 
-          {/* HEADER */}
           <View style={styles.header}>
             <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: 8 }}>
               <Ionicons name="arrow-back" size={20} color="#fff" />
@@ -108,57 +58,38 @@ export default function AIAssistantScreen() {
               <Text style={styles.refreshTime}>Last updated: {lastRefreshed}</Text>
             </View>
 
-            {suggestions.map((item) => (
-              <View
-                key={item.id}
-                style={[
-                  styles.card,
-                  {
-                    backgroundColor: item.bgColor,
-                    borderColor: item.borderColor,
-                  },
-                  item.type === "insight" && styles.insightCard,
-                ]}
-              >
-                <View style={styles.cardHeader}>
-                  <Ionicons name={item.icon as any} size={15} color={item.iconColor} />
-                  <Text style={[styles.cardTitle, { color: item.titleColor }]}>
-                    {item.title}
-                  </Text>
-                </View>
-                <Text style={[styles.cardText, { color: item.textColor }]}>
-                  {item.text}
-                </Text>
+            {/* Live insight from the backend */}
+            <View style={[styles.card, styles.insightCard, { backgroundColor: "#FFF8E1", borderColor: "#E65100" }]}>
+              <View style={styles.cardHeader}>
+                <Ionicons name="bulb-outline" size={15} color="#E65100" />
+                <Text style={[styles.cardTitle, { color: "#854F0B" }]}>Today's insight</Text>
               </View>
-            ))}
+              {loading ? (
+                <ActivityIndicator size="small" color="#E65100" style={{ marginTop: 8 }} />
+              ) : (
+                <Text style={[styles.cardText, { color: "#633806" }]}>{insight}</Text>
+              )}
+            </View>
 
             <TouchableOpacity
               style={styles.refreshBtn}
-              onPress={handleRefresh}
+              onPress={loadInsight}
               disabled={loading}
             >
               {loading ? (
-                <ActivityIndicator size="small" color="#1565C0" />
+                <ActivityIndicator size="small" color="#fff" />
               ) : (
-                <Ionicons name="refresh-outline" size={18} color="#1565C0" />
+                <>
+                  <Ionicons name="refresh-outline" size={16} color="#fff" />
+                  <Text style={styles.refreshBtnText}>Refresh insights</Text>
+                </>
               )}
-              <Text style={styles.refreshBtnText}>
-                {loading ? "Analysing factory data..." : "Refresh insights"}
-              </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.dashboardBtn}
-              onPress={() => router.push("/(manager)/dashboard")}
-            >
-              <Ionicons name="home-outline" size={16} color="#1565C0" />
-              <Text style={styles.dashboardBtnText}>Back to dashboard</Text>
-            </TouchableOpacity>
-
-            <View style={styles.infoNote}>
-              <Ionicons name="information-circle-outline" size={14} color="#888" />
-              <Text style={styles.infoText}>
-                Suggestions are based on your factory's production, waste, material, and machine data. Insights refresh daily or on demand.
+            <View style={styles.noteCard}>
+              <Ionicons name="information-circle-outline" size={16} color="#1565C0" />
+              <Text style={styles.noteText}>
+                Insights are generated from your factory's production, stock and machine data.
               </Text>
             </View>
 
@@ -175,20 +106,18 @@ const styles = StyleSheet.create({
   headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   headerTitle: { fontSize: 16, fontWeight: "500", color: "#fff" },
   headerSub: { fontSize: 11, color: "#90CAF9", marginTop: 2 },
-  aiBadge: { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "#E3F2FD", borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
+  aiBadge: { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "#E3F2FD", borderRadius: 20, paddingHorizontal: 10, paddingVertical: 5 },
   aiBadgeText: { fontSize: 11, fontWeight: "500", color: "#0C447C" },
   body: { padding: 16 },
   refreshRow: { flexDirection: "row", alignItems: "center", gap: 5, marginBottom: 12 },
   refreshTime: { fontSize: 11, color: "#888" },
-  card: { borderRadius: 12, borderWidth: 0.5, padding: 12, marginBottom: 10 },
-  insightCard: { borderLeftWidth: 3, borderRadius: 0, borderTopRightRadius: 12, borderBottomRightRadius: 12 },
+  card: { borderRadius: 12, borderWidth: 0.5, padding: 14, marginBottom: 12 },
+  insightCard: { borderLeftWidth: 3 },
   cardHeader: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 6 },
   cardTitle: { fontSize: 12, fontWeight: "500" },
-  cardText: { fontSize: 11, lineHeight: 17 },
-  refreshBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: "#E3F2FD", borderRadius: 10, padding: 14, marginTop: 4, marginBottom: 10 },
-  refreshBtnText: { fontSize: 13, fontWeight: "500", color: "#0C447C" },
-  dashboardBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: "#fff", borderWidth: 0.5, borderColor: "#1565C0", borderRadius: 10, padding: 14, marginBottom: 14 },
-  dashboardBtnText: { fontSize: 13, fontWeight: "500", color: "#1565C0" },
-  infoNote: { flexDirection: "row", alignItems: "flex-start", gap: 6, marginBottom: 24 },
-  infoText: { flex: 1, fontSize: 11, color: "#888", lineHeight: 16 },
+  cardText: { fontSize: 12, lineHeight: 18 },
+  refreshBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: "#1565C0", borderRadius: 10, padding: 14, marginBottom: 14 },
+  refreshBtnText: { fontSize: 14, fontWeight: "500", color: "#fff" },
+  noteCard: { flexDirection: "row", alignItems: "flex-start", gap: 8, backgroundColor: "#E3F2FD", borderRadius: 10, padding: 12, marginBottom: 24 },
+  noteText: { flex: 1, fontSize: 11, color: "#0C447C", lineHeight: 16 },
 });
