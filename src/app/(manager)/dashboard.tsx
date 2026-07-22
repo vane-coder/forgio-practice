@@ -7,10 +7,9 @@ import { getToken } from "../../auth";
 import { getMaterials } from "../../services/materials.service";
 import { getMachines } from "../../services/machines.service";
 
-const username = "Vanessa Oware";
-const initials = "VO";
-
 export default function DashboardScreen() {
+  const [username, setUsername] = useState("");
+  const [initials, setInitials] = useState("");
   const [materialCount, setMaterialCount] = useState(0);
   const [lowStockCount, setLowStockCount] = useState(0);
   const [machineCount, setMachineCount] = useState(0);
@@ -22,6 +21,26 @@ export default function DashboardScreen() {
         const token = await getToken();
         if (!token) return;
 
+
+        // real logged-in user
+        try {
+          const { API_BASE_URL } = await import("../../services/api.config");
+          const res = await fetch(`${API_BASE_URL}/profile`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (res.ok) {
+            const p = await res.json();
+            setUsername(p.name || "");
+            setInitials(
+              (p.name || "?")
+                .split(" ")
+                .map((n: string) => n[0])
+                .join("")
+                .substring(0, 2)
+                .toUpperCase()
+            );
+          }
+        } catch {}
         // materials
         try {
           const mats = await getMaterials(token);
