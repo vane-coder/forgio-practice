@@ -12,40 +12,35 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import { Heart, ThumbsUp, MessageSquare, Plus, Search, X } from 'lucide-react-native';
+import { useEffect } from 'react';
+import { getToken } from '../../auth';
+import { getNewsFeed, createPost } from '../../services/newsfeed.service';
 
 export default function FactoryNewsFeed() {
   const [showInput, setShowInput] = useState(false);
   const [postText, setPostText] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [posts, setPosts] = useState<any[]>([]);
 
-  const [posts, setPosts] = useState([
-    {
-      id: '1',
-      initials: 'RP',
-      name: 'Raina Pryce',
-      role: 'Manager · 2h ago',
-      content: "Production target for this week is 5,000 units. Let's push through!",
-      likes: 12,
-      hasLiked: false,
-    },
-    {
-      id: '2',
-      initials: 'AJ',
-      name: 'Attuah Jessica',
-      role: 'Dept Head · 5h ago',
-      content: 'Cutting dept hit 800 units today. Great work team!',
-      likes: 8,
-      hasLiked: false,
-    },
-  ]);
+  const loadPosts = async () => {
+    try {
+      const token = await getToken();
+      if (token) {
+        const data = await getNewsFeed(token);
+        setPosts(Array.isArray(data) ? data : []);
+      }
+    } catch (e) { console.log('newsfeed load failed', e); }
+  };
+
+  useEffect(() => { loadPosts(); }, []);
 
   const handleLike = (targetId: string) => { 
     setPosts((prevPosts) =>
       prevPosts.map((item) => {
-        if (item.id === targetId) {
+        if (item.postId === targetId) {
           return {
             ...item,
-            likes: item.hasLiked ? item.likes - 1 : item.likes + 1,
+            likes: 0,
             hasLiked: !item.hasLiked,
           };
         }
@@ -58,30 +53,27 @@ export default function FactoryNewsFeed() {
     Alert.alert('Comments', `Opening discussion thread for ${authorName}'s post...`);
   };
 
-  const handlePublishPost = () => {
+  const handlePublishPost = async () => {
     if (!postText.trim()) {
       Alert.alert('Empty Post', 'Please write a message before publishing.');
       return;
     }
-
-    const newPostItem = {
-      id: Date.now().toString(),
-      initials: 'ME', 
-      name: 'Myself',
-      role: 'Staff · Just now',
-      content: postText,
-      likes: 0,
-      hasLiked: false,
-    };
-
-    setPosts([newPostItem, ...posts]);
-    setPostText('');
-    setShowInput(false);
+    try {
+      const token = await getToken();
+      if (token) {
+        await createPost(token, { content: postText });
+        setPostText('');
+        setShowInput(false);
+        await loadPosts();
+      }
+    } catch (e) {
+      Alert.alert('Failed', 'Could not publish post.');
+    }
   };
 
   const filteredPosts = posts.filter((item) => 
-    item.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+    (item.content || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (item.authorName || "").toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -144,14 +136,14 @@ export default function FactoryNewsFeed() {
 
             {/* Posts Loop */}
             {filteredPosts.map((item) => (
-              <View key={item.id} style={styles.postCard}>
+              <View key={item.postId} style={styles.postCard}>
                 <View style={styles.profileRow}>
                   <View style={styles.avatar}>
-                    <Text style={styles.avatarText}>{item.initials}</Text>
+                    <Text style={styles.avatarText}>{(item.authorName || "?").substring(0,2).toUpperCase()}</Text>
                   </View>
                   <View style={styles.nameContainer}>
-                    <Text style={styles.profileName}>{item.name}</Text>
-                    <Text style={styles.profileRole}>{item.role}</Text>
+                    <Text style={styles.profileName}>{item.authorName || "Staff"}</Text>
+                    <Text style={styles.profileRole}>{item.createdAt ? new Date(item.createdAt).toLocaleDateString() : ""}</Text>
                   </View>
                 </View>
                 <Text style={styles.postContent}>{item.content}</Text>
@@ -160,9 +152,8 @@ export default function FactoryNewsFeed() {
 
                 {/* Like & Comment Row */}
                 <View style={styles.actionsRow}>
-                  <TouchableOpacity style={styles.actionButton} onPress={() => handleLike(item.id)}>
+                  <TouchableOpacity style={styles.actionButton} onPress={() => handleLike(item.postId)}>
   <View style={styles.actionButtonContent}>
-    {/* Always use ThumbsUp, only toggle the color and inner fill based on state */}
     <ThumbsUp 
       color={item.hasLiked ? '#2552b4' : '#64748b'} 
       fill={item.hasLiked ? '#2552b4' : 'none'} 
@@ -170,12 +161,12 @@ export default function FactoryNewsFeed() {
       style={styles.inlineIcon} 
     />
     <Text style={[styles.actionText, item.hasLiked && { color: '#2552b4' }]}>
-      {item.hasLiked ? `Liked (${item.likes})` : `Like (${item.likes})`}
+      {item.hasLiked ? 'Liked' : 'Like'}
     </Text>
   </View>
 </TouchableOpacity>
 
-                  <TouchableOpacity style={styles.actionButton} onPress={() => handleCommentPress(item.name)}>
+                  <TouchableOpacity style={styles.actionButton} onPress={() => handleCommentPress(item.authorName || "this")}>
                     <View style={styles.actionButtonContent}>
                       <MessageSquare color="#64748b" size={18} style={styles.inlineIcon} />
                       <Text style={styles.actionText}>Comment</Text>
@@ -202,7 +193,6 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 22, fontWeight: '700', color: '#ffffff' },
   mainContentContainer: { flex: 1, backgroundColor: '#f4f6f9', paddingHorizontal: 16 },
   scrollPadding: { paddingBottom: 24 },
-  
   searchBarContainer: {
     marginVertical: 12,
     backgroundColor: '#ffffff',
@@ -216,7 +206,6 @@ const styles = StyleSheet.create({
   },
   searchIcon: { marginRight: 8 },
   searchField: { flex: 1, color: '#0f172a', fontSize: 14 },
-
   postCard: { backgroundColor: '#ffffff', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: '#e2e8f0', marginBottom: 14 },
   profileRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
   avatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#99c2f5', justifyContent: 'center', alignItems: 'center', marginRight: 12 },
@@ -225,7 +214,6 @@ const styles = StyleSheet.create({
   profileName: { fontSize: 15, fontWeight: '700', color: '#0f172a' },
   profileRole: { fontSize: 12, color: '#64748b', marginTop: 2 },
   postContent: { fontSize: 14, color: '#1e293b', lineHeight: 20 },
-  
   divider: { height: 1, backgroundColor: '#f1f5f9', marginVertical: 12 },
   actionsRow: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center' },
   actionButton: { paddingVertical: 4, paddingHorizontal: 12 },
@@ -233,11 +221,9 @@ const styles = StyleSheet.create({
   inlineIcon: { marginRight: 6 },
   actionText: { fontSize: 13, fontWeight: '600', color: '#64748b' },
   likedText: { color: '#ef4444' },
-
   newPostButton: { borderWidth: 1.5, borderColor: '#2552b4', borderRadius: 10, paddingVertical: 12, alignItems: 'center', marginVertical: 8 },
   buttonInlineRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
   newPostButtonText: { color: '#2552b4', fontSize: 14, fontWeight: '600' },
-  
   inputContainer: { backgroundColor: '#ffffff', borderRadius: 12, padding: 12, marginBottom: 14, borderWidth: 1, borderColor: '#cbd5e1' },
   textField: { height: 80, color: '#0f172a', fontSize: 14, textAlignVertical: 'top' },
   submitButton: { backgroundColor: '#2552b4', borderRadius: 8, paddingVertical: 8, alignItems: 'center', marginTop: 8 },

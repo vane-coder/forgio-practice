@@ -1,25 +1,38 @@
-import React, { useState } from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-
-const listings = [
-  { id: 1, material: "Cotton Fabric", seller: "Accra Textiles Ltd", price: "GHS 12/kg", available: "500kg", location: "Accra", category: "FABRIC" },
-  { id: 2, material: "Dye Chemical", seller: "Kumasi Chem Co.", price: "GHS 45/L", available: "120L", location: "Kumasi", category: "CHEMICAL" },
-  { id: 3, material: "Polyester Thread", seller: "Tema Textiles", price: "GHS 8/kg", available: "300kg", location: "Tema", category: "FABRIC" },
-  { id: 4, material: "Packaging Boxes", seller: "Takoradi Supplies", price: "GHS 2/unit", available: "1000 units", location: "Takoradi", category: "PACKAGING" },
-];
+import { getToken } from "../../auth";
+import { getListings } from "../../services/marketplace.service";
 
 const categories = ["ALL", "FABRIC", "CHEMICAL", "PACKAGING"];
 
 export default function MarketplaceScreen() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("ALL");
+  const [listings, setListings] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const token = await getToken();
+        if (token) {
+          const data = await getListings(token);
+          setListings(Array.isArray(data) ? data : []);
+        }
+      } catch (e) {
+        console.log("Failed to load listings", e);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
 
   const filtered = listings.filter((l) =>
     (category === "ALL" || l.category === category) &&
-    l.material.toLowerCase().includes(search.toLowerCase())
+    (l.materialName || "").toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -77,20 +90,28 @@ export default function MarketplaceScreen() {
               </View>
             </ScrollView>
 
+            {/* Loading */}
+            {loading && (
+              <View style={styles.emptyState}>
+                <ActivityIndicator size="large" color="#1565C0" />
+                <Text style={styles.emptyText}>Loading listings...</Text>
+              </View>
+            )}
+
             {/* Listings */}
-            {filtered.map((item) => (
-              <View key={item.id} style={styles.card}>
+            {!loading && filtered.map((item) => (
+              <View key={item.listingId} style={styles.card}>
                 <View style={styles.cardTop}>
                   <View style={styles.materialIcon}>
                     <Ionicons name="cube-outline" size={20} color="#1565C0" />
                   </View>
                   <View style={styles.cardInfo}>
-                    <Text style={styles.materialName}>{item.material}</Text>
-                    <Text style={styles.sellerName}>{item.seller}</Text>
+                    <Text style={styles.materialName}>{item.materialName}</Text>
+                    <Text style={styles.sellerName}>{item.sellerFactoryName || "Factory"}</Text>
                   </View>
                   <View>
-                    <Text style={styles.price}>{item.price}</Text>
-                    <Text style={styles.available}>{item.available}</Text>
+                    <Text style={styles.price}>GHS {item.pricePerUnit}</Text>
+                    <Text style={styles.available}>{item.quantity} available</Text>
                   </View>
                 </View>
 
@@ -98,8 +119,8 @@ export default function MarketplaceScreen() {
 
                 <View style={styles.cardFooter}>
                   <View style={styles.locationRow}>
-                    <Ionicons name="location-outline" size={12} color="#888" />
-                    <Text style={styles.locationText}>{item.location}</Text>
+                    <Ionicons name="pricetag-outline" size={12} color="#888" />
+                    <Text style={styles.locationText}>{item.category || "Material"}</Text>
                   </View>
                   <TouchableOpacity style={styles.buyBtn}>
                     <Text style={styles.buyBtnText}>Buy now</Text>
@@ -108,10 +129,10 @@ export default function MarketplaceScreen() {
               </View>
             ))}
 
-            {filtered.length === 0 && (
+            {!loading && filtered.length === 0 && (
               <View style={styles.emptyState}>
                 <Ionicons name="search-outline" size={40} color="#ccc" />
-                <Text style={styles.emptyText}>No materials found</Text>
+                <Text style={styles.emptyText}>No materials listed yet</Text>
               </View>
             )}
 

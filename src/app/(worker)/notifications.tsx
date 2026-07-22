@@ -1,15 +1,10 @@
-import React from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-
-const notifications = [
-  { id: 1, message: "Team meeting today at 2PM in the assembly hall.", type: "MEETING", sentAt: "2h ago", read: false },
-  { id: 2, message: "Cotton fabric stock is critically low. Cutting dept please reduce usage.", type: "ALERT", sentAt: "5h ago", read: false },
-  { id: 3, message: "Heavy rain expected tomorrow. Secure all outdoor materials.", type: "WEATHER", sentAt: "Yesterday", read: true },
-  { id: 4, message: "Production target for this week is 5,000 units. Let's push through!", type: "GENERAL", sentAt: "2 days ago", read: true },
-];
+import { getToken } from "../../auth";
+import { getMyNotifications } from "../../services/notifications.service";
 
 const getTypeStyle = (type: string) => {
   if (type === "MEETING") return { bg: "#E3F2FD", color: "#0C447C", icon: "people-outline" };
@@ -19,7 +14,23 @@ const getTypeStyle = (type: string) => {
 };
 
 export default function WorkerNotificationsScreen() {
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const token = await getToken();
+        if (token) {
+          const data = await getMyNotifications(token);
+          setNotifications(Array.isArray(data) ? data : []);
+        }
+      } catch (e) { console.log("worker notifications failed", e); }
+      finally { setLoading(false); }
+    })();
+  }, []);
+
+  const unreadCount = notifications.length;
 
   return (
     <SafeAreaProvider>
@@ -33,27 +44,27 @@ export default function WorkerNotificationsScreen() {
             <View style={styles.headerRow}>
               <View>
                 <Text style={styles.headerTitle}>Notifications</Text>
-                <Text style={styles.headerSub}>{unreadCount} unread messages</Text>
+                <Text style={styles.headerSub}>{unreadCount} messages</Text>
               </View>
             </View>
           </View>
 
           <View style={styles.body}>
-            {notifications.map((n, i) => {
+            {loading && <ActivityIndicator size="large" color="#1565C0" style={{ marginVertical: 30 }} />}
+            {!loading && notifications.length === 0 && (
+              <Text style={{ textAlign: "center", color: "#888", marginVertical: 30 }}>No notifications yet</Text>
+            )}
+            {!loading && notifications.map((n, i) => {
               const s = getTypeStyle(n.type);
               return (
-                <View
-                  key={n.id}
-                  style={[styles.item, !n.read && styles.itemUnread]}
-                >
+                <View key={n.notifId} style={styles.item}>
                   <View style={[styles.iconCircle, { backgroundColor: s.bg }]}>
                     <Ionicons name={s.icon as any} size={18} color={s.color} />
                   </View>
                   <View style={styles.itemContent}>
                     <Text style={styles.itemMessage}>{n.message}</Text>
-                    <Text style={styles.itemTime}>{n.sentAt}</Text>
+                    <Text style={styles.itemTime}>{n.sentAt ? new Date(n.sentAt).toLocaleString() : ""}</Text>
                   </View>
-                  {!n.read && <View style={styles.unreadDot} />}
                 </View>
               );
             })}
@@ -72,10 +83,8 @@ const styles = StyleSheet.create({
   headerSub: { fontSize: 11, color: "#90CAF9", marginTop: 2 },
   body: { padding: 16, gap: 10 },
   item: { flexDirection: "row", alignItems: "flex-start", gap: 12, backgroundColor: "#fff", borderRadius: 12, borderWidth: 0.5, borderColor: "#e0e0e0", padding: 14 },
-  itemUnread: { borderColor: "#1565C0", borderWidth: 1 },
   iconCircle: { width: 38, height: 38, borderRadius: 19, justifyContent: "center", alignItems: "center", flexShrink: 0 },
   itemContent: { flex: 1 },
   itemMessage: { fontSize: 13, color: "#1A1A1A", lineHeight: 18 },
   itemTime: { fontSize: 11, color: "#888", marginTop: 4 },
-  unreadDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: "#1565C0", marginTop: 4 },
 });

@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { getToken, clearToken } from "../../auth";
+import { API_BASE_URL } from "../../services/api.config";
 
 const menuItems = [
   { id: 1, icon: "person-outline", label: "Edit profile", route: "/(worker)/edit-profile" },
@@ -13,6 +15,37 @@ const menuItems = [
 ];
 
 export default function WorkerProfileScreen() {
+  const [name, setName] = useState("");
+  const [role, setRole] = useState("");
+  const [factoryName, setFactoryName] = useState("");
+  const [deptName, setDeptName] = useState("");
+  const [initials, setInitials] = useState("");
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const token = await getToken();
+        if (!token) return;
+        const res = await fetch(`${API_BASE_URL}/profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const p = await res.json();
+          setName(p.name || "");
+          setRole(p.role || "");
+          setFactoryName(p.factoryName || "");
+          setDeptName(p.departmentName || "");
+          setInitials((p.name || "?").split(" ").map((n: string) => n[0]).join("").substring(0, 2).toUpperCase());
+        }
+      } catch (e) { console.log("worker profile load failed", e); }
+    })();
+  }, []);
+
+  const handleLogout = async () => {
+    await clearToken();
+    router.replace("/welcome");
+  };
+
   return (
     <SafeAreaProvider>
       <SafeAreaView style={{ flex: 1, backgroundColor: "#1565C0" }}>
@@ -24,12 +57,12 @@ export default function WorkerProfileScreen() {
             </TouchableOpacity>
             <View style={styles.profileTop}>
               <View style={styles.avatar}>
-                <Text style={styles.avatarText}>VO</Text>
+                <Text style={styles.avatarText}>{initials || "?"}</Text>
               </View>
               <View style={styles.profileInfo}>
-                <Text style={styles.profileName}>Vanessa Oware</Text>
-                <Text style={styles.profileRole}>Worker</Text>
-                <Text style={styles.profileFactory}>Cutting Dept · Morning shift</Text>
+                <Text style={styles.profileName}>{name || "Loading..."}</Text>
+                <Text style={styles.profileRole}>{role === "WORKER" ? "Worker" : role}</Text>
+                <Text style={styles.profileFactory}>{deptName ? `${deptName} · ${factoryName}` : factoryName}</Text>
               </View>
             </View>
           </View>
@@ -53,16 +86,8 @@ export default function WorkerProfileScreen() {
             </View>
 
             <TouchableOpacity
-              style={styles.forgotBtn}
-              onPress={() => router.push("/(auth)/forgot-password")}
-            >
-              <Ionicons name="key-outline" size={16} color="#1565C0" />
-              <Text style={styles.forgotBtnText}>Forgot password?</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
               style={styles.logoutBtn}
-              onPress={() => router.replace("/welcome")}
+              onPress={handleLogout}
             >
               <Ionicons name="log-out-outline" size={18} color="#C62828" />
               <Text style={styles.logoutBtnText}>Log out</Text>
@@ -92,8 +117,6 @@ const styles = StyleSheet.create({
   menuItem: { flexDirection: "row", alignItems: "center", gap: 12, padding: 14, borderBottomWidth: 0.5, borderBottomColor: "#f0f0f0" },
   menuIconCircle: { width: 36, height: 36, borderRadius: 18, backgroundColor: "#E3F2FD", justifyContent: "center", alignItems: "center" },
   menuLabel: { flex: 1, fontSize: 14, color: "#1A1A1A" },
-  forgotBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: "#E3F2FD", borderRadius: 10, padding: 14, marginBottom: 10 },
-  forgotBtnText: { fontSize: 14, color: "#1565C0", fontWeight: "500" },
   logoutBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: "#FFEBEE", borderRadius: 10, padding: 14, marginBottom: 20 },
   logoutBtnText: { fontSize: 14, color: "#C62828", fontWeight: "500" },
   version: { textAlign: "center", fontSize: 12, color: "#aaa", marginBottom: 30 },
