@@ -1,23 +1,36 @@
-import React, { useState } from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-
-const shipments = [
-  { id: "SH-0042", from: "Kumasi HQ", to: "Accra Branch", status: "IN_TRANSIT", eta: "~45 mins", driver: "Kofi Owusu" },
-  { id: "SH-0041", from: "Accra Branch", to: "Kumasi HQ", status: "ARRIVED", eta: "Delivered", driver: "Ama Mensah" },
-  { id: "SH-0040", from: "Kumasi HQ", to: "Tema Depot", status: "PENDING", eta: "Scheduled 2PM", driver: "Kweku Asante" },
-];
+import { getToken } from "../../auth";
+import { getShipments } from "../../services/shipment.service";
 
 const getStatusStyle = (status: string) => {
   if (status === "IN_TRANSIT") return { bg: "#E3F2FD", color: "#0C447C", label: "In transit" };
   if (status === "ARRIVED") return { bg: "#E8F5E9", color: "#1B5E20", label: "Arrived" };
-  return { bg: "#FFF3E0", color: "#E65100", label: "Pending" };
+  if (status === "DEPARTED") return { bg: "#FFF3E0", color: "#E65100", label: "Departed" };
+  return { bg: "#F5F5F5", color: "#666", label: "Pending" };
 };
 
 export default function ShipmentsScreen() {
   const [filter, setFilter] = useState("ALL");
+  const [shipments, setShipments] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const token = await getToken();
+        if (token) {
+          const data = await getShipments(token);
+          setShipments(Array.isArray(data) ? data : []);
+        }
+      } catch (e) { console.log("shipments load failed", e); }
+      finally { setLoading(false); }
+    })();
+  }, []);
+
   const filtered = shipments.filter((s) => filter === "ALL" || s.status === filter);
 
   return (
@@ -44,7 +57,7 @@ export default function ShipmentsScreen() {
           <View style={styles.body}>
 
             <View style={styles.filterRow}>
-              {["ALL", "PENDING", "IN_TRANSIT", "ARRIVED"].map((f) => (
+              {["ALL", "PENDING", "DEPARTED", "IN_TRANSIT", "ARRIVED"].map((f) => (
                 <TouchableOpacity
                   key={f}
                   style={[styles.filterTab, filter === f && styles.filterTabActive]}
@@ -57,12 +70,17 @@ export default function ShipmentsScreen() {
               ))}
             </View>
 
-            {filtered.map((s) => {
+            {loading && <ActivityIndicator size="large" color="#1565C0" style={{ marginVertical: 30 }} />}
+            {!loading && filtered.length === 0 && (
+              <Text style={{ textAlign: "center", color: "#888", marginVertical: 30 }}>No shipments yet</Text>
+            )}
+
+            {!loading && filtered.map((s) => {
               const badge = getStatusStyle(s.status);
               return (
-                <View key={s.id} style={styles.card}>
+                <View key={s.shipmentId} style={styles.card}>
                   <View style={styles.cardHeader}>
-                    <Text style={styles.shipmentId}>#{s.id}</Text>
+                    <Text style={styles.shipmentId}>#{s.shipmentId.substring(0, 8)}</Text>
                     <View style={[styles.badge, { backgroundColor: badge.bg }]}>
                       <Text style={[styles.badgeText, { color: badge.color }]}>{badge.label}</Text>
                     </View>
@@ -70,23 +88,25 @@ export default function ShipmentsScreen() {
                   <View style={styles.routeRow}>
                     <View style={styles.routeStop}>
                       <Ionicons name="location-outline" size={13} color="#1565C0" />
-                      <Text style={styles.routeText}>{s.from}</Text>
+                      <Text style={styles.routeText}>{s.fromBranchName}</Text>
                     </View>
                     <Ionicons name="arrow-forward" size={14} color="#ccc" />
                     <View style={styles.routeStop}>
                       <Ionicons name="flag-outline" size={13} color="#2E7D32" />
-                      <Text style={styles.routeText}>{s.to}</Text>
+                      <Text style={styles.routeText}>{s.toBranchName}</Text>
                     </View>
                   </View>
                   <View style={styles.divider} />
                   <View style={styles.cardFooter}>
                     <View style={styles.footerItem}>
                       <Ionicons name="person-outline" size={12} color="#888" />
-                      <Text style={styles.footerText}>{s.driver}</Text>
+                      <Text style={styles.footerText}>{s.driverName || "Unassigned"}</Text>
                     </View>
                     <View style={styles.footerItem}>
                       <Ionicons name="time-outline" size={12} color="#888" />
-                      <Text style={styles.footerText}>{s.eta}</Text>
+                      <Text style={styles.footerText}>
+                        {s.createdAt ? new Date(s.createdAt).toLocaleDateString() : ""}
+                      </Text>
                     </View>
                   </View>
                   {s.status === "IN_TRANSIT" && (
@@ -118,10 +138,10 @@ const styles = StyleSheet.create({
   newBtn: { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(255,255,255,0.2)", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
   newBtnText: { fontSize: 12, color: "#fff", fontWeight: "500" },
   body: { padding: 16 },
-  filterRow: { flexDirection: "row", gap: 8, marginBottom: 14 },
+  filterRow: { flexDirection: "row", gap: 8, marginBottom: 14, flexWrap: "wrap" },
   filterTab: { borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, backgroundColor: "#fff", borderWidth: 0.5, borderColor: "#e0e0e0" },
   filterTabActive: { backgroundColor: "#1565C0", borderColor: "#1565C0" },
-  filterText: { fontSize: 11, color: "#888" },
+  filterText: { fontSize: 12, color: "#888" },
   filterTextActive: { color: "#fff", fontWeight: "500" },
   card: { backgroundColor: "#fff", borderRadius: 12, borderWidth: 0.5, borderColor: "#e0e0e0", padding: 14, marginBottom: 12 },
   cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 },
@@ -130,11 +150,11 @@ const styles = StyleSheet.create({
   badgeText: { fontSize: 10, fontWeight: "500" },
   routeRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 10 },
   routeStop: { flexDirection: "row", alignItems: "center", gap: 4, flex: 1 },
-  routeText: { fontSize: 12, color: "#1A1A1A", fontWeight: "500" },
+  routeText: { fontSize: 12, color: "#1A1A1A" },
   divider: { height: 0.5, backgroundColor: "#f0f0f0", marginBottom: 10 },
-  cardFooter: { flexDirection: "row", gap: 16 },
+  cardFooter: { flexDirection: "row", justifyContent: "space-between" },
   footerItem: { flexDirection: "row", alignItems: "center", gap: 4 },
   footerText: { fontSize: 11, color: "#888" },
-  trackBtn: { flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: "#E3F2FD", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, marginTop: 10, alignSelf: "flex-start" },
+  trackBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: "#E3F2FD", borderRadius: 8, padding: 10, marginTop: 10 },
   trackBtnText: { fontSize: 12, color: "#1565C0", fontWeight: "500" },
 });
