@@ -1,8 +1,10 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { getToken } from "../../auth";
+import { API_BASE_URL } from "../../services/api.config";
 
 export default function ChangePasswordScreen() {
   const [current, setCurrent] = useState("");
@@ -11,6 +13,41 @@ export default function ChangePasswordScreen() {
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    if (!current || !newPass || !confirm) {
+      Alert.alert("Missing fields", "Please fill in all fields.");
+      return;
+    }
+    if (newPass.length < 8) {
+      Alert.alert("Too short", "New password must be at least 8 characters.");
+      return;
+    }
+    if (newPass !== confirm) {
+      Alert.alert("Mismatch", "New password and confirmation don't match.");
+      return;
+    }
+    setSaving(true);
+    try {
+      const token = await getToken();
+      if (token) {
+        const res = await fetch(`${API_BASE_URL}/profile/change-password`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ currentPassword: current, newPassword: newPass }),
+        });
+        if (!res.ok) throw new Error("Change failed");
+        Alert.alert("Success", "Your password has been updated.");
+        router.back();
+      }
+    } catch (e) {
+      Alert.alert("Failed", "Current password may be incorrect.");
+    } finally { setSaving(false); }
+  };
 
   return (
     <SafeAreaProvider>
@@ -55,8 +92,8 @@ export default function ChangePasswordScreen() {
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity style={styles.saveBtn} onPress={() => router.back()}>
-              <Text style={styles.saveBtnText}>Update password</Text>
+            <TouchableOpacity style={styles.saveBtn} onPress={handleSave} disabled={saving}>
+              {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveBtnText}>Update password</Text>}
             </TouchableOpacity>
 
           </View>
