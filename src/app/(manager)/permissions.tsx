@@ -1,19 +1,10 @@
-import React, { useState } from "react";
-import {
-  View, Text, StyleSheet, ScrollView,
-  TouchableOpacity, TextInput
-} from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Alert } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-
-const workers = [
-  { id: 1, name: "Attuah Jessica", initials: "AJ", department: "Cutting dept", role: "DEPT_HEAD", permissions: { viewReports: true, enterData: true, admin: false } },
-  { id: 2, name: "Apoasan Akologo", initials: "AA", department: "Assembly dept", role: "DEPT_HEAD", permissions: { viewReports: true, enterData: true, admin: false } },
-  { id: 3, name: "Vanessa Oware", initials: "VO", department: "Cutting dept", role: "WORKER", permissions: { viewReports: false, enterData: true, admin: false } },
-  { id: 4, name: "Akoto Boakye", initials: "AB", department: "Packaging dept", role: "DEPT_HEAD", permissions: { viewReports: true, enterData: true, admin: false } },
-  { id: 5, name: "Raina Pryce", initials: "RP", department: "Assembly dept", role: "WORKER", permissions: { viewReports: false, enterData: true, admin: false } },
-];
+import { getToken } from "../../auth";
+import { getWorkersWithPermissions, assignPermission } from "../../services/permissions.service";
 
 const getRoleBadge = (role: string) => {
   if (role === "DEPT_HEAD") return { bg: "#E3F2FD", color: "#0C447C", label: "Dept Head" };
@@ -21,16 +12,52 @@ const getRoleBadge = (role: string) => {
   return { bg: "#F3E5F5", color: "#4A148C", label: "Worker" };
 };
 
+const initials = (name: string) => name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+
 export default function PermissionsScreen() {
+  const [workers, setWorkers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const filtered = workers.filter((w) => w.name.toLowerCase().includes(search.toLowerCase()));
+  const [saving, setSaving] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const token = await getToken();
+        if (token) {
+          const data = await getWorkersWithPermissions(token);
+          setWorkers(Array.isArray(data) ? data : []);
+        }
+      } catch (e) { console.log("permissions load failed", e); }
+      finally { setLoading(false); }
+    })();
+  }, []);
+
+  const toggle = async (worker: any, field: "viewReports" | "enterData" | "admin") => {
+    const token = await getToken();
+    if (!token) return;
+    const updated = { ...worker, [field]: !worker[field] };
+    setWorkers((prev) => prev.map((w) => w.userId === worker.userId ? updated : w));
+    setSaving(worker.userId);
+    try {
+      await assignPermission(token, {
+        userId: worker.userId,
+        viewReports: updated.viewReports,
+        enterData: updated.enterData,
+        admin: updated.admin,
+      });
+    } catch (e) {
+      setWorkers((prev) => prev.map((w) => w.userId === worker.userId ? worker : w));
+      Alert.alert("Error", "Failed to update permissions.");
+    } finally { setSaving(null); }
+  };
+
+  const filtered = workers.filter((w) => w.userName?.toLowerCase().includes(search.toLowerCase()));
 
   return (
     <SafeAreaProvider>
       <SafeAreaView style={{ flex: 1, backgroundColor: "#1565C0" }}>
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-
-          {/* HEADER */}
           <View style={styles.header}>
             <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: 8 }}>
               <Ionicons name="arrow-back" size={20} color="#fff" />
@@ -47,74 +74,49 @@ export default function PermissionsScreen() {
           </View>
 
           <View style={styles.body}>
-
-            {/* Search */}
             <View style={styles.searchBar}>
               <Ionicons name="search-outline" size={16} color="#888" />
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Search workers..."
-                placeholderTextColor="#aaa"
-                value={search}
-                onChangeText={setSearch}
-              />
+              <TextInput style={styles.searchInput} placeholder="Search workers..." placeholderTextColor="#aaa" value={search} onChangeText={setSearch} />
             </View>
 
-            {/* Worker list */}
+            {loading && <ActivityIndicator size="large" color="#1565C0" style={{ marginVertical: 30 }} />}
+
             <View style={styles.list}>
               {filtered.map((worker, index) => {
-                const badge = getRoleBadge(worker.role);
+                const badge = getRoleBadge(worker.role ?? "WORKER");
                 return (
-                  <View
-                    key={worker.id}
-                    style={[styles.workerItem, index === filtered.length - 1 && { borderBottomWidth: 0 }]}
-                  >
+                  <View key={worker.userId} style={[styles.workerItem, index === filtered.length - 1 && { borderBottomWidth: 0 }]}>
                     <View style={styles.workerRow}>
                       <View style={styles.avatar}>
-                        <Text style={styles.avatarText}>{worker.initials}</Text>
+                        <Text style={styles.avatarText}>{initials(worker.userName ?? "?")}</Text>
                       </View>
                       <View style={styles.workerInfo}>
-                        <Text style={styles.workerName}>{worker.name}</Text>
-                        <Text style={styles.workerDept}>{worker.department}</Text>
+                        <Text style={styles.workerName}>{worker.userName}</Text>
                       </View>
                       <View style={[styles.roleBadge, { backgroundColor: badge.bg }]}>
                         <Text style={[styles.roleBadgeText, { color: badge.color }]}>{badge.label}</Text>
                       </View>
                     </View>
-
                     <View style={styles.permissionRow}>
-                      <View style={[styles.permTag, { backgroundColor: worker.permissions.viewReports ? "#E8F5E9" : "#FFEBEE" }]}>
-                        <Text style={[styles.permTagText, { color: worker.permissions.viewReports ? "#1B5E20" : "#B71C1C" }]}>
-                          {worker.permissions.viewReports ? "View reports" : "No reports"}
-                        </Text>
-                      </View>
-                      <View style={[styles.permTag, { backgroundColor: worker.permissions.enterData ? "#E8F5E9" : "#FFEBEE" }]}>
-                        <Text style={[styles.permTagText, { color: worker.permissions.enterData ? "#1B5E20" : "#B71C1C" }]}>
-                          {worker.permissions.enterData ? "Enter data" : "No data entry"}
-                        </Text>
-                      </View>
-                      <View style={[styles.permTag, { backgroundColor: worker.permissions.admin ? "#E8F5E9" : "#FFEBEE" }]}>
-                        <Text style={[styles.permTagText, { color: worker.permissions.admin ? "#1B5E20" : "#B71C1C" }]}>
-                          {worker.permissions.admin ? "Admin" : "No admin"}
-                        </Text>
-                      </View>
-                      <TouchableOpacity style={styles.editBtn}>
-                        <Ionicons name="pencil-outline" size={13} color="#1565C0" />
-                      </TouchableOpacity>
+                      {(["viewReports", "enterData", "admin"] as const).map((field) => (
+                        <TouchableOpacity
+                          key={field}
+                          style={[styles.permTag, { backgroundColor: worker[field] ? "#E8F5E9" : "#FFEBEE" }]}
+                          onPress={() => toggle(worker, field)}
+                          disabled={saving === worker.userId}
+                        >
+                          <Text style={[styles.permTagText, { color: worker[field] ? "#1B5E20" : "#B71C1C" }]}>
+                            {field === "viewReports" ? (worker[field] ? "View reports" : "No reports") :
+                             field === "enterData" ? (worker[field] ? "Enter data" : "No data entry") :
+                             (worker[field] ? "Admin" : "No admin")}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
                     </View>
                   </View>
                 );
               })}
             </View>
-
-            <TouchableOpacity
-              style={styles.assignBtn}
-              onPress={() => router.push("/(manager)/departments")}
-            >
-              <Ionicons name="shield-checkmark-outline" size={18} color="#fff" />
-              <Text style={styles.assignBtnText}>Assign permissions</Text>
-            </TouchableOpacity>
-
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -140,13 +142,9 @@ const styles = StyleSheet.create({
   avatarText: { fontSize: 14, fontWeight: "500", color: "#0C447C" },
   workerInfo: { flex: 1 },
   workerName: { fontSize: 14, fontWeight: "500", color: "#1A1A1A" },
-  workerDept: { fontSize: 12, color: "#888", marginTop: 1 },
   roleBadge: { borderRadius: 20, paddingHorizontal: 8, paddingVertical: 3 },
   roleBadgeText: { fontSize: 11, fontWeight: "500" },
   permissionRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, alignItems: "center" },
   permTag: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
   permTagText: { fontSize: 11 },
-  editBtn: { marginLeft: "auto", width: 26, height: 26, borderRadius: 13, backgroundColor: "#E3F2FD", justifyContent: "center", alignItems: "center" },
-  assignBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: "#1565C0", borderRadius: 10, padding: 14, marginBottom: 24 },
-  assignBtnText: { fontSize: 14, fontWeight: "500", color: "#fff" },
 });

@@ -1,87 +1,74 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { getToken } from "../../auth";
+import { submitProduction } from "../../services/production.service";
 
 export default function EnterProductionScreen() {
   const [product, setProduct] = useState("");
   const [quantity, setQuantity] = useState("");
   const [shift, setShift] = useState("MORNING");
   const [notes, setNotes] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!product.trim() || !quantity.trim()) { Alert.alert("Missing fields", "Product name and quantity are required."); return; }
+    setSaving(true);
+    try {
+      const token = await getToken();
+      if (token) {
+        await submitProduction(token, {
+          productName: product.trim(),
+          quantityProduced: parseInt(quantity, 10),
+          shift,
+          notes: notes.trim() || undefined,
+        });
+        Alert.alert("Submitted", "Production entry recorded.");
+        router.push("/(worker)/record-material");
+      }
+    } catch { Alert.alert("Error", "Failed to submit production entry."); }
+    finally { setSaving(false); }
+  };
 
   return (
     <SafeAreaProvider>
       <SafeAreaView style={{ flex: 1, backgroundColor: "#1565C0" }}>
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-
           <View style={styles.header}>
             <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: 8 }}>
               <Ionicons name="arrow-back" size={20} color="#fff" />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Enter production</Text>
-            <Text style={styles.headerSub}>Monday, 23 June 2026</Text>
+            <Text style={styles.headerSub}>{new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</Text>
           </View>
-
           <View style={styles.body}>
-
             <Text style={styles.label}>Product name</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="e.g. Cotton shirt"
-              placeholderTextColor="#aaa"
-              value={product}
-              onChangeText={setProduct}
-            />
-
+            <TextInput style={styles.input} placeholder="e.g. Cotton shirt" placeholderTextColor="#aaa" value={product} onChangeText={setProduct} />
             <Text style={styles.label}>Quantity produced</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="e.g. 120"
-              placeholderTextColor="#aaa"
-              value={quantity}
-              onChangeText={setQuantity}
-              keyboardType="numeric"
-            />
-
+            <TextInput style={styles.input} placeholder="e.g. 120" placeholderTextColor="#aaa" value={quantity} onChangeText={setQuantity} keyboardType="numeric" />
             <Text style={styles.label}>Shift</Text>
             <View style={styles.chipRow}>
               {["MORNING", "AFTERNOON", "NIGHT"].map((s) => (
-                <TouchableOpacity
-                  key={s}
-                  style={[styles.chip, shift === s && styles.chipActive]}
-                  onPress={() => setShift(s)}
-                >
-                  <Text style={[styles.chipText, shift === s && styles.chipTextActive]}>
-                    {s.charAt(0) + s.slice(1).toLowerCase()}
-                  </Text>
+                <TouchableOpacity key={s} style={[styles.chip, shift === s && styles.chipActive]} onPress={() => setShift(s)}>
+                  <Text style={[styles.chipText, shift === s && styles.chipTextActive]}>{s.charAt(0) + s.slice(1).toLowerCase()}</Text>
                 </TouchableOpacity>
               ))}
             </View>
-
             <Text style={styles.label}>Notes (optional)</Text>
-            <TextInput
-              style={styles.textArea}
-              placeholder="Any additional notes..."
-              placeholderTextColor="#aaa"
-              value={notes}
-              onChangeText={setNotes}
-              multiline
-              numberOfLines={3}
-            />
-
-            <TouchableOpacity
-              style={styles.submitBtn}
-              onPress={() => router.push("/(worker)/record-material")}
-            >
-              <Ionicons name="checkmark-circle-outline" size={18} color="#fff" />
-              <Text style={styles.submitBtnText}>Submit entry</Text>
+            <TextInput style={styles.textArea} placeholder="Any additional notes..." placeholderTextColor="#aaa" value={notes} onChangeText={setNotes} multiline numberOfLines={3} />
+            <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit} disabled={saving}>
+              {saving ? <ActivityIndicator color="#fff" /> : (
+                <>
+                  <Ionicons name="checkmark-circle-outline" size={18} color="#fff" />
+                  <Text style={styles.submitBtnText}>Submit entry</Text>
+                </>
+              )}
             </TouchableOpacity>
-
             <TouchableOpacity style={styles.cancelBtn} onPress={() => router.back()}>
               <Text style={styles.cancelBtnText}>Cancel</Text>
             </TouchableOpacity>
-
           </View>
         </ScrollView>
       </SafeAreaView>

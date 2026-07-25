@@ -1,8 +1,10 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
+import { getToken } from "../../auth";
+import { updateShipmentStatus } from "../../services/shipment.service";
 
 const steps = [
   { key: "PENDING", label: "Pending", icon: "time-outline", desc: "Shipment assigned, not yet departed" },
@@ -12,8 +14,27 @@ const steps = [
 ];
 
 export default function UpdateStatusScreen() {
-  const [current, setCurrent] = useState("PENDING");
+  const params = useLocalSearchParams<{ shipmentId?: string; status?: string }>();
+  const [current, setCurrent] = useState(params.status || "PENDING");
+  const [saving, setSaving] = useState(false);
   const currentIndex = steps.findIndex((s) => s.key === current);
+
+  const advance = async (nextKey: string) => {
+    if (!params.shipmentId) {
+      Alert.alert("Missing shipment", "No shipment selected.");
+      return;
+    }
+    setSaving(true);
+    try {
+      const token = await getToken();
+      if (token) {
+        await updateShipmentStatus(token, params.shipmentId, nextKey);
+        setCurrent(nextKey);
+      }
+    } catch (e) {
+      Alert.alert("Failed", "Could not update status.");
+    } finally { setSaving(false); }
+  };
 
   return (
     <SafeAreaProvider>
@@ -25,7 +46,9 @@ export default function UpdateStatusScreen() {
               <Ionicons name="arrow-back" size={20} color="#fff" />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Update status</Text>
-            <Text style={styles.headerSub}>Shipment #SH-0042</Text>
+            {params.shipmentId ? (
+              <Text style={styles.headerSub}>#{params.shipmentId.substring(0, 8)}</Text>
+            ) : null}
           </View>
 
           <View style={styles.body}>
@@ -62,10 +85,17 @@ export default function UpdateStatusScreen() {
                     {isActive && index < steps.length - 1 && (
                       <TouchableOpacity
                         style={styles.nextBtn}
-                        onPress={() => setCurrent(steps[index + 1].key)}
+                        onPress={() => advance(steps[index + 1].key)}
+                        disabled={saving}
                       >
-                        <Text style={styles.nextBtnText}>Mark as {steps[index + 1].label}</Text>
-                        <Ionicons name="arrow-forward" size={14} color="#1565C0" />
+                        {saving ? (
+                          <ActivityIndicator size="small" color="#1565C0" />
+                        ) : (
+                          <>
+                            <Text style={styles.nextBtnText}>Mark as {steps[index + 1].label}</Text>
+                            <Ionicons name="arrow-forward" size={14} color="#1565C0" />
+                          </>
+                        )}
                       </TouchableOpacity>
                     )}
                     {step.key === "ARRIVED" && isActive && (

@@ -1,67 +1,90 @@
-import React, { useState } from "react";
-import {
-  View, Text, StyleSheet, ScrollView,
-  TouchableOpacity, TextInput
-} from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Alert } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { getToken } from "../../auth";
+import { getDepartments, createDepartment } from "../../services/departments.service";
 
-const departments = [
-  { id: 1, name: "Cutting", workers: 12, head: "Attuah Jessica", color: "#1565C0" },
-  { id: 2, name: "Assembly", workers: 18, head: "Apoasan Akologo", color: "#2E7D32" },
-  { id: 3, name: "Packaging", workers: 9, head: "Akoto Boakye", color: "#E65100" },
-];
+const COLORS = ["#1565C0", "#2E7D32", "#E65100", "#6A1B9A", "#00838F"];
 
 export default function DepartmentsScreen() {
+  const [departments, setDepartments] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [newDeptName, setNewDeptName] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const load = async () => {
+    try {
+      const token = await getToken();
+      if (token) {
+        const data = await getDepartments(token);
+        setDepartments(Array.isArray(data) ? data : []);
+      }
+    } catch (e) { console.log("departments load failed", e); }
+    finally { setLoading(false); }
+  };
+
+  const handleCreate = async () => {
+    if (!newDeptName.trim()) return;
+    setSaving(true);
+    try {
+      const token = await getToken();
+      if (token) {
+        const dept = await createDepartment(token, { name: newDeptName.trim() });
+        setDepartments((prev) => [...prev, dept]);
+        setNewDeptName("");
+        setShowForm(false);
+      }
+    } catch (e) {
+      Alert.alert("Error", "Failed to create department.");
+    } finally { setSaving(false); }
+  };
 
   return (
     <SafeAreaProvider>
       <SafeAreaView style={{ flex: 1, backgroundColor: "#1565C0" }}>
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-
           <View style={styles.header}>
             <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: 8 }}>
               <Ionicons name="arrow-back" size={20} color="#fff" />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Departments</Text>
-            <Text style={styles.headerSub}>{departments.length} departments · {departments.reduce((sum, d) => sum + d.workers, 0)} workers</Text>
+            <Text style={styles.headerSub}>
+              {departments.length} departments · {departments.reduce((s, d) => s + (d.workerCount || 0), 0)} workers
+            </Text>
           </View>
 
           <View style={styles.body}>
+            {loading && <ActivityIndicator size="large" color="#1565C0" style={{ marginVertical: 30 }} />}
 
-            {departments.map((dept) => (
-              <View key={dept.id} style={styles.card}>
+            {!loading && departments.map((dept, i) => (
+              <View key={dept.deptId} style={styles.card}>
                 <View style={styles.cardTop}>
-                  <View style={[styles.colorDot, { backgroundColor: dept.color }]} />
+                  <View style={[styles.colorDot, { backgroundColor: COLORS[i % COLORS.length] }]} />
                   <Text style={styles.deptName}>{dept.name}</Text>
                   <View style={styles.workerBadge}>
-                    <Text style={styles.workerBadgeText}>{dept.workers} workers</Text>
+                    <Text style={styles.workerBadgeText}>{dept.workerCount ?? 0} workers</Text>
                   </View>
                 </View>
                 <View style={styles.headRow}>
                   <Ionicons name="person-circle-outline" size={14} color="#888" />
-                  <Text style={styles.headText}>Head: {dept.head}</Text>
+                  <Text style={styles.headText}>Head: {dept.headName ?? "Unassigned"}</Text>
                 </View>
                 <View style={styles.cardActions}>
-                  <TouchableOpacity
-                    style={styles.actionBtn}
-                    onPress={() => router.push("/(manager)/permissions")}
-                  >
+                  <TouchableOpacity style={styles.actionBtn} onPress={() => router.push("/(manager)/permissions")}>
                     <Ionicons name="people-outline" size={14} color="#1565C0" />
                     <Text style={styles.actionBtnText}>View workers</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.actionBtn}>
-                    <Ionicons name="create-outline" size={14} color="#1565C0" />
-                    <Text style={styles.actionBtnText}>Edit</Text>
                   </TouchableOpacity>
                 </View>
               </View>
             ))}
 
-            {/* Create department form */}
             {showForm ? (
               <View style={styles.formCard}>
                 <Text style={styles.formLabel}>Department name</Text>
@@ -73,27 +96,20 @@ export default function DepartmentsScreen() {
                   onChangeText={setNewDeptName}
                 />
                 <View style={styles.formButtons}>
-                  <TouchableOpacity
-                    style={styles.cancelBtn}
-                    onPress={() => setShowForm(false)}
-                  >
+                  <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowForm(false)}>
                     <Text style={styles.cancelBtnText}>Cancel</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.createBtn}>
-                    <Text style={styles.createBtnText}>Create</Text>
+                  <TouchableOpacity style={styles.createBtn} onPress={handleCreate} disabled={saving}>
+                    {saving ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.createBtnText}>Create</Text>}
                   </TouchableOpacity>
                 </View>
               </View>
             ) : (
-              <TouchableOpacity
-                style={styles.addBtn}
-                onPress={() => setShowForm(true)}
-              >
+              <TouchableOpacity style={styles.addBtn} onPress={() => setShowForm(true)}>
                 <Ionicons name="add-circle-outline" size={18} color="#1565C0" />
                 <Text style={styles.addBtnText}>Create department</Text>
               </TouchableOpacity>
             )}
-
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -129,3 +145,4 @@ const styles = StyleSheet.create({
   createBtn: { flex: 1, backgroundColor: "#1565C0", borderRadius: 8, padding: 12, alignItems: "center" },
   createBtnText: { fontSize: 13, color: "#fff", fontWeight: "500" },
 });
+

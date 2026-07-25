@@ -1,50 +1,84 @@
-import React, { useState } from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { getToken } from "../../auth";
+import { API_BASE_URL } from "../../services/api.config";
 
 export default function WorkerEditProfileScreen() {
-  const [name, setName] = useState("Vanessa Oware");
-  const [email, setEmail] = useState("vanessa@forgio.com");
-  const [phone, setPhone] = useState("0244000000");
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const token = await getToken();
+        if (token) {
+          const res = await fetch(`${API_BASE_URL}/profile`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (res.ok) {
+            const data = await res.json();
+            setName(data.name ?? "");
+            setPhone(data.phone ?? "");
+          }
+        }
+      } catch (e) { console.log("profile load failed", e); }
+      finally { setLoading(false); }
+    })();
+  }, []);
+
+  const handleSave = async () => {
+    if (!name.trim() || !phone.trim()) { Alert.alert("Missing fields", "Name and phone are required."); return; }
+    setSaving(true);
+    try {
+      const token = await getToken();
+      if (token) {
+        const res = await fetch(`${API_BASE_URL}/profile`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ name: name.trim(), phone: phone.trim() }),
+        });
+        if (!res.ok) throw new Error();
+        Alert.alert("Saved", "Profile updated.");
+        router.back();
+      }
+    } catch { Alert.alert("Error", "Failed to save profile."); }
+    finally { setSaving(false); }
+  };
+
+  const initials = name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
 
   return (
     <SafeAreaProvider>
       <SafeAreaView style={{ flex: 1, backgroundColor: "#1565C0" }}>
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-
           <View style={styles.header}>
             <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: 8 }}>
               <Ionicons name="arrow-back" size={20} color="#fff" />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Edit profile</Text>
           </View>
-
           <View style={styles.body}>
-
-            <View style={styles.avatarSection}>
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>VO</Text>
-              </View>
-              <TouchableOpacity style={styles.changePhotoBtn}>
-                <Text style={styles.changePhotoText}>Change photo</Text>
-              </TouchableOpacity>
-            </View>
-
-            <Text style={styles.label}>Full name</Text>
-            <TextInput style={styles.input} value={name} onChangeText={setName} />
-
-            <Text style={styles.label}>Email</Text>
-            <TextInput style={styles.input} value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
-
-            <Text style={styles.label}>Phone number</Text>
-            <TextInput style={styles.input} value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
-
-            <TouchableOpacity style={styles.saveBtn} onPress={() => router.back()}>
-              <Text style={styles.saveBtnText}>Save changes</Text>
-            </TouchableOpacity>
-
+            {loading ? <ActivityIndicator size="large" color="#1565C0" style={{ marginVertical: 40 }} /> : (
+              <>
+                <View style={styles.avatarSection}>
+                  <View style={styles.avatar}>
+                    <Text style={styles.avatarText}>{initials || "?"}</Text>
+                  </View>
+                </View>
+                <Text style={styles.label}>Full name</Text>
+                <TextInput style={styles.input} value={name} onChangeText={setName} />
+                <Text style={styles.label}>Phone number</Text>
+                <TextInput style={styles.input} value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
+                <TouchableOpacity style={styles.saveBtn} onPress={handleSave} disabled={saving}>
+                  {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveBtnText}>Save changes</Text>}
+                </TouchableOpacity>
+              </>
+            )}
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -58,10 +92,8 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 16, fontWeight: "500", color: "#fff" },
   body: { padding: 16 },
   avatarSection: { alignItems: "center", marginBottom: 24 },
-  avatar: { width: 80, height: 80, borderRadius: 40, backgroundColor: "#1565C0", justifyContent: "center", alignItems: "center", marginBottom: 10 },
+  avatar: { width: 80, height: 80, borderRadius: 40, backgroundColor: "#1565C0", justifyContent: "center", alignItems: "center" },
   avatarText: { fontSize: 28, fontWeight: "bold", color: "#90CAF9" },
-  changePhotoBtn: { backgroundColor: "#E3F2FD", borderRadius: 20, paddingHorizontal: 16, paddingVertical: 6 },
-  changePhotoText: { fontSize: 13, color: "#1565C0", fontWeight: "500" },
   label: { fontSize: 13, fontWeight: "500", color: "#1A1A1A", marginBottom: 8 },
   input: { backgroundColor: "#fff", borderRadius: 10, borderWidth: 0.5, borderColor: "#e0e0e0", padding: 12, fontSize: 14, color: "#1A1A1A", marginBottom: 16 },
   saveBtn: { backgroundColor: "#1565C0", borderRadius: 10, padding: 14, alignItems: "center", marginTop: 8, marginBottom: 24 },
