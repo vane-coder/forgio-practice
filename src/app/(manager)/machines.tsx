@@ -6,7 +6,7 @@ import { router } from "expo-router";
 import { useEffect } from "react";
 import { ActivityIndicator } from "react-native";
 import { getToken } from "../../auth";
-import { getMachines } from "../../services/machines.service";
+import { getMachines, updateMachineStatus } from "../../services/machines.service";
 
 const getStatusStyle = (status: string) => {
   if (status === "RUNNING") return { bg: "#E8F5E9", color: "#2E7D32", label: "Running", icon: "checkmark-circle-outline" };
@@ -19,6 +19,7 @@ export default function MachinesScreen() {
   const [selectedMachine, setSelectedMachine] = useState<any>(null);
   const [machines, setMachines] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -135,7 +136,18 @@ export default function MachinesScreen() {
                   <TouchableOpacity
                     key={s}
                     style={[styles.statusOption, { backgroundColor: st.bg }]}
-                    onPress={() => setShowModal(false)}
+                    onPress={async () => {
+                      if (!selectedMachine) return;
+                      setUpdatingStatus(true);
+                      try {
+                        const token = await getToken();
+                        if (token) {
+                          await updateMachineStatus(token, selectedMachine.machineId, s);
+                          setMachines((prev) => prev.map((m) => m.machineId === selectedMachine.machineId ? { ...m, status: s } : m));
+                        }
+                      } catch (e) { console.log("status update failed", e); }
+                      finally { setUpdatingStatus(false); setShowModal(false); }
+                    }}
                   >
                     <Ionicons name={st.icon as any} size={18} color={st.color} />
                     <Text style={[styles.statusOptionText, { color: st.color }]}>{st.label}</Text>

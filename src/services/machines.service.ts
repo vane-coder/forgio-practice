@@ -18,3 +18,13 @@ export const reportBreakdown = async (token: string, data: { machineId: string; 
   if (!response.ok) throw new Error("Failed to report breakdown");
   return response.json();
 };
+
+export const updateMachineStatus = async (token: string, machineId: string, status: string) => {
+  const response = await fetch(`${API_BASE_URL}/machines/${machineId}/status`, {
+    method: "PATCH",
+    headers: getHeaders(token),
+    body: JSON.stringify({ status }),
+  });
+  if (!response.ok) throw new Error("Failed to update machine status");
+  return response.json();
+};

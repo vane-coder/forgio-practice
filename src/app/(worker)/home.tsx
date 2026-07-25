@@ -1,97 +1,111 @@
-import React from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { getToken } from "../../auth";
+import { API_BASE_URL } from "../../services/api.config";
+import { getMyNotifications } from "../../services/notifications.service";
+import { getNewsFeed } from "../../services/newsfeed.service";
 
 export default function WorkerHomeScreen() {
+  const [profile, setProfile] = useState<any>(null);
+  const [latestNotif, setLatestNotif] = useState<any>(null);
+  const [latestPost, setLatestPost] = useState<any>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const token = await getToken();
+        if (!token) return;
+        const [profileRes, notifs, feed] = await Promise.all([
+          fetch(`${API_BASE_URL}/profile`, { headers: { Authorization: `Bearer ${token}` } }).then((r) => r.json()),
+          getMyNotifications(token).catch(() => []),
+          getNewsFeed(token).catch(() => []),
+        ]);
+        setProfile(profileRes);
+        if (Array.isArray(notifs) && notifs.length > 0) setLatestNotif(notifs[0]);
+        if (Array.isArray(feed) && feed.length > 0) setLatestPost(feed[0]);
+      } catch (e) { console.log("home load failed", e); }
+    })();
+  }, []);
+
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  const initials = profile?.name?.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2) ?? "?";
+
   return (
     <SafeAreaProvider>
       <SafeAreaView style={{ flex: 1, backgroundColor: "#1565C0" }}>
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-
           <View style={styles.header}>
             <View style={styles.headerRow}>
               <View>
-                <Text style={styles.greeting}>Good morning</Text>
-                <Text style={styles.name}>Vanessa Oware</Text>
-                 <Text style={styles.deptText}>Cutting Dept · Morning shift</Text>
+                <Text style={styles.greeting}>{greeting}</Text>
+                <Text style={styles.name}>{profile?.name ?? "..."}</Text>
+                <Text style={styles.deptText}>{profile?.departmentName ?? ""}</Text>
               </View>
-              
-              <TouchableOpacity
-                style={styles.avatar}
-                onPress={() => router.push("/(worker)/profile")}
-              >
-                <Text style={styles.avatarText}>VO</Text>
+              <TouchableOpacity style={styles.avatar} onPress={() => router.push("/(worker)/profile")}>
+                <Text style={styles.avatarText}>{initials}</Text>
               </TouchableOpacity>
-             
             </View>
           </View>
 
           <View style={styles.body}>
-
-            {/* Quick actions */}
             <View style={styles.grid}>
-              <TouchableOpacity
-                style={styles.actionCard}
-                onPress={() => router.push("/(worker)/enter-production")}
-              >
-                <Ionicons name="clipboard-outline" size={28} color="#1565C0" />
-                <Text style={styles.actionText}>Enter production</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.actionCard}
-                onPress={() => router.push("/(worker)/record-material")}
-              >
-                <Ionicons name="cube-outline" size={28} color="#1565C0" />
-                <Text style={styles.actionText}>Record materials</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.actionCard}
-                onPress={() => router.push("/(worker)/report-breakdown")}
-              >
-                <Ionicons name="triangle-outline" size={28} color="#E65100" />
-                <Text style={styles.actionText}>Report breakdown</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.actionCard}
-                onPress={() => router.push("/(worker)/my-records")}
-              >
-                <Ionicons name="time-outline" size={28} color="#1565C0" />
-                <Text style={styles.actionText}>My records</Text>
-              </TouchableOpacity>
+              {[
+                { label: "Enter production", icon: "clipboard-outline", route: "/(worker)/enter-production" },
+                { label: "Record materials", icon: "cube-outline", route: "/(worker)/record-material" },
+                { label: "Report breakdown", icon: "triangle-outline", route: "/(worker)/report-breakdown", color: "#E65100" },
+                { label: "My records", icon: "time-outline", route: "/(worker)/my-records" },
+              ].map((item) => (
+                <TouchableOpacity key={item.label} style={styles.actionCard} onPress={() => router.push(item.route as any)}>
+                  <Ionicons name={item.icon as any} size={28} color={item.color ?? "#1565C0"} />
+                  <Text style={styles.actionText}>{item.label}</Text>
+                </TouchableOpacity>
+              ))}
             </View>
 
-            {/* Latest notification */}
             <Text style={styles.sectionTitle}>Latest notification</Text>
-            <View style={styles.notifCard}>
-              <View style={styles.notifIcon}>
-                <Ionicons name="people-outline" size={18} color="#0C447C" />
+            {latestNotif ? (
+              <View style={styles.notifCard}>
+                <View style={styles.notifIcon}>
+                  <Ionicons name="people-outline" size={18} color="#0C447C" />
+                </View>
+                <View style={styles.notifContent}>
+                  <Text style={styles.notifText}>{latestNotif.message}</Text>
+                  <Text style={styles.notifTime}>{latestNotif.type}</Text>
+                </View>
               </View>
-              <View style={styles.notifContent}>
-                <Text style={styles.notifText}>Team meeting today at 2PM in the assembly hall.</Text>
-                <Text style={styles.notifTime}>2h ago · All workers</Text>
+            ) : (
+              <View style={styles.notifCard}>
+                <View style={styles.notifContent}>
+                  <Text style={styles.notifText}>No notifications yet.</Text>
+                </View>
               </View>
-            </View>
+            )}
 
-            {/* News feed preview */}
             <Text style={styles.sectionTitle}>Latest news</Text>
-            <View style={styles.newsCard}>
-              <View style={styles.newsRow}>
-                <View style={styles.newsAvatar}>
-                  <Text style={styles.newsAvatarText}>RP</Text>
+            {latestPost ? (
+              <View style={styles.newsCard}>
+                <View style={styles.newsRow}>
+                  <View style={styles.newsAvatar}>
+                    <Text style={styles.newsAvatarText}>
+                      {latestPost.authorName?.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2) ?? "?"}
+                    </Text>
+                  </View>
+                  <View style={styles.newsInfo}>
+                    <Text style={styles.newsAuthor}>{latestPost.authorName}</Text>
+                    <Text style={styles.newsTime}>{latestPost.role}</Text>
+                  </View>
                 </View>
-                <View style={styles.newsInfo}>
-                  <Text style={styles.newsAuthor}>Raina Pryce</Text>
-                  <Text style={styles.newsTime}>Manager · 2h ago</Text>
-                </View>
+                <Text style={styles.newsText}>{latestPost.content}</Text>
               </View>
-              <Text style={styles.newsText}>Production target for this week is 5,000 units. Let's push through!</Text>
-            </View>
-
+            ) : (
+              <View style={styles.newsCard}>
+                <Text style={styles.newsText}>No posts yet.</Text>
+              </View>
+            )}
           </View>
         </ScrollView>
       </SafeAreaView>
