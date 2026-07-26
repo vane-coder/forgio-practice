@@ -4,7 +4,7 @@ export const generateReport = async (token: string, data: {
   startDate: string;
   endDate: string;
 }) => {
-  const response = await fetch(`${API_BASE_URL}/reports/generate`, {
+  const response = await fetch(`${API_BASE_URL}/reports`, {
     method: "POST",
     headers: getHeaders(token),
     body: JSON.stringify(data),

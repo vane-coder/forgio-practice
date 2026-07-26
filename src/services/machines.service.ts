@@ -9,8 +9,8 @@ export const getMachines = async (token: string): Promise<Machine[]> => {
   return response.json();
 };
 
-export const reportBreakdown = async (token: string, data: { machineId: string; cause: string }) => {
-  const response = await fetch(`${API_BASE_URL}/breakdowns`, {
+export const reportBreakdown = async (token: string, data: { machineId: string; description: string }) => {
+  const response = await fetch(`${API_BASE_URL}/breakdown-logs`, {
     method: "POST",
     headers: getHeaders(token),
     body: JSON.stringify(data),

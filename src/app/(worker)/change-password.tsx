@@ -23,7 +23,7 @@ export default function WorkerChangePasswordScreen() {
     try {
       const token = await getToken();
       if (token) {
-        const res = await fetch(`${API_BASE_URL}/profile/change-password`, {
+        const res = await fetch(`${API_BASE_URL}/profile/password`, {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
           body: JSON.stringify({ currentPassword: current, newPassword: newPass }),

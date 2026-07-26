@@ -39,7 +39,7 @@ export default function ReportBreakdownScreen() {
       if (token) {
         await reportBreakdown(token, {
           machineId: selectedMachine,
-          cause: `${description.trim()}${time ? ` (stopped at ${time.trim()})` : ""}`,
+          description: `${description.trim()}${time ? ` (stopped at ${time.trim()})` : ""}`,
         });
         Alert.alert("Reported", "Breakdown has been reported to the manager.");
         router.push("/(worker)/home");
