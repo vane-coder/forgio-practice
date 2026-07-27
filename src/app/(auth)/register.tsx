@@ -1,14 +1,12 @@
-
 import { useState } from "react";
 import {
   View, Text, TextInput, TouchableOpacity,
-  StyleSheet, ScrollView, Alert
+  StyleSheet, ScrollView, Alert,
 } from "react-native";
 import React from "react";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { register } from "../../services/auth.service";
-import { saveToken } from "../../auth";
+import { sendRegistrationCode } from "../../services/auth.service";
 
 export default function RegisterScreen() {
   const [name, setName] = useState("");
@@ -23,19 +21,26 @@ export default function RegisterScreen() {
       Alert.alert("Missing fields", "Please fill in all fields.");
       return;
     }
+    if (password.length < 6) {
+      Alert.alert("Weak password", "Password must be at least 6 characters.");
+      return;
+    }
     setLoading(true);
     try {
-      const res = await register({
-        managerName: name,
-        phone,
-        password,
-        factoryName,
+      const res = await sendRegistrationCode(phone);
+      router.push({
+        pathname: "/(auth)/verify-otp",
+        params: {
+          flow: "registration",
+          phone,
+          verificationId: res.verificationId ?? "",
+          managerName: name,
+          password,
+          factoryName,
+        },
       });
-      await saveToken(res.accessToken);
-      // a new registration is always a manager (creates the factory)
-      router.replace("/(manager)/dashboard");
-    } catch (e) {
-      Alert.alert("Registration failed",String(e));
+    } catch (e: any) {
+      Alert.alert("Error", e.message || "Could not send verification code.");
     } finally {
       setLoading(false);
     }
@@ -55,7 +60,6 @@ export default function RegisterScreen() {
       <Text style={styles.label}>Full name</Text>
       <TextInput style={styles.input} placeholder="e.g. Vanessa Oware" value={name} onChangeText={setName} />
 
-
       <Text style={styles.label}>Phone number</Text>
       <TextInput style={styles.input} placeholder="e.g. 0244000000" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
 
@@ -66,7 +70,7 @@ export default function RegisterScreen() {
       <View style={styles.passwordRow}>
         <TextInput
           style={styles.passwordInput}
-          placeholder="At least 8 characters"
+          placeholder="At least 6 characters"
           value={password}
           onChangeText={setPassword}
           secureTextEntry={!showPassword}
@@ -75,14 +79,14 @@ export default function RegisterScreen() {
           <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color="#888" />
         </TouchableOpacity>
       </View>
-      <TouchableOpacity style={styles.button} onPress={handleRegister}>
-        <Text style={styles.buttonText}>Create account</Text>
+
+      <TouchableOpacity style={styles.button} onPress={handleRegister} disabled={loading}>
+        <Text style={styles.buttonText}>{loading ? "Sending code..." : "Create account"}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.loginLink} onPress={() => router.push("/(auth)/login")}>
         <Text style={styles.loginLinkText}>Already have an account? <Text style={styles.loginLinkBold}>Sign in</Text></Text>
       </TouchableOpacity>
-
     </ScrollView>
   );
 }
@@ -97,11 +101,6 @@ const styles = StyleSheet.create({
   passwordRow: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: "#e0e0e0", borderRadius: 10, marginBottom: 16, backgroundColor: "#F5F7FA" },
   passwordInput: { flex: 1, padding: 12, fontSize: 14, color: "#1A1A1A" },
   eyeBtn: { padding: 12 },
-  roleRow: { flexDirection: "row", gap: 10, marginBottom: 24 },
-  roleBtn: { flex: 1, borderRadius: 8, padding: 10, alignItems: "center", backgroundColor: "#F5F5F5", borderWidth: 0.5, borderColor: "#e0e0e0" },
-  roleBtnActive: { backgroundColor: "#1565C0", borderColor: "#1565C0" },
-  roleBtnText: { fontSize: 13, color: "#888" },
-  roleBtnTextActive: { color: "#fff", fontWeight: "500" },
   button: { backgroundColor: "#1565C0", padding: 16, borderRadius: 10, alignItems: "center", marginBottom: 16 },
   buttonText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
   loginLink: { alignItems: "center", marginBottom: 40 },

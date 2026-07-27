@@ -3,7 +3,6 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "reac
 import React from "react";
 import { router } from "expo-router";
 import { login } from "../../services/auth.service";
-import { saveToken } from "../../auth";
 
 export default function LoginScreen() {
   const [phone, setPhone] = useState("");
@@ -18,13 +17,19 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       const res = await login(phone, password);
-      await saveToken(res.accessToken);           // save the token for other screens
-      // navigate based on the role the BACKEND returned (not a manual picker)
-      if (res.role === "MANAGER") router.replace("/(manager)/dashboard");
-      else if (res.role === "WORKER") router.replace("/(worker)/home");
-      else if (res.role === "DRIVER") router.replace("/(driver)/shipment-assignment");
-    } catch (e) {
-      Alert.alert("Login failed", "Check your phone number and password.");
+      if (res.otpRequired) {
+        (router as any).push({
+          pathname: "/(auth)/verify-otp",
+          params: {
+            flow: "login",
+            phone,
+            password,
+            verificationId: res.verificationId,
+          },
+        });
+      }
+    } catch (e: any) {
+      Alert.alert("Login failed", e.message || "Check your phone number and password.");
     } finally {
       setLoading(false);
     }

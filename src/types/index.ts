@@ -80,3 +80,14 @@ export interface AuthResponse {
   name: string;
   role: Role;
 }
+
+export interface OtpSentResponse {
+  message: string;
+  verificationId: string | null;
+}
+
+export interface LoginChallengeResponse {
+  otpRequired: boolean;
+  verificationId: string;
+  message: string;
+}
