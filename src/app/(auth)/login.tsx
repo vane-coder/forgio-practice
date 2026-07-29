@@ -2,11 +2,13 @@ import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import React from "react";
 import { router } from "expo-router";
+import { Eye, EyeOff } from "lucide-react-native";
 import { login } from "../../services/auth.service";
 
 export default function LoginScreen() {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
@@ -49,13 +51,22 @@ export default function LoginScreen() {
         autoCapitalize="none"
       />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
+      <View style={styles.passwordWrapper}>
+        <TextInput
+          style={styles.passwordInput}
+          placeholder="Password"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry={!showPassword}
+        />
+        <TouchableOpacity
+          style={styles.eyeButton}
+          onPress={() => setShowPassword((prev) => !prev)}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          {showPassword ? <EyeOff size={20} color="#666" /> : <Eye size={20} color="#666" />}
+        </TouchableOpacity>
+      </View>
 
       <TouchableOpacity
         style={styles.forgotLink}
@@ -82,6 +93,9 @@ const styles = StyleSheet.create({
   title: { fontSize: 32, fontWeight: "bold", color: "#1565C0", textAlign: "center", marginBottom: 8 },
   subtitle: { fontSize: 16, color: "#666", textAlign: "center", marginBottom: 32 },
   input: { borderWidth: 1, borderColor: "#ccc", borderRadius: 8, padding: 12, marginBottom: 16, fontSize: 16 },
+  passwordWrapper: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: "#ccc", borderRadius: 8, marginBottom: 16 },
+  passwordInput: { flex: 1, padding: 12, fontSize: 16 },
+  eyeButton: { paddingHorizontal: 12, paddingVertical: 12 },
   forgotLink: { alignSelf: "flex-end", marginBottom: 16 },
   forgotLinkText: { fontSize: 13, color: "#1565C0", fontWeight: "500" },
   button: { backgroundColor: "#1565C0", padding: 16, borderRadius: 8, alignItems: "center" },

@@ -8,6 +8,21 @@ export const getWorkersWithPermissions = async (token: string) => {
   return response.json();
 };
 
+export const createWorker = async (token: string, data: {
+  name: string;
+  phone: string;
+  password: string;
+  role?: string;
+}) => {
+  const response = await fetch(`${API_BASE_URL}/permissions/workers`, {
+    method: "POST",
+    headers: getHeaders(token),
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) throw new Error("Failed to create worker");
+  return response.json();
+};
+
 export const assignPermission = async (token: string, data: {
   userId: string;
   viewReports: boolean;

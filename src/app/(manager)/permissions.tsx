@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Alert } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Alert, Modal } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { getToken } from "../../auth";
-import { getWorkersWithPermissions, assignPermission } from "../../services/permissions.service";
+import { getWorkersWithPermissions, assignPermission, createWorker } from "../../services/permissions.service";
 
 const getRoleBadge = (role: string) => {
   if (role === "DEPT_HEAD") return { bg: "#E3F2FD", color: "#0C447C", label: "Dept Head" };
@@ -19,6 +19,38 @@ export default function PermissionsScreen() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [saving, setSaving] = useState<string | null>(null);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [wName, setWName] = useState("");
+  const [wPhone, setWPhone] = useState("");
+  const [wPassword, setWPassword] = useState("");
+  const [wRole, setWRole] = useState("WORKER");
+  const [creating, setCreating] = useState(false);
+
+  const handleAddWorker = async () => {
+    if (!wName.trim() || !wPhone.trim() || !wPassword.trim()) {
+      Alert.alert("Missing info", "Name, phone and password are required.");
+      return;
+    }
+    setCreating(true);
+    try {
+      const token = await getToken();
+      if (token) {
+        const created = await createWorker(token, {
+          name: wName.trim(),
+          phone: wPhone.trim(),
+          password: wPassword,
+          role: wRole,
+        });
+        setWorkers((prev) => [...prev, created]);
+        setWName(""); setWPhone(""); setWPassword(""); setWRole("WORKER");
+        setShowAddModal(false);
+      }
+    } catch (e: any) {
+      Alert.alert("Failed", e.message || "Could not add worker.");
+    } finally {
+      setCreating(false);
+    }
+  };
 
   useEffect(() => {
     (async () => {
@@ -67,9 +99,10 @@ export default function PermissionsScreen() {
                 <Text style={styles.headerTitle}>Permissions</Text>
                 <Text style={styles.headerSub}>Manage worker access levels</Text>
               </View>
-              <View style={styles.countBadge}>
-                <Text style={styles.countText}>{workers.length} workers</Text>
-              </View>
+              <TouchableOpacity style={styles.addBtn} onPress={() => setShowAddModal(true)}>
+                <Ionicons name="person-add-outline" size={16} color="#fff" />
+                <Text style={styles.addBtnText}>Add worker</Text>
+              </TouchableOpacity>
             </View>
           </View>
 
@@ -119,6 +152,76 @@ export default function PermissionsScreen() {
             </View>
           </View>
         </ScrollView>
+
+        {/* Add worker modal */}
+        <Modal visible={showAddModal} transparent animationType="slide">
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalCard}>
+              <Text style={styles.modalTitle}>Add worker</Text>
+              <Text style={styles.modalSub}>Create a new account in your factory</Text>
+
+              <Text style={styles.inputLabel}>Full name</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="e.g. Kwame Mensah"
+                placeholderTextColor="#999"
+                value={wName}
+                onChangeText={setWName}
+              />
+
+              <Text style={styles.inputLabel}>Phone</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="e.g. +233201234567"
+                placeholderTextColor="#999"
+                keyboardType="phone-pad"
+                value={wPhone}
+                onChangeText={setWPhone}
+              />
+
+              <Text style={styles.inputLabel}>Temporary password</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Set an initial password"
+                placeholderTextColor="#999"
+                secureTextEntry
+                value={wPassword}
+                onChangeText={setWPassword}
+              />
+
+              <Text style={styles.inputLabel}>Role</Text>
+              <View style={styles.roleRow}>
+                {["WORKER", "DEPT_HEAD", "DRIVER"].map((r) => (
+                  <TouchableOpacity
+                    key={r}
+                    style={[styles.roleChip, wRole === r && styles.roleChipActive]}
+                    onPress={() => setWRole(r)}
+                  >
+                    <Text style={[styles.roleChipText, wRole === r && styles.roleChipTextActive]}>
+                      {r === "DEPT_HEAD" ? "Dept Head" : r === "DRIVER" ? "Driver" : "Worker"}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <TouchableOpacity
+                style={[styles.saveBtn, creating && { opacity: 0.6 }]}
+                onPress={handleAddWorker}
+                disabled={creating}
+              >
+                {creating ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.saveBtnText}>Add worker</Text>
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowAddModal(false)}>
+                <Text style={styles.cancelBtnText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
       </SafeAreaView>
     </SafeAreaProvider>
   );
@@ -130,8 +233,8 @@ const styles = StyleSheet.create({
   headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   headerTitle: { fontSize: 18, fontWeight: "500", color: "#fff" },
   headerSub: { fontSize: 11, color: "#90CAF9", marginTop: 2 },
-  countBadge: { backgroundColor: "rgba(255,255,255,0.15)", borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
-  countText: { fontSize: 11, color: "#fff" },
+  addBtn: { flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: "rgba(255,255,255,0.2)", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 7 },
+  addBtnText: { fontSize: 12, color: "#fff", fontWeight: "500" },
   body: { padding: 16 },
   searchBar: { flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: "#fff", borderRadius: 10, borderWidth: 0.5, borderColor: "#e0e0e0", paddingHorizontal: 12, paddingVertical: 5, marginBottom: 14 },
   searchInput: { flex: 1, fontSize: 15, color: "#1A1A1A" },
@@ -147,4 +250,19 @@ const styles = StyleSheet.create({
   permissionRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, alignItems: "center" },
   permTag: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
   permTagText: { fontSize: 11 },
+  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" },
+  modalCard: { backgroundColor: "#fff", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24 },
+  modalTitle: { fontSize: 16, fontWeight: "500", color: "#1A1A1A", marginBottom: 4 },
+  modalSub: { fontSize: 13, color: "#888", marginBottom: 12 },
+  inputLabel: { fontSize: 12, color: "#555", fontWeight: "500", marginBottom: 6, marginTop: 8 },
+  input: { borderWidth: 1, borderColor: "#e0e0e0", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: "#1A1A1A" },
+  roleRow: { flexDirection: "row", gap: 8, marginTop: 2 },
+  roleChip: { flex: 1, borderWidth: 1, borderColor: "#e0e0e0", borderRadius: 8, paddingVertical: 8, alignItems: "center" },
+  roleChipActive: { backgroundColor: "#E3F2FD", borderColor: "#1565C0" },
+  roleChipText: { fontSize: 12, color: "#888", fontWeight: "500" },
+  roleChipTextActive: { color: "#1565C0" },
+  saveBtn: { backgroundColor: "#1565C0", borderRadius: 10, padding: 14, alignItems: "center", marginTop: 16 },
+  saveBtnText: { fontSize: 14, color: "#fff", fontWeight: "600" },
+  cancelBtn: { backgroundColor: "#F5F5F5", borderRadius: 10, padding: 14, alignItems: "center", marginTop: 8 },
+  cancelBtnText: { fontSize: 14, color: "#888", fontWeight: "500" },
 });

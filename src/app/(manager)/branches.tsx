@@ -114,7 +114,20 @@ export default function BranchesScreen() {
                 </View>
 
                 <View style={styles.cardActions}>
-                  <TouchableOpacity style={styles.actionBtn}>
+                  <TouchableOpacity
+                    style={styles.actionBtn}
+                    onPress={() => router.push({
+                      pathname: "/(manager)/branch-details",
+                      params: {
+                        branchId: branch.branchId,
+                        name: branch.name,
+                        location: branch.location || "",
+                        workerCount: String(branch.workerCount ?? 0),
+                        machineCount: String(branch.machineCount ?? 0),
+                        isMain: branch.isMain ? "1" : "0",
+                      },
+                    })}
+                  >
                     <Ionicons name="eye-outline" size={14} color="#1565C0" />
                     <Text style={styles.actionBtnText}>View details</Text>
                   </TouchableOpacity>

@@ -1,12 +1,12 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, TextInput } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, TextInput, Alert } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useEffect } from "react";
 import { ActivityIndicator } from "react-native";
 import { getToken } from "../../auth";
-import { getMachines, updateMachineStatus } from "../../services/machines.service";
+import { getMachines, updateMachineStatus, createMachine } from "../../services/machines.service";
 
 const getStatusStyle = (status: string) => {
   if (status === "RUNNING") return { bg: "#E8F5E9", color: "#2E7D32", label: "Running", icon: "checkmark-circle-outline" };
@@ -20,6 +20,35 @@ export default function MachinesScreen() {
   const [machines, setMachines] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newServiceDate, setNewServiceDate] = useState("");
+  const [creating, setCreating] = useState(false);
+
+  const handleCreateMachine = async () => {
+    if (!newName.trim()) {
+      Alert.alert("Missing name", "Please enter a machine name.");
+      return;
+    }
+    setCreating(true);
+    try {
+      const token = await getToken();
+      if (token) {
+        const created = await createMachine(token, {
+          name: newName.trim(),
+          lastServiceDate: newServiceDate.trim() || undefined,
+        });
+        setMachines((prev) => [...prev, created]);
+        setNewName("");
+        setNewServiceDate("");
+        setShowAddModal(false);
+      }
+    } catch (e: any) {
+      Alert.alert("Failed", e.message || "Could not add machine.");
+    } finally {
+      setCreating(false);
+    }
+  };
 
   useEffect(() => {
     (async () => {
@@ -50,7 +79,7 @@ export default function MachinesScreen() {
                 <Text style={styles.headerTitle}>Machines</Text>
                 <Text style={styles.headerSub}>{machines.length} machines · {stoppedCount} stopped</Text>
               </View>
-              <TouchableOpacity style={styles.addBtn}>
+              <TouchableOpacity style={styles.addBtn} onPress={() => setShowAddModal(true)}>
                 <Ionicons name="add" size={18} color="#fff" />
                 <Text style={styles.addBtnText}>Add</Text>
               </TouchableOpacity>
@@ -58,14 +87,6 @@ export default function MachinesScreen() {
           </View>
 
           <View style={styles.body}>
-
-            {/* AI suggestion */}
-            <View style={styles.aiCard}>
-              <Ionicons name="bulb-outline" size={16} color="#E65100" />
-              <Text style={styles.aiText}>
-                Sewing Machine 3 has broken down 4 times this month. Schedule maintenance before next failure.
-              </Text>
-            </View>
 
             {/* Machine cards */}
             {loading && <ActivityIndicator size="large" color="#1565C0" style={{ marginVertical: 30 }} />}
@@ -161,6 +182,49 @@ export default function MachinesScreen() {
           </View>
         </Modal>
 
+        {/* Add machine modal */}
+        <Modal visible={showAddModal} transparent animationType="slide">
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalCard}>
+              <Text style={styles.modalTitle}>Add machine</Text>
+              <Text style={styles.modalSub}>Enter machine details</Text>
+
+              <Text style={styles.inputLabel}>Name</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="e.g. Sewing Machine 4"
+                placeholderTextColor="#999"
+                value={newName}
+                onChangeText={setNewName}
+              />
+
+              <Text style={styles.inputLabel}>Last service date (optional)</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="YYYY-MM-DD"
+                placeholderTextColor="#999"
+                value={newServiceDate}
+                onChangeText={setNewServiceDate}
+              />
+
+              <TouchableOpacity
+                style={[styles.saveBtn, creating && { opacity: 0.6 }]}
+                onPress={handleCreateMachine}
+                disabled={creating}
+              >
+                {creating ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.saveBtnText}>Save</Text>
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowAddModal(false)}>
+                <Text style={styles.cancelBtnText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
       </SafeAreaView>
     </SafeAreaProvider>
   );
@@ -175,8 +239,6 @@ const styles = StyleSheet.create({
   addBtn: { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(255,255,255,0.2)", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
   addBtnText: { fontSize: 12, color: "#fff", fontWeight: "500" },
   body: { padding: 16 },
-  aiCard: { flexDirection: "row", alignItems: "flex-start", gap: 8, backgroundColor: "#FFF8E1", borderRadius: 10, padding: 12, marginBottom: 14, borderLeftWidth: 3, borderLeftColor: "#E65100" },
-  aiText: { flex: 1, fontSize: 12, color: "#633806", lineHeight: 17 },
   card: { backgroundColor: "#fff", borderRadius: 12, borderWidth: 0.5, borderColor: "#e0e0e0", padding: 14, marginBottom: 12 },
   cardTop: { flexDirection: "row", alignItems: "center", gap: 10 },
   machineIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: "#E3F2FD", justifyContent: "center", alignItems: "center" },
@@ -200,4 +262,8 @@ const styles = StyleSheet.create({
   statusOptionText: { fontSize: 14, fontWeight: "500" },
   cancelBtn: { backgroundColor: "#F5F5F5", borderRadius: 10, padding: 14, alignItems: "center", marginTop: 4 },
   cancelBtnText: { fontSize: 14, color: "#888", fontWeight: "500" },
+  inputLabel: { fontSize: 12, color: "#555", fontWeight: "500", marginBottom: 6, marginTop: 8 },
+  input: { borderWidth: 1, borderColor: "#e0e0e0", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: "#1A1A1A", marginBottom: 4 },
+  saveBtn: { backgroundColor: "#1565C0", borderRadius: 10, padding: 14, alignItems: "center", marginTop: 12 },
+  saveBtnText: { fontSize: 14, color: "#fff", fontWeight: "600" },
 });

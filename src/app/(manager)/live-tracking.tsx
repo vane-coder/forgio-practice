@@ -2,38 +2,47 @@ import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import MapView, { Marker, Polyline } from "react-native-maps";
+import MapView, { Marker } from "react-native-maps";
 import { router, useLocalSearchParams } from "expo-router";
 import { getToken } from "../../auth";
 import { trackShipment } from "../../services/gps.service";
 import { updateShipmentStatus, getShipments } from "../../services/shipment.service";
 
 export default function LiveTrackingScreen() {
-  const { shipmentId } = useLocalSearchParams<{ shipmentId: string }>();
+  const params = useLocalSearchParams<{ shipmentId: string }>();
+  const [selectedId, setSelectedId] = useState<string | undefined>(params.shipmentId);
   const [tracking, setTracking] = useState<any>(null);
   const [shipment, setShipment] = useState<any>(null);
+  const [shipments, setShipments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [marking, setMarking] = useState(false);
 
+  const shipmentId = selectedId;
+
   const load = async () => {
-    if (!shipmentId) { setLoading(false); return; }
     try {
       const token = await getToken();
       if (token) {
-        const [gpsData, shipmentsData] = await Promise.all([
-          trackShipment(token, shipmentId).catch(() => []),
-          getShipments(token).catch(() => []),
-        ]);
-        const logs = Array.isArray(gpsData) ? gpsData : [];
-        setTracking(logs.length > 0 ? logs[logs.length - 1] : null);
-        const match = Array.isArray(shipmentsData) ? shipmentsData.find((s: any) => s.shipmentId === shipmentId) : null;
-        setShipment(match);
+        const shipmentsData = await getShipments(token).catch(() => []);
+        const all = Array.isArray(shipmentsData) ? shipmentsData : [];
+        setShipments(all);
+
+        if (shipmentId) {
+          const gpsData = await trackShipment(token, shipmentId).catch(() => []);
+          const logs = Array.isArray(gpsData) ? gpsData : [];
+          setTracking(logs.length > 0 ? logs[logs.length - 1] : null);
+          const match = all.find((s: any) => s.shipmentId === shipmentId) ?? null;
+          setShipment(match);
+        } else {
+          setTracking(null);
+          setShipment(null);
+        }
       }
     } catch (e) { console.log("tracking load failed", e); }
     finally { setLoading(false); }
   };
 
-  useEffect(() => { load(); }, [shipmentId]);
+  useEffect(() => { setLoading(true); load(); }, [shipmentId]);
 
   const handleMarkArrived = async () => {
     if (!shipmentId) return;
@@ -72,6 +81,32 @@ export default function LiveTrackingScreen() {
           <View style={styles.body}>
             {loading ? (
               <ActivityIndicator size="large" color="#1565C0" style={{ marginVertical: 40 }} />
+            ) : !shipmentId ? (
+              <View>
+                <Text style={styles.pickerHeading}>Select a shipment to track</Text>
+                {shipments.length === 0 && (
+                  <Text style={{ textAlign: "center", color: "#888", marginVertical: 30 }}>No shipments available</Text>
+                )}
+                {shipments.map((s) => {
+                  const active = s.status === "IN_TRANSIT" || s.status === "DEPARTED";
+                  return (
+                    <TouchableOpacity
+                      key={s.shipmentId}
+                      style={styles.pickerItem}
+                      onPress={() => { setLoading(true); setSelectedId(s.shipmentId); }}
+                    >
+                      <View style={[styles.pickerDot, { backgroundColor: active ? "#2E7D32" : "#aaa" }]} />
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.pickerRoute}>{s.fromBranchName} → {s.toBranchName}</Text>
+                        <Text style={styles.pickerMeta}>
+                          #{s.shipmentId.substring(0, 8)} · {String(s.status).replace("_", " ").toLowerCase()}
+                        </Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={16} color="#888" />
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
             ) : (
               <>
                 <View style={styles.mapContainer}>
@@ -119,6 +154,13 @@ export default function LiveTrackingScreen() {
                   <Ionicons name="refresh-outline" size={18} color="#1565C0" />
                   <Text style={styles.refreshBtnText}>Refresh location</Text>
                 </TouchableOpacity>
+
+                {!params.shipmentId && (
+                  <TouchableOpacity style={styles.changeBtn} onPress={() => setSelectedId(undefined)}>
+                    <Ionicons name="list-outline" size={16} color="#888" />
+                    <Text style={styles.changeBtnText}>Choose another shipment</Text>
+                  </TouchableOpacity>
+                )}
               </>
             )}
           </View>
@@ -145,6 +187,13 @@ const styles = StyleSheet.create({
   badgeOrangeText: { fontSize: 10, color: "#854F0B" },
   arrivedBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: "#2E7D32", borderRadius: 10, padding: 14, marginBottom: 10 },
   arrivedBtnText: { fontSize: 14, fontWeight: "500", color: "#fff" },
-  refreshBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: "#fff", borderRadius: 10, borderWidth: 0.5, borderColor: "#1565C0", padding: 14, marginBottom: 20 },
+  refreshBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: "#fff", borderRadius: 10, borderWidth: 0.5, borderColor: "#1565C0", padding: 14, marginBottom: 10 },
   refreshBtnText: { fontSize: 14, fontWeight: "500", color: "#1565C0" },
+  changeBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, padding: 10, marginBottom: 20 },
+  changeBtnText: { fontSize: 13, color: "#888", fontWeight: "500" },
+  pickerHeading: { fontSize: 13, fontWeight: "500", color: "#555", marginBottom: 12 },
+  pickerItem: { flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: "#fff", borderRadius: 10, borderWidth: 0.5, borderColor: "#e0e0e0", padding: 14, marginBottom: 10 },
+  pickerDot: { width: 9, height: 9, borderRadius: 5 },
+  pickerRoute: { fontSize: 13, fontWeight: "500", color: "#1A1A1A" },
+  pickerMeta: { fontSize: 11, color: "#888", marginTop: 2 },
 });

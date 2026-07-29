@@ -9,6 +9,19 @@ export const getMachines = async (token: string): Promise<Machine[]> => {
   return response.json();
 };
 
+export const createMachine = async (
+  token: string,
+  data: { name: string; lastServiceDate?: string }
+): Promise<Machine> => {
+  const response = await fetch(`${API_BASE_URL}/machines`, {
+    method: "POST",
+    headers: getHeaders(token),
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) throw new Error("Failed to create machine");
+  return response.json();
+};
+
 export const reportBreakdown = async (token: string, data: { machineId: string; description: string }) => {
   const response = await fetch(`${API_BASE_URL}/breakdown-logs`, {
     method: "POST",

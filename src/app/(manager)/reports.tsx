@@ -110,6 +110,25 @@ export default function ReportsScreen() {
                       <Text style={styles.reportPeriod}>
                         {r.startDate && r.endDate ? `${r.startDate} – ${r.endDate}` : r.createdAt ? new Date(r.createdAt).toLocaleDateString() : ""}
                       </Text>
+                      {(r.productionEntries != null || r.totalProduced != null) && (
+                        <View style={styles.metricRow}>
+                          <View style={styles.metricChip}>
+                            <Ionicons name="cube-outline" size={11} color="#0C447C" />
+                            <Text style={styles.metricText}>{r.totalProduced ?? "0"} units</Text>
+                          </View>
+                          <View style={styles.metricChip}>
+                            <Ionicons name="list-outline" size={11} color="#0C447C" />
+                            <Text style={styles.metricText}>{r.productionEntries ?? 0} entries</Text>
+                          </View>
+                          {r.machinesStopped ? (
+                            <View style={[styles.metricChip, { backgroundColor: "#FFEBEE" }]}>
+                              <Ionicons name="alert-circle-outline" size={11} color="#C62828" />
+                              <Text style={[styles.metricText, { color: "#C62828" }]}>{r.machinesStopped} stopped</Text>
+                            </View>
+                          ) : null}
+                        </View>
+                      )}
+                      {r.content ? <Text style={styles.reportContent}>{r.content}</Text> : null}
                     </View>
                   </View>
                 ))}
@@ -138,9 +157,13 @@ const styles = StyleSheet.create({
   generateBtnText: { fontSize: 14, fontWeight: "500", color: "#fff" },
   sectionTitle: { fontSize: 13, fontWeight: "500", color: "#1A1A1A", marginBottom: 10 },
   reportList: { backgroundColor: "#fff", borderRadius: 12, borderWidth: 0.5, borderColor: "#e0e0e0", overflow: "hidden", marginBottom: 24 },
-  reportItem: { flexDirection: "row", alignItems: "center", gap: 12, padding: 14, borderBottomWidth: 0.5, borderBottomColor: "#f0f0f0" },
+  reportItem: { flexDirection: "row", alignItems: "flex-start", gap: 12, padding: 14, borderBottomWidth: 0.5, borderBottomColor: "#f0f0f0" },
   reportIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: "#E3F2FD", justifyContent: "center", alignItems: "center" },
   reportInfo: { flex: 1 },
   reportTitle: { fontSize: 12, fontWeight: "500", color: "#1A1A1A" },
   reportPeriod: { fontSize: 10, color: "#888", marginTop: 2 },
+  metricRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 8 },
+  metricChip: { flexDirection: "row", alignItems: "center", gap: 3, backgroundColor: "#E3F2FD", borderRadius: 6, paddingHorizontal: 7, paddingVertical: 3 },
+  metricText: { fontSize: 10, color: "#0C447C", fontWeight: "500" },
+  reportContent: { fontSize: 11, color: "#666", lineHeight: 16, marginTop: 8 },
 });
