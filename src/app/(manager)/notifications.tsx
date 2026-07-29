@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View, Text, StyleSheet, ScrollView,
   TouchableOpacity, TextInput
@@ -6,11 +6,10 @@ import {
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useEffect } from "react";
 import { Alert, ActivityIndicator } from "react-native";
 import { getToken } from "../../auth";
 import { sendBulkNotification, getSentNotifications } from "../../services/notifications.service";
-
+import { getDepartments } from "../../services/departments.service";
 
 const getTypeStyle = (type: string) => {
   if (type === "MEETING") return { bg: "#E3F2FD", color: "#0C447C", icon: "people-outline" };
@@ -21,12 +20,12 @@ const getTypeStyle = (type: string) => {
 
 export default function NotificationsScreen() {
   const [message, setMessage] = useState("");
-  const [target, setTarget] = useState("ALL");
+  const [targetDeptId, setTargetDeptId] = useState<string | null>(null);
   const [type, setType] = useState("GENERAL");
   const [tab, setTab] = useState("SEND");
   const [sending, setSending] = useState(false);
-
   const [sent, setSent] = useState<any[]>([]);
+  const [departments, setDepartments] = useState<any[]>([]);
 
   const loadSent = async () => {
     try {
@@ -38,6 +37,17 @@ export default function NotificationsScreen() {
     } catch (e) { console.log("sent load failed", e); }
   };
 
+  const loadDepartments = async () => {
+    try {
+      const token = await getToken();
+      if (token) {
+        const data = await getDepartments(token);
+        setDepartments(Array.isArray(data) ? data : []);
+      }
+    } catch (e) { console.log("departments load failed", e); }
+  };
+
+  useEffect(() => { loadDepartments(); }, []);
   useEffect(() => { if (tab === "HISTORY") loadSent(); }, [tab]);
 
   const handleSend = async () => {
@@ -49,8 +59,8 @@ export default function NotificationsScreen() {
         await sendBulkNotification(token, {
           message,
           type: (type as any),
-          targetRole: target === "ALL" ? undefined : target,
-        });
+          targetDeptId: targetDeptId || undefined,
+        } as any);
         Alert.alert("Sent", "Your notification was sent.");
         setMessage("");
         await loadSent();
@@ -88,17 +98,28 @@ export default function NotificationsScreen() {
               <>
                 <Text style={styles.label}>Send to</Text>
                 <View style={styles.chipRow}>
-                  {["ALL", "CUTTING", "ASSEMBLY", "PACKAGING"].map((t) => (
+                  <TouchableOpacity
+                    style={[styles.chip, targetDeptId === null && styles.chipActive]}
+                    onPress={() => setTargetDeptId(null)}
+                  >
+                    <Text style={[styles.chipText, targetDeptId === null && styles.chipTextActive]}>All workers</Text>
+                  </TouchableOpacity>
+                  {departments.map((d) => (
                     <TouchableOpacity
-                      key={t}
-                      style={[styles.chip, target === t && styles.chipActive]}
-                      onPress={() => setTarget(t)}
+                      key={d.deptId}
+                      style={[styles.chip, targetDeptId === d.deptId && styles.chipActive]}
+                      onPress={() => setTargetDeptId(d.deptId)}
                     >
-                      <Text style={[styles.chipText, target === t && styles.chipTextActive]}>
-                        {t === "ALL" ? "All workers" : t.charAt(0) + t.slice(1).toLowerCase() + " dept"}
+                      <Text style={[styles.chipText, targetDeptId === d.deptId && styles.chipTextActive]}>
+                        {d.name}
                       </Text>
                     </TouchableOpacity>
                   ))}
+                  {departments.length === 0 && (
+                    <Text style={{ fontSize: 12, color: "#aaa", paddingVertical: 6 }}>
+                      No departments yet — create one to target specific teams.
+                    </Text>
+                  )}
                 </View>
 
                 <Text style={styles.label}>Type</Text>
@@ -127,16 +148,12 @@ export default function NotificationsScreen() {
                   numberOfLines={4}
                 />
 
-                <TouchableOpacity
-                  style={styles.sendBtn}
-                  onPress={handleSend}
-                  disabled={sending}
-                >
+                <TouchableOpacity style={styles.sendBtn} onPress={handleSend} disabled={sending}>
                   <Ionicons name="send-outline" size={18} color="#fff" />
                   <Text style={styles.sendBtnText}>{sending ? "Sending..." : "Send notification"}</Text>
                 </TouchableOpacity>
               </>
-        ) : (
+            ) : (
               <>
                 <Text style={styles.sectionTitle}>Previously sent</Text>
                 <View style={styles.historyList}>
@@ -149,15 +166,23 @@ export default function NotificationsScreen() {
                     const st = getTypeStyle(n.type);
                     return (
                       <View key={n.notifId} style={[styles.historyItem, i === sent.length - 1 && { borderBottomWidth: 0 }]}>
-                        <View style={[styles.historyIcon, { backgroundColor: st.bg }]}>
-                          <Ionicons name={st.icon as any} size={16} color={st.color} />
+                        <View style={[styles.historyIconWrap, { backgroundColor: st.bg }]}>
+                          <Ionicons name={st.icon as any} size={18} color={st.color} />
                         </View>
                         <View style={styles.historyContent}>
-                          <Text style={styles.historyMessage}>{n.message}</Text>
-                          <View style={styles.historyMeta}>
-                            <Text style={styles.historyTarget}>{n.targetRole || "All"}</Text>
+                          <View style={styles.historyTopRow}>
+                            <View style={[styles.typePill, { backgroundColor: st.bg }]}>
+                              <Text style={[styles.typePillText, { color: st.color }]}>{n.type}</Text>
+                            </View>
                             <Text style={styles.historySentAt}>
-                              {n.sentAt ? new Date(n.sentAt).toLocaleString() : ""}
+                              {n.sentAt ? new Date(n.sentAt).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : ""}
+                            </Text>
+                          </View>
+                          <Text style={styles.historyMessage}>{n.message}</Text>
+                          <View style={styles.historyTargetRow}>
+                            <Ionicons name="people-outline" size={12} color="#888" />
+                            <Text style={styles.historyTarget}>
+                              {n.targetDeptName || n.targetRole || "All workers"}
                             </Text>
                           </View>
                         </View>
@@ -195,12 +220,15 @@ const styles = StyleSheet.create({
   sendBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: "#1565C0", borderRadius: 10, padding: 14, marginBottom: 24 },
   sendBtnText: { fontSize: 14, fontWeight: "500", color: "#fff" },
   sectionTitle: { fontSize: 13, fontWeight: "500", color: "#1A1A1A", marginBottom: 10 },
-  historyList: { backgroundColor: "#fff", borderRadius: 12, borderWidth: 0.5, borderColor: "#e0e0e0", overflow: "hidden", marginBottom: 24 },
-  historyItem: { flexDirection: "row", gap: 12, padding: 14, borderBottomWidth: 0.5, borderBottomColor: "#f0f0f0" },
-  historyIcon: { width: 36, height: 36, borderRadius: 18, justifyContent: "center", alignItems: "center", flexShrink: 0 },
+  historyList: { gap: 10, marginBottom: 24 },
+  historyItem: { flexDirection: "row", gap: 12, backgroundColor: "#fff", borderRadius: 12, borderWidth: 0.5, borderColor: "#e0e0e0", padding: 14 },
+  historyIconWrap: { width: 40, height: 40, borderRadius: 20, justifyContent: "center", alignItems: "center", flexShrink: 0 },
   historyContent: { flex: 1 },
-  historyMessage: { fontSize: 13, color: "#1A1A1A", lineHeight: 17, marginBottom: 6 },
-  historyMeta: { flexDirection: "row", justifyContent: "space-between" },
-  historyTarget: { fontSize: 11, color: "#1565C0", fontWeight: "500" },
-  historySentAt: { fontSize: 10, color: "#888" },
+  historyTopRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 },
+  typePill: { borderRadius: 20, paddingHorizontal: 8, paddingVertical: 2 },
+  typePillText: { fontSize: 9, fontWeight: "600" },
+  historyMessage: { fontSize: 13, color: "#1A1A1A", lineHeight: 18, marginBottom: 8 },
+  historyTargetRow: { flexDirection: "row", alignItems: "center", gap: 4 },
+  historyTarget: { fontSize: 11, color: "#888", fontWeight: "500" },
+  historySentAt: { fontSize: 10, color: "#aaa" },
 });

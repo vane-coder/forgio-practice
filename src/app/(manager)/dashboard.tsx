@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { getToken } from "../../auth";
 import { getMaterials } from "../../services/materials.service";
 import { getMachines } from "../../services/machines.service";
@@ -15,67 +15,69 @@ export default function DashboardScreen() {
   const [machineCount, setMachineCount] = useState(0);
   const [aiInsight, setAiInsight] = useState("Loading insights...");
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const token = await getToken();
-        if (!token) return;
-
-
-        // real logged-in user
+  useFocusEffect(
+    React.useCallback(() => {
+      (async () => {
         try {
-          const { API_BASE_URL } = await import("../../services/api.config");
-          const res = await fetch(`${API_BASE_URL}/profile`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          if (res.ok) {
-            const p = await res.json();
-            setUsername(p.name || "");
-            setInitials(
-              (p.name || "?")
-                .split(" ")
-                .map((n: string) => n[0])
-                .join("")
-                .substring(0, 2)
-                .toUpperCase()
+          const token = await getToken();
+          if (!token) return;
+
+
+          // real logged-in user
+          try {
+            const { API_BASE_URL } = await import("../../services/api.config");
+            const res = await fetch(`${API_BASE_URL}/profile`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            if (res.ok) {
+              const p = await res.json();
+              setUsername(p.name || "");
+              setInitials(
+                (p.name || "?")
+                  .split(" ")
+                  .map((n: string) => n[0])
+                  .join("")
+                  .substring(0, 2)
+                  .toUpperCase()
+              );
+            }
+          } catch { }
+          // materials
+          try {
+            const mats = await getMaterials(token);
+            if (Array.isArray(mats)) {
+              setMaterialCount(mats.length);
+              setLowStockCount(mats.filter((m: any) => m.lowStock).length);
+            }
+          } catch { }
+
+          // machines
+          try {
+            const machines = await getMachines(token);
+            if (Array.isArray(machines)) setMachineCount(machines.length);
+          } catch { }
+
+          // AI insight
+          try {
+            const res = await fetch(
+              `${(await import("../../services/api.config")).API_BASE_URL}/ai/suggestions`,
+              { headers: { Authorization: `Bearer ${token}` } }
             );
-          }
-        } catch {}
-        // materials
-        try {
-          const mats = await getMaterials(token);
-          if (Array.isArray(mats)) {
-            setMaterialCount(mats.length);
-            setLowStockCount(mats.filter((m: any) => m.lowStock).length);
-          }
-        } catch {}
-
-        // machines
-        try {
-          const machines = await getMachines(token);
-          if (Array.isArray(machines)) setMachineCount(machines.length);
-        } catch {}
-
-        // AI insight
-        try {
-          const res = await fetch(
-            `${(await import("../../services/api.config")).API_BASE_URL}/ai/suggestions`,
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-          if (res.ok) {
-            const data = await res.json();
-            setAiInsight(data.suggestion || "No insights available right now.");
-          } else {
+            if (res.ok) {
+              const data = await res.json();
+              setAiInsight(data.suggestion || "No insights available right now.");
+            } else {
+              setAiInsight("No insights available right now.");
+            }
+          } catch {
             setAiInsight("No insights available right now.");
           }
-        } catch {
-          setAiInsight("No insights available right now.");
+        } catch (e) {
+          console.log("Dashboard load error", e);
         }
-      } catch (e) {
-        console.log("Dashboard load error", e);
-      }
-    })();
-  }, []);
+      })();
+    }, [])
+  );
 
   return (
     <SafeAreaProvider>
@@ -186,7 +188,7 @@ export default function DashboardScreen() {
           </TouchableOpacity>
           <TouchableOpacity style={styles.navItem} onPress={() => router.push("/(manager)/departments")}>
             <Ionicons name="business-outline" size={22} color="#999" />
-            <Text style={styles.navText}>Factory</Text>
+            <Text style={styles.navText}>Departments</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.navItem} onPress={() => router.push("/(manager)/profile")}>
             <Ionicons name="person-outline" size={22} color="#999" />

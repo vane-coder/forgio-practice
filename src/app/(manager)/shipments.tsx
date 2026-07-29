@@ -97,38 +97,59 @@ export default function ShipmentsScreen() {
               <Text style={{ textAlign: "center", color: "#888", marginVertical: 30 }}>No shipments yet</Text>
             )}
 
-            {!loading && filtered.map((s) => {
+           {!loading && filtered.map((s) => {
               const badge = getStatusStyle(s.status);
               return (
                 <View key={s.shipmentId} style={styles.card}>
                   <View style={styles.cardHeader}>
-                    <Text style={styles.shipmentId}>#{s.shipmentId.substring(0, 8)}</Text>
+                    <View style={styles.idRow}>
+                      <Ionicons name="cube-outline" size={14} color="#1565C0" />
+                      <Text style={styles.shipmentId}>#{s.shipmentId.substring(0, 8).toUpperCase()}</Text>
+                    </View>
                     <View style={[styles.badge, { backgroundColor: badge.bg }]}>
+                      <View style={[styles.badgeDot, { backgroundColor: badge.color }]} />
                       <Text style={[styles.badgeText, { color: badge.color }]}>{badge.label}</Text>
                     </View>
                   </View>
-                  <View style={styles.routeRow}>
-                    <View style={styles.routeStop}>
-                      <Ionicons name="location-outline" size={13} color="#1565C0" />
-                      <Text style={styles.routeText}>{s.fromBranchName}</Text>
+
+                  <View style={styles.routeTrack}>
+                    <View style={styles.routeCol}>
+                      <View style={styles.dotBlue} />
+                      <View style={styles.routeConnector} />
+                      <View style={styles.dotGreen} />
                     </View>
-                    <Ionicons name="arrow-forward" size={14} color="#ccc" />
-                    <View style={styles.routeStop}>
-                      <Ionicons name="flag-outline" size={13} color="#2E7D32" />
-                      <Text style={styles.routeText}>{s.toBranchName}</Text>
+                    <View style={styles.routeLabels}>
+                      <View style={{ marginBottom: 14 }}>
+                        <Text style={styles.routeCaption}>From</Text>
+                        <Text style={styles.routeText}>{s.fromBranchName}</Text>
+                      </View>
+                      <View>
+                        <Text style={styles.routeCaption}>To</Text>
+                        <Text style={styles.routeText}>{s.toBranchName}</Text>
+                      </View>
                     </View>
                   </View>
+
                   <View style={styles.divider} />
+
                   <View style={styles.cardFooter}>
                     <View style={styles.footerItem}>
-                      <Ionicons name="person-outline" size={12} color="#888" />
+                      <Ionicons name="person-circle-outline" size={15} color="#888" />
                       <Text style={styles.footerText}>{s.driverName || "Unassigned"}</Text>
                     </View>
                     <View style={styles.footerItem}>
-                      <Ionicons name="time-outline" size={12} color="#888" />
+                      <Ionicons name="calendar-outline" size={13} color="#888" />
                       <Text style={styles.footerText}>{s.createdAt ? new Date(s.createdAt).toLocaleDateString() : ""}</Text>
                     </View>
                   </View>
+
+                  {s.notes ? (
+                    <View style={styles.notesBox}>
+                      <Ionicons name="document-text-outline" size={13} color="#888" />
+                      <Text style={styles.notesText}>{s.notes}</Text>
+                    </View>
+                  ) : null}
+
                   {s.status === "IN_TRANSIT" && (
                     <TouchableOpacity
                       style={styles.trackBtn}
@@ -197,7 +218,7 @@ const styles = StyleSheet.create({
   card: { backgroundColor: "#fff", borderRadius: 12, borderWidth: 0.5, borderColor: "#e0e0e0", padding: 14, marginBottom: 12 },
   cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 },
   shipmentId: { fontSize: 13, fontWeight: "500", color: "#1A1A1A" },
-  badge: { borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3 },
+  badge: { borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3 ,flexDirection:"row",alignItems:"center",gap:4},
   badgeText: { fontSize: 10, fontWeight: "500" },
   routeRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 10 },
   routeStop: { flexDirection: "row", alignItems: "center", gap: 4, flex: 1 },
@@ -220,4 +241,15 @@ const styles = StyleSheet.create({
   branchOption: { borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 4, backgroundColor: "#F5F7FA" },
   branchOptionActive: { backgroundColor: "#1565C0" },
   branchOptionText: { fontSize: 13, color: "#1A1A1A" },
+  idRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+  badgeDot: { width: 6, height: 6, borderRadius: 3 },
+  routeTrack: { flexDirection: "row", gap: 12, marginBottom: 12 },
+  routeCol: { alignItems: "center", paddingTop: 4 },
+  dotBlue: { width: 9, height: 9, borderRadius: 5, backgroundColor: "#1565C0" },
+  routeConnector: { width: 2, flex: 1, minHeight: 20, backgroundColor: "#E3F2FD", marginVertical: 3 },
+  dotGreen: { width: 9, height: 9, borderRadius: 5, backgroundColor: "#2E7D32" },
+  routeLabels: { flex: 1 },
+  routeCaption: { fontSize: 10, color: "#aaa", marginBottom: 1 },
+  notesBox: { flexDirection: "row", alignItems: "flex-start", gap: 6, backgroundColor: "#F5F7FA", borderRadius: 8, padding: 10, marginTop: 10 },
+  notesText: { flex: 1, fontSize: 11, color: "#666", lineHeight: 16 },
 });
