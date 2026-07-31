@@ -15,6 +15,7 @@ import {
   forgotPassword,
 } from "../../services/auth.service";
 import { saveToken } from "../../auth";
+import { colors } from "../../constants/Colors";
 
 const CODE_LENGTH = 6;
 const RESEND_COOLDOWN = 60;
@@ -162,13 +163,13 @@ export default function VerifyOtpScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={22} color="#1565C0" />
+            <Ionicons name="arrow-back" size={22} color={colors.primary} />
           </TouchableOpacity>
         </View>
 
         <View style={styles.body}>
           <View style={styles.iconCircle}>
-            <Ionicons name="shield-checkmark-outline" size={36} color="#1565C0" />
+            <Ionicons name="shield-checkmark-outline" size={36} color={colors.primary} />
           </View>
 
           <Text style={styles.title}>{flowTitle[flow as OtpFlow]}</Text>
@@ -217,35 +218,35 @@ export default function VerifyOtpScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" },
+  container: { flex: 1, backgroundColor: colors.white },
   header: { padding: 20, paddingTop: 16 },
   body: { flex: 1, paddingHorizontal: 24 },
   iconCircle: {
     width: 72, height: 72, borderRadius: 36,
-    backgroundColor: "#E3F2FD",
+    backgroundColor: colors.blueTint,
     justifyContent: "center", alignItems: "center",
     marginBottom: 20,
   },
-  title: { fontSize: 24, fontWeight: "bold", color: "#1A1A1A", marginBottom: 10 },
-  subtitle: { fontSize: 13, color: "#888", lineHeight: 20, marginBottom: 32 },
+  title: { fontSize: 24, fontWeight: "bold", color: colors.textDark, marginBottom: 10 },
+  subtitle: { fontSize: 13, color: colors.textMuted, lineHeight: 20, marginBottom: 32 },
   codeRow: {
     flexDirection: "row", justifyContent: "space-between",
     marginBottom: 32, gap: 8,
   },
   codeInput: {
-    flex: 1, height: 56, borderWidth: 1.5, borderColor: "#e0e0e0",
+    flex: 1, height: 56, borderWidth: 1.5, borderColor: colors.border,
     borderRadius: 12, textAlign: "center", fontSize: 22, fontWeight: "700",
-    color: "#1A1A1A", backgroundColor: "#F5F7FA",
+    color: colors.textDark, backgroundColor: colors.background,
   },
-  codeInputFilled: { borderColor: "#1565C0", backgroundColor: "#E3F2FD" },
+  codeInputFilled: { borderColor: colors.accent, backgroundColor: colors.accentLight },
   verifyBtn: {
-    backgroundColor: "#1565C0", padding: 16,
+    backgroundColor: colors.accent, padding: 16,
     borderRadius: 10, alignItems: "center", marginBottom: 20,
   },
   verifyBtnDisabled: { opacity: 0.5 },
-  verifyBtnText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
+  verifyBtnText: { color: colors.white, fontSize: 16, fontWeight: "bold" },
   resendRow: { flexDirection: "row", justifyContent: "center", alignItems: "center" },
-  resendText: { fontSize: 13, color: "#888" },
+  resendText: { fontSize: 13, color: colors.textMuted },
   resendTimer: { fontSize: 13, color: "#aaa" },
-  resendLink: { fontSize: 13, color: "#1565C0", fontWeight: "600" },
+  resendLink: { fontSize: 13, color: colors.accent, fontWeight: "600" },
 });

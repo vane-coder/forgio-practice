@@ -6,6 +6,7 @@ import { router } from "expo-router";
 import { getToken } from "../../auth";
 import { getShipments } from "../../services/shipment.service";
 import { API_BASE_URL } from "../../services/api.config";
+import { colors } from "../../constants/Colors";
 
 export default function ShipmentAssignmentScreen() {
   const [shipment, setShipment] = useState<any>(null);
@@ -20,12 +21,17 @@ export default function ShipmentAssignmentScreen() {
         headers: { Authorization: `Bearer ${token}` },
       });
       const profile = profileRes.ok ? await profileRes.json() : null;
+      const myId = profile?.userId ?? profile?.id ?? profile?.sub;
 
       const all = await getShipments(token);
-      const mine = Array.isArray(all)
-        ? all.find((s: any) => s.driverId === profile?.userId && s.status !== "ARRIVED")
-        : null;
-      setShipment(mine || null);
+      const active = Array.isArray(all)
+        ? all.filter((s: any) => s.status !== "ARRIVED")
+        : [];
+      // Match on the driver id under whatever key the profile returns it.
+      // Deliberately no "first active shipment" fallback: that could show a
+      // driver someone else's delivery if the backend doesn't scope the list.
+      const mine = active.find((s: any) => s.driverId === myId) ?? null;
+      setShipment(mine);
     } catch (e) {
       console.log("shipment-assignment load failed", e);
     } finally {
@@ -38,8 +44,8 @@ export default function ShipmentAssignmentScreen() {
   if (loading) {
     return (
       <SafeAreaProvider>
-        <SafeAreaView style={{ flex: 1, backgroundColor: "#1565C0", justifyContent: "center", alignItems: "center" }}>
-          <ActivityIndicator size="large" color="#fff" />
+        <SafeAreaView style={{ flex: 1, backgroundColor: colors.primary, justifyContent: "center", alignItems: "center" }}>
+          <ActivityIndicator size="large" color={colors.white} />
         </SafeAreaView>
       </SafeAreaProvider>
     );
@@ -48,13 +54,13 @@ export default function ShipmentAssignmentScreen() {
   if (!shipment) {
     return (
       <SafeAreaProvider>
-        <SafeAreaView style={{ flex: 1, backgroundColor: "#1565C0" }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: colors.primary }}>
           <View style={styles.header}>
             <Text style={styles.headerTitle}>My Shipment</Text>
           </View>
           <View style={[styles.body, { alignItems: "center", paddingTop: 60 }]}>
-            <Ionicons name="cube-outline" size={48} color="#ccc" />
-            <Text style={{ color: "#888", marginTop: 12 }}>No active shipment assigned right now.</Text>
+            <Ionicons name="cube-outline" size={48} color={colors.border} />
+            <Text style={{ color: colors.textMuted, marginTop: 12 }}>No active shipment assigned right now.</Text>
           </View>
         </SafeAreaView>
       </SafeAreaProvider>
@@ -65,7 +71,7 @@ export default function ShipmentAssignmentScreen() {
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView style={{ flex: 1, backgroundColor: "#1565C0" }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.primary }}>
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
 
           <View style={styles.header}>
@@ -76,17 +82,17 @@ export default function ShipmentAssignmentScreen() {
               </View>
               <View style={[
                 styles.statusBadge,
-                status === "PENDING" && { backgroundColor: "#FFF3E0" },
+                status === "PENDING" && { backgroundColor: colors.warningBg },
                 status === "DEPARTED" && { backgroundColor: "#F3E5F5" },
-                status === "IN_TRANSIT" && { backgroundColor: "#E3F2FD" },
-                status === "ARRIVED" && { backgroundColor: "#E8F5E9" },
+                status === "IN_TRANSIT" && { backgroundColor: colors.blueTint },
+                status === "ARRIVED" && { backgroundColor: colors.successBg },
               ]}>
                 <Text style={[
                   styles.statusText,
-                  status === "PENDING" && { color: "#E65100" },
+                  status === "PENDING" && { color: colors.warning },
                   status === "DEPARTED" && { color: "#6A1B9A" },
-                  status === "IN_TRANSIT" && { color: "#0C447C" },
-                  status === "ARRIVED" && { color: "#1B5E20" },
+                  status === "IN_TRANSIT" && { color: colors.primary },
+                  status === "ARRIVED" && { color: colors.success },
                 ]}>
                   {status.replace("_", " ")}
                 </Text>
@@ -118,7 +124,7 @@ export default function ShipmentAssignmentScreen() {
 
             {shipment.notes ? (
               <View style={styles.assignedCard}>
-                <Ionicons name="document-text-outline" size={16} color="#888" />
+                <Ionicons name="document-text-outline" size={16} color={colors.textMuted} />
                 <Text style={styles.assignedText}>{shipment.notes}</Text>
               </View>
             ) : null}
@@ -128,14 +134,14 @@ export default function ShipmentAssignmentScreen() {
                 style={styles.updateStatusBtn}
                 onPress={() => router.push({ pathname: "/(driver)/update-status", params: { shipmentId: shipment.shipmentId, status } })}
               >
-                <Ionicons name="navigate-outline" size={18} color="#1565C0" />
+                <Ionicons name="navigate-outline" size={18} color={colors.white} />
                 <Text style={styles.updateStatusBtnText}>Update status</Text>
               </TouchableOpacity>
             )}
 
             {status === "ARRIVED" && (
               <View style={styles.successCard}>
-                <Ionicons name="checkmark-circle" size={24} color="#2E7D32" />
+                <Ionicons name="checkmark-circle" size={24} color={colors.success} />
                 <Text style={styles.successText}>Delivery completed!</Text>
               </View>
             )}
@@ -148,28 +154,28 @@ export default function ShipmentAssignmentScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F7FA" },
-  header: { backgroundColor: "#1565C0", paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16 },
+  container: { flex: 1, backgroundColor: colors.background },
+  header: { backgroundColor: colors.primary, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16 },
   headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  headerTitle: { fontSize: 20, fontWeight: "500", color: "#fff" },
-  headerSub: { fontSize: 11, color: "#90CAF9", marginTop: 2 },
+  headerTitle: { fontSize: 20, fontWeight: "500", color: colors.white },
+  headerSub: { fontSize: 11, color: colors.headerSubtitle, marginTop: 2 },
   statusBadge: { borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
   statusText: { fontSize: 11, fontWeight: "500" },
   body: { padding: 16 },
-  routeCard: { backgroundColor: "#fff", borderRadius: 12, borderWidth: 0.5, borderColor: "#e0e0e0", padding: 14, marginBottom: 14 },
+  routeCard: { backgroundColor: colors.white, borderRadius: 12, borderWidth: 0.5, borderColor: colors.border, padding: 14, marginBottom: 14 },
   routeRow: { flexDirection: "row", gap: 12 },
   routeIconCol: { alignItems: "center", paddingTop: 4 },
-  routeDotBlue: { width: 10, height: 10, borderRadius: 5, backgroundColor: "#1565C0" },
-  routeLine: { width: 2, height: 40, backgroundColor: "#E3F2FD", marginVertical: 4 },
-  routeDotGreen: { width: 10, height: 10, borderRadius: 5, backgroundColor: "#2E7D32" },
+  routeDotBlue: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.primary },
+  routeLine: { width: 2, height: 40, backgroundColor: colors.blueTint, marginVertical: 4 },
+  routeDotGreen: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.success },
   routeInfo: { flex: 1, gap: 16 },
   routeStop: { gap: 2 },
-  routeLabel: { fontSize: 10, color: "#888" },
-  routeName: { fontSize: 16, fontWeight: "500", color: "#1A1A1A" },
+  routeLabel: { fontSize: 10, color: colors.textMuted },
+  routeName: { fontSize: 16, fontWeight: "500", color: colors.textDark },
   assignedCard: { flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: "#F5F5F5", borderRadius: 10, padding: 12, marginBottom: 16 },
-  assignedText: { fontSize: 13, color: "#888", flex: 1 },
-  updateStatusBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: "#E3F2FD", borderRadius: 10, padding: 14, marginBottom: 10 },
-  updateStatusBtnText: { fontSize: 14, fontWeight: "500", color: "#1565C0" },
-  successCard: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, backgroundColor: "#E8F5E9", borderRadius: 10, padding: 16, marginBottom: 10 },
-  successText: { fontSize: 14, fontWeight: "500", color: "#2E7D32" },
+  assignedText: { fontSize: 13, color: colors.textMuted, flex: 1 },
+  updateStatusBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: colors.accent, borderRadius: 10, padding: 14, marginBottom: 10 },
+  updateStatusBtnText: { fontSize: 14, fontWeight: "500", color: colors.white },
+  successCard: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, backgroundColor: colors.successBg, borderRadius: 10, padding: 16, marginBottom: 10 },
+  successText: { fontSize: 14, fontWeight: "500", color: colors.success },
 });

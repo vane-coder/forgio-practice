@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { getToken } from "../../auth";
 import { API_BASE_URL } from "../../services/api.config";
+import { colors } from "../../constants/Colors";
 
 export default function EditProfileScreen() {
   const [name, setName] = useState("");
@@ -63,8 +64,8 @@ export default function EditProfileScreen() {
   if (loading) {
     return (
       <SafeAreaProvider>
-        <SafeAreaView style={{ flex: 1, backgroundColor: "#1565C0", justifyContent: "center", alignItems: "center" }}>
-          <ActivityIndicator size="large" color="#fff" />
+        <SafeAreaView style={{ flex: 1, backgroundColor: colors.primary, justifyContent: "center", alignItems: "center" }}>
+          <ActivityIndicator size="large" color={colors.white} />
         </SafeAreaView>
       </SafeAreaProvider>
     );
@@ -72,12 +73,12 @@ export default function EditProfileScreen() {
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView style={{ flex: 1, backgroundColor: "#1565C0" }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.primary }}>
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
 
           <View style={styles.header}>
             <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: 8 }}>
-              <Ionicons name="arrow-back" size={20} color="#fff" />
+              <Ionicons name="arrow-back" size={20} color={colors.white} />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Edit profile</Text>
           </View>
@@ -97,7 +98,7 @@ export default function EditProfileScreen() {
             <TextInput style={styles.input} value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
 
             <Text style={styles.label}>Factory name</Text>
-            <TextInput style={[styles.input, { color: "#999" }]} value={factory} editable={false} />
+            <TextInput style={[styles.input, { color: colors.textMuted }]} value={factory} editable={false} />
 
             <TouchableOpacity style={styles.saveBtn} onPress={handleSave} disabled={saving}>
               <Text style={styles.saveBtnText}>{saving ? "Saving..." : "Save changes"}</Text>
@@ -111,15 +112,15 @@ export default function EditProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F7FA" },
-  header: { backgroundColor: "#1565C0", paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16 },
-  headerTitle: { fontSize: 16, fontWeight: "500", color: "#fff" },
+  container: { flex: 1, backgroundColor: colors.background },
+  header: { backgroundColor: colors.primary, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16 },
+  headerTitle: { fontSize: 16, fontWeight: "500", color: colors.white },
   body: { padding: 16 },
   avatarSection: { alignItems: "center", marginBottom: 20 },
-  avatar: { width: 80, height: 80, borderRadius: 40, backgroundColor: "#1565C0", justifyContent: "center", alignItems: "center" },
-  avatarText: { fontSize: 26, fontWeight: "bold", color: "#fff" },
-  label: { fontSize: 13, fontWeight: "500", color: "#1A1A1A", marginBottom: 6, marginTop: 12 },
-  input: { backgroundColor: "#fff", borderRadius: 10, borderWidth: 0.5, borderColor: "#e0e0e0", padding: 12, fontSize: 14, color: "#1A1A1A" },
-  saveBtn: { backgroundColor: "#1565C0", borderRadius: 10, padding: 16, alignItems: "center", marginTop: 24, marginBottom: 30 },
-  saveBtnText: { color: "#fff", fontSize: 15, fontWeight: "500" },
+  avatar: { width: 80, height: 80, borderRadius: 40, backgroundColor: colors.primary, justifyContent: "center", alignItems: "center" },
+  avatarText: { fontSize: 26, fontWeight: "bold", color: colors.white },
+  label: { fontSize: 13, fontWeight: "500", color: colors.textDark, marginBottom: 6, marginTop: 12 },
+  input: { backgroundColor: colors.white, borderRadius: 10, borderWidth: 0.5, borderColor: colors.border, padding: 12, fontSize: 14, color: colors.textDark },
+  saveBtn: { backgroundColor: colors.accent, borderRadius: 10, padding: 16, alignItems: "center", marginTop: 24, marginBottom: 30 },
+  saveBtnText: { color: colors.white, fontSize: 15, fontWeight: "500" },
 });

@@ -4,6 +4,7 @@ import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { forgotPassword } from "../../services/auth.service";
+import { colors } from "../../constants/Colors";
 
 export default function ForgotPasswordScreen() {
   const [phone, setPhone] = useState("");
@@ -34,16 +35,16 @@ export default function ForgotPasswordScreen() {
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={22} color="#1565C0" />
+            <Ionicons name="arrow-back" size={22} color={colors.primary} />
           </TouchableOpacity>
         </View>
 
         <View style={styles.body}>
           <View style={styles.iconCircle}>
-            <Ionicons name="key-outline" size={36} color="#1565C0" />
+            <Ionicons name="key-outline" size={36} color={colors.primary} />
           </View>
 
           <Text style={styles.title}>Forgot password?</Text>
@@ -56,7 +57,7 @@ export default function ForgotPasswordScreen() {
           <TextInput
             style={styles.input}
             placeholder="e.g. 0244000000"
-            placeholderTextColor="#aaa"
+            placeholderTextColor={colors.textMuted}
             value={phone}
             onChangeText={setPhone}
             keyboardType="phone-pad"
@@ -78,14 +79,14 @@ export default function ForgotPasswordScreen() {
 const styles = StyleSheet.create({
   header: { padding: 20, paddingTop: 16 },
   body: { flex: 1, paddingHorizontal: 24 },
-  iconCircle: { width: 72, height: 72, borderRadius: 36, backgroundColor: "#E3F2FD", justifyContent: "center", alignItems: "center", marginBottom: 20 },
-  title: { fontSize: 24, fontWeight: "bold", color: "#1A1A1A", marginBottom: 10 },
-  subtitle: { fontSize: 13, color: "#888", lineHeight: 20, marginBottom: 28 },
-  label: { fontSize: 13, fontWeight: "500", color: "#1A1A1A", marginBottom: 8 },
-  input: { borderWidth: 1, borderColor: "#e0e0e0", borderRadius: 10, padding: 12, fontSize: 14, color: "#1A1A1A", backgroundColor: "#F5F7FA", marginBottom: 20 },
-  sendBtn: { backgroundColor: "#1565C0", borderRadius: 10, padding: 16, alignItems: "center", marginBottom: 16 },
-  sendBtnText: { fontSize: 15, fontWeight: "bold", color: "#fff" },
+  iconCircle: { width: 72, height: 72, borderRadius: 36, backgroundColor: colors.blueTint, justifyContent: "center", alignItems: "center", marginBottom: 20 },
+  title: { fontSize: 24, fontWeight: "bold", color: colors.textDark, marginBottom: 10 },
+  subtitle: { fontSize: 13, color: colors.textMuted, lineHeight: 20, marginBottom: 28 },
+  label: { fontSize: 13, fontWeight: "500", color: colors.textDark, marginBottom: 8 },
+  input: { borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 12, fontSize: 14, color: colors.textDark, backgroundColor: colors.background, marginBottom: 20 },
+  sendBtn: { backgroundColor: colors.accent, borderRadius: 10, padding: 16, alignItems: "center", marginBottom: 16 },
+  sendBtnText: { fontSize: 15, fontWeight: "bold", color: colors.white },
   loginLink: { alignItems: "center", marginTop: 10 },
-  loginLinkText: { fontSize: 13, color: "#888" },
-  loginLinkBold: { color: "#1565C0", fontWeight: "500" },
+  loginLinkText: { fontSize: 13, color: colors.textMuted },
+  loginLinkBold: { color: colors.primary, fontWeight: "500" },
 });

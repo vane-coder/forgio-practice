@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { getToken } from "../../auth";
 import { API_BASE_URL } from "../../services/api.config";
+import { colors } from "../../constants/Colors";
 
 export default function WorkerChangePasswordScreen() {
   const [current, setCurrent] = useState("");
@@ -38,17 +39,17 @@ export default function WorkerChangePasswordScreen() {
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView style={{ flex: 1, backgroundColor: "#1565C0" }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.primary }}>
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
           <View style={styles.header}>
             <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: 8 }}>
-              <Ionicons name="arrow-back" size={20} color="#fff" />
+              <Ionicons name="arrow-back" size={20} color={colors.white} />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Change password</Text>
           </View>
           <View style={styles.body}>
             <View style={styles.infoCard}>
-              <Ionicons name="information-circle-outline" size={16} color="#1565C0" />
+              <Ionicons name="information-circle-outline" size={16} color={colors.primary} />
               <Text style={styles.infoText}>Your new password must be at least 8 characters long.</Text>
             </View>
             {(["Current password", "New password", "Confirm new password"] as const).map((label, i) => {
@@ -60,16 +61,16 @@ export default function WorkerChangePasswordScreen() {
                 <View key={label}>
                   <Text style={styles.label}>{label}</Text>
                   <View style={styles.passwordRow}>
-                    <TextInput style={styles.passwordInput} value={val} onChangeText={setter} secureTextEntry={!show} placeholder={`Enter ${label.toLowerCase()}`} placeholderTextColor="#aaa" />
+                    <TextInput style={styles.passwordInput} value={val} onChangeText={setter} secureTextEntry={!show} placeholder={`Enter ${label.toLowerCase()}`} placeholderTextColor={colors.textMuted} />
                     <TouchableOpacity onPress={() => setShow(!show)} style={styles.eyeBtn}>
-                      <Ionicons name={show ? "eye-off-outline" : "eye-outline"} size={20} color="#888" />
+                      <Ionicons name={show ? "eye-off-outline" : "eye-outline"} size={20} color={colors.textMuted} />
                     </TouchableOpacity>
                   </View>
                 </View>
               );
             })}
             <TouchableOpacity style={styles.saveBtn} onPress={handleSave} disabled={saving}>
-              {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveBtnText}>Update password</Text>}
+              {saving ? <ActivityIndicator color={colors.white} /> : <Text style={styles.saveBtnText}>Update password</Text>}
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -79,16 +80,16 @@ export default function WorkerChangePasswordScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F7FA" },
-  header: { backgroundColor: "#1565C0", paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16 },
-  headerTitle: { fontSize: 16, fontWeight: "500", color: "#fff" },
+  container: { flex: 1, backgroundColor: colors.background },
+  header: { backgroundColor: colors.primary, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16 },
+  headerTitle: { fontSize: 16, fontWeight: "500", color: colors.white },
   body: { padding: 16 },
-  infoCard: { flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: "#E3F2FD", borderRadius: 10, padding: 12, marginBottom: 20 },
-  infoText: { flex: 1, fontSize: 12, color: "#0C447C", lineHeight: 17 },
-  label: { fontSize: 13, fontWeight: "500", color: "#1A1A1A", marginBottom: 8 },
-  passwordRow: { flexDirection: "row", alignItems: "center", backgroundColor: "#fff", borderRadius: 10, borderWidth: 0.5, borderColor: "#e0e0e0", marginBottom: 16 },
-  passwordInput: { flex: 1, padding: 12, fontSize: 14, color: "#1A1A1A" },
+  infoCard: { flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: colors.blueTint, borderRadius: 10, padding: 12, marginBottom: 20 },
+  infoText: { flex: 1, fontSize: 12, color: colors.primary, lineHeight: 17 },
+  label: { fontSize: 13, fontWeight: "500", color: colors.textDark, marginBottom: 8 },
+  passwordRow: { flexDirection: "row", alignItems: "center", backgroundColor: colors.white, borderRadius: 10, borderWidth: 0.5, borderColor: colors.border, marginBottom: 16 },
+  passwordInput: { flex: 1, padding: 12, fontSize: 14, color: colors.textDark },
   eyeBtn: { padding: 12 },
-  saveBtn: { backgroundColor: "#1565C0", borderRadius: 10, padding: 14, alignItems: "center", marginTop: 8, marginBottom: 24 },
-  saveBtnText: { fontSize: 14, fontWeight: "500", color: "#fff" },
+  saveBtn: { backgroundColor: colors.accent, borderRadius: 10, padding: 14, alignItems: "center", marginTop: 8, marginBottom: 24 },
+  saveBtnText: { fontSize: 14, fontWeight: "500", color: colors.white },
 });

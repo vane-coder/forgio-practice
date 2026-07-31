@@ -5,10 +5,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { getToken } from "../../auth";
 import { getWorkersWithPermissions, assignPermission, createWorker } from "../../services/permissions.service";
+import { colors } from "../../constants/Colors";
 
 const getRoleBadge = (role: string) => {
-  if (role === "DEPT_HEAD") return { bg: "#E3F2FD", color: "#0C447C", label: "Dept Head" };
-  if (role === "MANAGER") return { bg: "#E8F5E9", color: "#1B5E20", label: "Manager" };
+  if (role === "DEPT_HEAD") return { bg: colors.blueTint, color: colors.primary, label: "Dept Head" };
+  if (role === "MANAGER") return { bg: colors.successBg, color: colors.success, label: "Manager" };
   return { bg: "#F3E5F5", color: "#4A148C", label: "Worker" };
 };
 
@@ -88,11 +89,11 @@ export default function PermissionsScreen() {
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView style={{ flex: 1, backgroundColor: "#1565C0" }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.primary }}>
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
           <View style={styles.header}>
             <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: 8 }}>
-              <Ionicons name="arrow-back" size={20} color="#fff" />
+              <Ionicons name="arrow-back" size={20} color={colors.white} />
             </TouchableOpacity>
             <View style={styles.headerRow}>
               <View>
@@ -100,7 +101,7 @@ export default function PermissionsScreen() {
                 <Text style={styles.headerSub}>Manage worker access levels</Text>
               </View>
               <TouchableOpacity style={styles.addBtn} onPress={() => setShowAddModal(true)}>
-                <Ionicons name="person-add-outline" size={16} color="#fff" />
+                <Ionicons name="person-add-outline" size={16} color={colors.white} />
                 <Text style={styles.addBtnText}>Add worker</Text>
               </TouchableOpacity>
             </View>
@@ -108,11 +109,11 @@ export default function PermissionsScreen() {
 
           <View style={styles.body}>
             <View style={styles.searchBar}>
-              <Ionicons name="search-outline" size={16} color="#888" />
-              <TextInput style={styles.searchInput} placeholder="Search workers..." placeholderTextColor="#aaa" value={search} onChangeText={setSearch} />
+              <Ionicons name="search-outline" size={16} color={colors.textMuted} />
+              <TextInput style={styles.searchInput} placeholder="Search workers..." placeholderTextColor={colors.textMuted} value={search} onChangeText={setSearch} />
             </View>
 
-            {loading && <ActivityIndicator size="large" color="#1565C0" style={{ marginVertical: 30 }} />}
+            {loading && <ActivityIndicator size="large" color={colors.primary} style={{ marginVertical: 30 }} />}
 
             <View style={styles.list}>
               {filtered.map((worker, index) => {
@@ -134,11 +135,11 @@ export default function PermissionsScreen() {
                       {(["viewReports", "enterData", "admin"] as const).map((field) => (
                         <TouchableOpacity
                           key={field}
-                          style={[styles.permTag, { backgroundColor: worker[field] ? "#E8F5E9" : "#FFEBEE" }]}
+                          style={[styles.permTag, { backgroundColor: worker[field] ? colors.successBg : colors.dangerBg }]}
                           onPress={() => toggle(worker, field)}
                           disabled={saving === worker.userId}
                         >
-                          <Text style={[styles.permTagText, { color: worker[field] ? "#1B5E20" : "#B71C1C" }]}>
+                          <Text style={[styles.permTagText, { color: worker[field] ? colors.success : colors.danger }]}>
                             {field === "viewReports" ? (worker[field] ? "View reports" : "No reports") :
                              field === "enterData" ? (worker[field] ? "Enter data" : "No data entry") :
                              (worker[field] ? "Admin" : "No admin")}
@@ -164,7 +165,7 @@ export default function PermissionsScreen() {
               <TextInput
                 style={styles.input}
                 placeholder="e.g. Kwame Mensah"
-                placeholderTextColor="#999"
+                placeholderTextColor={colors.textMuted}
                 value={wName}
                 onChangeText={setWName}
               />
@@ -173,7 +174,7 @@ export default function PermissionsScreen() {
               <TextInput
                 style={styles.input}
                 placeholder="e.g. +233201234567"
-                placeholderTextColor="#999"
+                placeholderTextColor={colors.textMuted}
                 keyboardType="phone-pad"
                 value={wPhone}
                 onChangeText={setWPhone}
@@ -183,7 +184,7 @@ export default function PermissionsScreen() {
               <TextInput
                 style={styles.input}
                 placeholder="Set an initial password"
-                placeholderTextColor="#999"
+                placeholderTextColor={colors.textMuted}
                 secureTextEntry
                 value={wPassword}
                 onChangeText={setWPassword}
@@ -210,7 +211,7 @@ export default function PermissionsScreen() {
                 disabled={creating}
               >
                 {creating ? (
-                  <ActivityIndicator size="small" color="#fff" />
+                  <ActivityIndicator size="small" color={colors.white} />
                 ) : (
                   <Text style={styles.saveBtnText}>Add worker</Text>
                 )}
@@ -228,41 +229,41 @@ export default function PermissionsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F7FA" },
-  header: { backgroundColor: "#1565C0", paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16 },
+  container: { flex: 1, backgroundColor: colors.background },
+  header: { backgroundColor: colors.primary, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16 },
   headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  headerTitle: { fontSize: 18, fontWeight: "500", color: "#fff" },
-  headerSub: { fontSize: 11, color: "#90CAF9", marginTop: 2 },
+  headerTitle: { fontSize: 18, fontWeight: "500", color: colors.white },
+  headerSub: { fontSize: 11, color: colors.headerSubtitle, marginTop: 2 },
   addBtn: { flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: "rgba(255,255,255,0.2)", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 7 },
-  addBtnText: { fontSize: 12, color: "#fff", fontWeight: "500" },
+  addBtnText: { fontSize: 12, color: colors.white, fontWeight: "500" },
   body: { padding: 16 },
-  searchBar: { flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: "#fff", borderRadius: 10, borderWidth: 0.5, borderColor: "#e0e0e0", paddingHorizontal: 12, paddingVertical: 5, marginBottom: 14 },
-  searchInput: { flex: 1, fontSize: 15, color: "#1A1A1A" },
-  list: { backgroundColor: "#fff", borderRadius: 12, borderWidth: 0.5, borderColor: "#e0e0e0", overflow: "hidden", marginBottom: 14 },
-  workerItem: { padding: 14, borderBottomWidth: 0.5, borderBottomColor: "#f0f0f0" },
+  searchBar: { flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: colors.white, borderRadius: 10, borderWidth: 0.5, borderColor: colors.border, paddingHorizontal: 12, paddingVertical: 5, marginBottom: 14 },
+  searchInput: { flex: 1, fontSize: 15, color: colors.textDark },
+  list: { backgroundColor: colors.white, borderRadius: 12, borderWidth: 0.5, borderColor: colors.border, overflow: "hidden", marginBottom: 14 },
+  workerItem: { padding: 14, borderBottomWidth: 0.5, borderBottomColor: colors.border },
   workerRow: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 8 },
-  avatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: "#E3F2FD", justifyContent: "center", alignItems: "center", flexShrink: 0 },
-  avatarText: { fontSize: 14, fontWeight: "500", color: "#0C447C" },
+  avatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.blueTint, justifyContent: "center", alignItems: "center", flexShrink: 0 },
+  avatarText: { fontSize: 14, fontWeight: "500", color: colors.primary },
   workerInfo: { flex: 1 },
-  workerName: { fontSize: 14, fontWeight: "500", color: "#1A1A1A" },
+  workerName: { fontSize: 14, fontWeight: "500", color: colors.textDark },
   roleBadge: { borderRadius: 20, paddingHorizontal: 8, paddingVertical: 3 },
   roleBadgeText: { fontSize: 11, fontWeight: "500" },
   permissionRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, alignItems: "center" },
   permTag: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
   permTagText: { fontSize: 11 },
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" },
-  modalCard: { backgroundColor: "#fff", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24 },
-  modalTitle: { fontSize: 16, fontWeight: "500", color: "#1A1A1A", marginBottom: 4 },
-  modalSub: { fontSize: 13, color: "#888", marginBottom: 12 },
-  inputLabel: { fontSize: 12, color: "#555", fontWeight: "500", marginBottom: 6, marginTop: 8 },
-  input: { borderWidth: 1, borderColor: "#e0e0e0", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: "#1A1A1A" },
+  modalCard: { backgroundColor: colors.white, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24 },
+  modalTitle: { fontSize: 16, fontWeight: "500", color: colors.textDark, marginBottom: 4 },
+  modalSub: { fontSize: 13, color: colors.textMuted, marginBottom: 12 },
+  inputLabel: { fontSize: 12, color: colors.textMuted, fontWeight: "500", marginBottom: 6, marginTop: 8 },
+  input: { borderWidth: 1, borderColor: colors.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: colors.textDark },
   roleRow: { flexDirection: "row", gap: 8, marginTop: 2 },
-  roleChip: { flex: 1, borderWidth: 1, borderColor: "#e0e0e0", borderRadius: 8, paddingVertical: 8, alignItems: "center" },
-  roleChipActive: { backgroundColor: "#E3F2FD", borderColor: "#1565C0" },
-  roleChipText: { fontSize: 12, color: "#888", fontWeight: "500" },
-  roleChipTextActive: { color: "#1565C0" },
-  saveBtn: { backgroundColor: "#1565C0", borderRadius: 10, padding: 14, alignItems: "center", marginTop: 16 },
-  saveBtnText: { fontSize: 14, color: "#fff", fontWeight: "600" },
-  cancelBtn: { backgroundColor: "#F5F5F5", borderRadius: 10, padding: 14, alignItems: "center", marginTop: 8 },
-  cancelBtnText: { fontSize: 14, color: "#888", fontWeight: "500" },
+  roleChip: { flex: 1, borderWidth: 1, borderColor: colors.border, borderRadius: 8, paddingVertical: 8, alignItems: "center" },
+  roleChipActive: { backgroundColor: colors.accentLight, borderColor: colors.accent },
+  roleChipText: { fontSize: 12, color: colors.textMuted, fontWeight: "500" },
+  roleChipTextActive: { color: colors.accent },
+  saveBtn: { backgroundColor: colors.accent, borderRadius: 10, padding: 14, alignItems: "center", marginTop: 16 },
+  saveBtnText: { fontSize: 14, color: colors.white, fontWeight: "600" },
+  cancelBtn: { backgroundColor: colors.background, borderRadius: 10, padding: 14, alignItems: "center", marginTop: 8 },
+  cancelBtnText: { fontSize: 14, color: colors.textMuted, fontWeight: "500" },
 });

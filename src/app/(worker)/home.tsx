@@ -7,6 +7,7 @@ import { getToken } from "../../auth";
 import { API_BASE_URL } from "../../services/api.config";
 import { getMyNotifications } from "../../services/notifications.service";
 import { getNewsFeed } from "../../services/newsfeed.service";
+import { colors } from "../../constants/Colors";
 
 export default function WorkerHomeScreen() {
   const [profile, setProfile] = useState<any>(null);
@@ -36,7 +37,7 @@ export default function WorkerHomeScreen() {
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView style={{ flex: 1, backgroundColor: "#1565C0" }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.primary }}>
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
           <View style={styles.header}>
             <View style={styles.headerRow}>
@@ -56,11 +57,11 @@ export default function WorkerHomeScreen() {
               {[
                 { label: "Enter production", icon: "clipboard-outline", route: "/(worker)/enter-production" },
                 { label: "Record materials", icon: "cube-outline", route: "/(worker)/record-material" },
-                { label: "Report breakdown", icon: "triangle-outline", route: "/(worker)/report-breakdown", color: "#E65100" },
+                { label: "Report breakdown", icon: "triangle-outline", route: "/(worker)/report-breakdown", color: colors.warning },
                 { label: "My records", icon: "time-outline", route: "/(worker)/my-records" },
-              ].map((item) => (
-                <TouchableOpacity key={item.label} style={styles.actionCard} onPress={() => router.push(item.route as any)}>
-                  <Ionicons name={item.icon as any} size={28} color={item.color ?? "#1565C0"} />
+              ].map((item, i) => (
+                <TouchableOpacity key={item.label} style={[styles.actionCard, i % 2 === 1 && styles.actionCardAlt]} onPress={() => router.push(item.route as any)}>
+                  <Ionicons name={item.icon as any} size={28} color={item.color ?? (i % 2 === 0 ? colors.primary : colors.accent)} />
                   <Text style={styles.actionText}>{item.label}</Text>
                 </TouchableOpacity>
               ))}
@@ -70,7 +71,7 @@ export default function WorkerHomeScreen() {
             {latestNotif ? (
               <View style={styles.notifCard}>
                 <View style={styles.notifIcon}>
-                  <Ionicons name="people-outline" size={18} color="#0C447C" />
+                  <Ionicons name="people-outline" size={18} color={colors.primary} />
                 </View>
                 <View style={styles.notifContent}>
                   <Text style={styles.notifText}>{latestNotif.message}</Text>
@@ -114,30 +115,31 @@ export default function WorkerHomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F7FA" },
-  header: { backgroundColor: "#1565C0", paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16 },
+  container: { flex: 1, backgroundColor: colors.background },
+  header: { backgroundColor: colors.primary, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16 },
   headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 },
-  greeting: { fontSize: 12, color: "#90CAF9" },
-  name: { fontSize: 18, fontWeight: "500", color: "#fff" },
-  avatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: "#0C447C", justifyContent: "center", alignItems: "center" },
-  avatarText: { fontSize: 14, fontWeight: "500", color: "#90CAF9" },
-  deptText: { fontSize: 11, color: "#90CAF9" },
+  greeting: { fontSize: 12, color: colors.headerSubtitle },
+  name: { fontSize: 18, fontWeight: "500", color: colors.white },
+  avatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.primary, justifyContent: "center", alignItems: "center" },
+  avatarText: { fontSize: 14, fontWeight: "500", color: colors.headerSubtitle },
+  deptText: { fontSize: 11, color: colors.headerSubtitle },
   body: { padding: 16 },
   grid: { flexDirection: "row", flexWrap: "wrap", gap: 12, marginBottom: 20 },
-  actionCard: { width: "47%", backgroundColor: "#fff", borderRadius: 12, borderWidth: 0.5, borderColor: "#e0e0e0", padding: 16, alignItems: "center", gap: 8 },
-  actionText: { fontSize: 12, fontWeight: "500", color: "#1A1A1A", textAlign: "center" },
-  sectionTitle: { fontSize: 13, fontWeight: "500", color: "#1A1A1A", marginBottom: 10 },
-  notifCard: { flexDirection: "row", alignItems: "flex-start", gap: 12, backgroundColor: "#fff", borderRadius: 12, borderWidth: 0.5, borderColor: "#e0e0e0", padding: 14, marginBottom: 20 },
-  notifIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: "#E3F2FD", justifyContent: "center", alignItems: "center" },
+  actionCard: { width: "47%", backgroundColor: colors.blueTint, borderRadius: 12, borderWidth: 0.5, borderColor: colors.border, padding: 16, alignItems: "center", gap: 8 },
+  actionCardAlt: { backgroundColor: colors.accentLight },
+  actionText: { fontSize: 12, fontWeight: "500", color: colors.textDark, textAlign: "center" },
+  sectionTitle: { fontSize: 13, fontWeight: "500", color: colors.textDark, marginBottom: 10 },
+  notifCard: { flexDirection: "row", alignItems: "flex-start", gap: 12, backgroundColor: colors.white, borderRadius: 12, borderWidth: 0.5, borderColor: colors.border, padding: 14, marginBottom: 20 },
+  notifIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.blueTint, justifyContent: "center", alignItems: "center" },
   notifContent: { flex: 1 },
-  notifText: { fontSize: 12, color: "#1A1A1A", lineHeight: 17 },
-  notifTime: { fontSize: 10, color: "#888", marginTop: 4 },
-  newsCard: { backgroundColor: "#fff", borderRadius: 12, borderWidth: 0.5, borderColor: "#e0e0e0", padding: 14, marginBottom: 20 },
+  notifText: { fontSize: 12, color: colors.textDark, lineHeight: 17 },
+  notifTime: { fontSize: 10, color: colors.textMuted, marginTop: 4 },
+  newsCard: { backgroundColor: colors.white, borderRadius: 12, borderWidth: 0.5, borderColor: colors.border, padding: 14, marginBottom: 20 },
   newsRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 8 },
-  newsAvatar: { width: 30, height: 30, borderRadius: 15, backgroundColor: "#E3F2FD", justifyContent: "center", alignItems: "center" },
-  newsAvatarText: { fontSize: 10, fontWeight: "500", color: "#0C447C" },
+  newsAvatar: { width: 30, height: 30, borderRadius: 15, backgroundColor: colors.blueTint, justifyContent: "center", alignItems: "center" },
+  newsAvatarText: { fontSize: 10, fontWeight: "500", color: colors.primary },
   newsInfo: { flex: 1 },
-  newsAuthor: { fontSize: 11, fontWeight: "500", color: "#1A1A1A" },
-  newsTime: { fontSize: 10, color: "#888" },
-  newsText: { fontSize: 12, color: "#444", lineHeight: 18 },
+  newsAuthor: { fontSize: 11, fontWeight: "500", color: colors.textDark },
+  newsTime: { fontSize: 10, color: colors.textMuted },
+  newsText: { fontSize: 12, color: colors.textMuted, lineHeight: 18 },
 });

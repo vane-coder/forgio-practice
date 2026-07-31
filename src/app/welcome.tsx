@@ -6,18 +6,19 @@ import {
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { colors } from "../constants/Colors";
 
 const { height } = Dimensions.get("window");
 
 export default function WelcomeScreen() {
     return (
         <SafeAreaProvider>
-            <SafeAreaView style={{ flex: 1, backgroundColor: "#1565C0" }}>
+            <SafeAreaView style={{ flex: 1, backgroundColor: colors.primary }}>
 
                 {/* Top section — blue background */}
                 <View style={styles.top}>
                     <View style={styles.logoContainer}>
-                        <Ionicons name="business" size={40} color="#fff" />
+                        <Ionicons name="business" size={40} color={colors.white} />
                     </View>
                     <Text style={styles.appName}>Forgio</Text>
                     <Text style={styles.tagline}>Know More. Waste Less. Grow Faster.</Text>
@@ -63,7 +64,7 @@ const styles = StyleSheet.create({
     // Top blue section
     top: {
         flex: 1,
-        backgroundColor: "#1565C0",
+        backgroundColor: colors.primary,
         alignItems: "center",
         justifyContent: "center",
         paddingBottom: 40,
@@ -80,24 +81,24 @@ const styles = StyleSheet.create({
     logoText: {
         fontSize: 40,
         fontWeight: "bold",
-        color: "#fff",
+        color: colors.white,
     },
     appName: {
         fontSize: 36,
         fontWeight: "bold",
-        color: "#fff",
+        color: colors.white,
         marginBottom: 8,
     },
     tagline: {
         fontSize: 13,
-        color: "#90CAF9",
+        color: colors.headerSubtitle,
         textAlign: "center",
         paddingHorizontal: 40,
     },
 
     // Bottom white section
     bottom: {
-        backgroundColor: "#fff",
+        backgroundColor: colors.white,
         borderTopLeftRadius: 28,
         borderTopRightRadius: 28,
         padding: 28,
@@ -107,17 +108,17 @@ const styles = StyleSheet.create({
     welcomeTitle: {
         fontSize: 24,
         fontWeight: "bold",
-        color: "#1A1A1A",
+        color: colors.textDark,
         marginBottom: 10,
     },
     welcomeSubtitle: {
         fontSize: 13,
-        color: "#888",
+        color: colors.textMuted,
         lineHeight: 20,
         marginBottom: 28,
     },
     signUpBtn: {
-        backgroundColor: "#1565C0",
+        backgroundColor: colors.accent,
         borderRadius: 12,
         padding: 16,
         alignItems: "center",
@@ -126,10 +127,10 @@ const styles = StyleSheet.create({
     signUpBtnText: {
         fontSize: 15,
         fontWeight: "600",
-        color: "#fff",
+        color: colors.white,
     },
     loginBtn: {
-        backgroundColor: "#E3F2FD",
+        backgroundColor: colors.blueTint,
         borderRadius: 12,
         padding: 16,
         alignItems: "center",
@@ -138,15 +139,15 @@ const styles = StyleSheet.create({
     loginBtnText: {
         fontSize: 15,
         fontWeight: "600",
-        color: "#1565C0",
+        color: colors.primary,
     },
     termsText: {
         fontSize: 11,
-        color: "#aaa",
+        color: colors.textMuted,
         textAlign: "center",
         lineHeight: 18,
     },
     termsLink: {
-        color: "#1565C0",
+        color: colors.primary,
     },
 });

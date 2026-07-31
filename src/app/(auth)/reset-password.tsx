@@ -7,6 +7,7 @@ import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { resetPassword } from "../../services/auth.service";
+import { colors } from "../../constants/Colors";
 
 export default function ResetPasswordScreen() {
   const { phone, code } = useLocalSearchParams<{ phone: string; code: string }>();
@@ -42,13 +43,13 @@ export default function ResetPasswordScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={22} color="#1565C0" />
+            <Ionicons name="arrow-back" size={22} color={colors.primary} />
           </TouchableOpacity>
         </View>
 
         <View style={styles.body}>
           <View style={styles.iconCircle}>
-            <Ionicons name="lock-closed-outline" size={36} color="#1565C0" />
+            <Ionicons name="lock-closed-outline" size={36} color={colors.primary} />
           </View>
 
           <Text style={styles.title}>Set new password</Text>
@@ -66,7 +67,7 @@ export default function ResetPasswordScreen() {
               secureTextEntry={!showPassword}
             />
             <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeBtn}>
-              <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color="#888" />
+              <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color={colors.textMuted} />
             </TouchableOpacity>
           </View>
 
@@ -97,29 +98,29 @@ export default function ResetPasswordScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" },
+  container: { flex: 1, backgroundColor: colors.white },
   header: { padding: 20, paddingTop: 16 },
   body: { flex: 1, paddingHorizontal: 24 },
   iconCircle: {
     width: 72, height: 72, borderRadius: 36,
-    backgroundColor: "#E3F2FD",
+    backgroundColor: colors.blueTint,
     justifyContent: "center", alignItems: "center",
     marginBottom: 20,
   },
-  title: { fontSize: 24, fontWeight: "bold", color: "#1A1A1A", marginBottom: 10 },
-  subtitle: { fontSize: 13, color: "#888", lineHeight: 20, marginBottom: 28 },
-  label: { fontSize: 13, fontWeight: "500", color: "#1A1A1A", marginBottom: 8 },
+  title: { fontSize: 24, fontWeight: "bold", color: colors.textDark, marginBottom: 10 },
+  subtitle: { fontSize: 13, color: colors.textMuted, lineHeight: 20, marginBottom: 28 },
+  label: { fontSize: 13, fontWeight: "500", color: colors.textDark, marginBottom: 8 },
   passwordRow: {
     flexDirection: "row", alignItems: "center",
-    borderWidth: 1, borderColor: "#e0e0e0", borderRadius: 10,
-    marginBottom: 16, backgroundColor: "#F5F7FA",
+    borderWidth: 1, borderColor: colors.border, borderRadius: 10,
+    marginBottom: 16, backgroundColor: colors.background,
   },
-  passwordInput: { flex: 1, padding: 12, fontSize: 14, color: "#1A1A1A" },
+  passwordInput: { flex: 1, padding: 12, fontSize: 14, color: colors.textDark },
   eyeBtn: { padding: 12 },
   resetBtn: {
-    backgroundColor: "#1565C0", padding: 16,
+    backgroundColor: colors.accent, padding: 16,
     borderRadius: 10, alignItems: "center", marginTop: 8,
   },
   resetBtnDisabled: { opacity: 0.5 },
-  resetBtnText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
+  resetBtnText: { color: colors.white, fontSize: 16, fontWeight: "bold" },
 });

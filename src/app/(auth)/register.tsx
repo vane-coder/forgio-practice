@@ -7,6 +7,7 @@ import React from "react";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { sendRegistrationCode } from "../../services/auth.service";
+import { colors } from "../../constants/Colors";
 
 export default function RegisterScreen() {
   const [name, setName] = useState("");
@@ -50,7 +51,7 @@ export default function RegisterScreen() {
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color="#1565C0" />
+          <Ionicons name="arrow-back" size={22} color={colors.primary} />
         </TouchableOpacity>
       </View>
 
@@ -76,7 +77,7 @@ export default function RegisterScreen() {
           secureTextEntry={!showPassword}
         />
         <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeBtn}>
-          <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color="#888" />
+          <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color={colors.textMuted} />
         </TouchableOpacity>
       </View>
 
@@ -92,18 +93,18 @@ export default function RegisterScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff", padding: 24 },
+  container: { flex: 1, backgroundColor: colors.white, padding: 24 },
   header: { marginTop: 10, marginBottom: 20 },
-  title: { fontSize: 26, fontWeight: "bold", color: "#1A1A1A", marginBottom: 6 },
-  subtitle: { fontSize: 13, color: "#888", marginBottom: 28, lineHeight: 20 },
-  label: { fontSize: 13, fontWeight: "500", color: "#1A1A1A", marginBottom: 8 },
-  input: { borderWidth: 1, borderColor: "#e0e0e0", borderRadius: 10, padding: 12, marginBottom: 8, fontSize: 14, color: "#1A1A1A", backgroundColor: "#F5F7FA" },
-  passwordRow: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: "#e0e0e0", borderRadius: 10, marginBottom: 16, backgroundColor: "#F5F7FA" },
-  passwordInput: { flex: 1, padding: 12, fontSize: 14, color: "#1A1A1A" },
+  title: { fontSize: 26, fontWeight: "bold", color: colors.textDark, marginBottom: 6 },
+  subtitle: { fontSize: 13, color: colors.textMuted, marginBottom: 28, lineHeight: 20 },
+  label: { fontSize: 13, fontWeight: "500", color: colors.textDark, marginBottom: 8 },
+  input: { borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 12, marginBottom: 8, fontSize: 14, color: colors.textDark, backgroundColor: colors.background },
+  passwordRow: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: colors.border, borderRadius: 10, marginBottom: 16, backgroundColor: colors.background },
+  passwordInput: { flex: 1, padding: 12, fontSize: 14, color: colors.textDark },
   eyeBtn: { padding: 12 },
-  button: { backgroundColor: "#1565C0", padding: 16, borderRadius: 10, alignItems: "center", marginBottom: 16 },
-  buttonText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
+  button: { backgroundColor: colors.accent, padding: 16, borderRadius: 10, alignItems: "center", marginBottom: 16 },
+  buttonText: { color: colors.white, fontSize: 16, fontWeight: "bold" },
   loginLink: { alignItems: "center", marginBottom: 40 },
-  loginLinkText: { fontSize: 13, color: "#888" },
-  loginLinkBold: { color: "#1565C0", fontWeight: "500" },
+  loginLinkText: { fontSize: 13, color: colors.textMuted },
+  loginLinkBold: { color: colors.primary, fontWeight: "500" },
 });

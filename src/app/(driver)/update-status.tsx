@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { getToken } from "../../auth";
 import { updateShipmentStatus } from "../../services/shipment.service";
+import { colors } from "../../constants/Colors";
 
 const steps = [
   { key: "PENDING", label: "Pending", icon: "time-outline", desc: "Shipment assigned, not yet departed" },
@@ -38,12 +39,12 @@ export default function UpdateStatusScreen() {
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView style={{ flex: 1, backgroundColor: "#1565C0" }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.primary }}>
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
 
           <View style={styles.header}>
             <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: 8 }}>
-              <Ionicons name="arrow-back" size={20} color="#fff" />
+              <Ionicons name="arrow-back" size={20} color={colors.white} />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Update status</Text>
             {params.shipmentId ? (
@@ -60,24 +61,24 @@ export default function UpdateStatusScreen() {
                   <View style={styles.stepIconCol}>
                     <View style={[
                       styles.stepCircle,
-                      isDone && { backgroundColor: "#2E7D32", borderColor: "#2E7D32" },
-                      isActive && { backgroundColor: "#1565C0", borderColor: "#1565C0" },
+                      isDone && { backgroundColor: colors.success, borderColor: colors.success },
+                      isActive && { backgroundColor: colors.accent, borderColor: colors.accent },
                     ]}>
                       <Ionicons
                         name={isDone ? "checkmark" : step.icon as any}
                         size={16}
-                        color={isDone || isActive ? "#fff" : "#ccc"}
+                        color={isDone || isActive ? colors.white : colors.border}
                       />
                     </View>
                     {index < steps.length - 1 && (
-                      <View style={[styles.stepLine, isDone && { backgroundColor: "#2E7D32" }]} />
+                      <View style={[styles.stepLine, isDone && { backgroundColor: colors.success }]} />
                     )}
                   </View>
                   <View style={styles.stepContent}>
                     <Text style={[
                       styles.stepLabel,
-                      isActive && { color: "#1565C0" },
-                      isDone && { color: "#2E7D32" }
+                      isActive && { color: colors.accent },
+                      isDone && { color: colors.success }
                     ]}>
                       {step.label}
                     </Text>
@@ -89,11 +90,11 @@ export default function UpdateStatusScreen() {
                         disabled={saving}
                       >
                         {saving ? (
-                          <ActivityIndicator size="small" color="#1565C0" />
+                          <ActivityIndicator size="small" color={colors.white} />
                         ) : (
                           <>
                             <Text style={styles.nextBtnText}>Mark as {steps[index + 1].label}</Text>
-                            <Ionicons name="arrow-forward" size={14} color="#1565C0" />
+                            <Ionicons name="arrow-forward" size={14} color={colors.white} />
                           </>
                         )}
                       </TouchableOpacity>
@@ -104,7 +105,7 @@ export default function UpdateStatusScreen() {
                         onPress={() => router.push("/(driver)/shipment-assignment")}
                       >
                         <Text style={styles.doneBtnText}>Done</Text>
-                        <Ionicons name="checkmark" size={14} color="#fff" />
+                        <Ionicons name="checkmark" size={14} color={colors.white} />
                       </TouchableOpacity>
                     )}
                   </View>
@@ -120,20 +121,20 @@ export default function UpdateStatusScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F7FA" },
-  header: { backgroundColor: "#1565C0", paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16 },
-  headerTitle: { fontSize: 20, fontWeight: "500", color: "#fff" },
-  headerSub: { fontSize: 11, color: "#90CAF9", marginTop: 2 },
+  container: { flex: 1, backgroundColor: colors.background },
+  header: { backgroundColor: colors.primary, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16 },
+  headerTitle: { fontSize: 20, fontWeight: "500", color: colors.white },
+  headerSub: { fontSize: 11, color: colors.headerSubtitle, marginTop: 2 },
   body: { padding: 20 },
   stepRow: { flexDirection: "row", gap: 14, marginBottom: 4 },
   stepIconCol: { alignItems: "center" },
-  stepCircle: { width: 36, height: 36, borderRadius: 18, borderWidth: 1.5, borderColor: "#ccc", backgroundColor: "#fff", justifyContent: "center", alignItems: "center" },
-  stepLine: { width: 2, height: 50, backgroundColor: "#e0e0e0", marginVertical: 4 },
+  stepCircle: { width: 36, height: 36, borderRadius: 18, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.white, justifyContent: "center", alignItems: "center" },
+  stepLine: { width: 2, height: 50, backgroundColor: colors.border, marginVertical: 4 },
   stepContent: { flex: 1, paddingBottom: 20 },
-  stepLabel: { fontSize: 16, fontWeight: "500", color: "#888", marginBottom: 3 },
-  stepDesc: { fontSize: 11, color: "#aaa" },
-  nextBtn: { flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: "#E3F2FD", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, marginTop: 10, alignSelf: "flex-start" },
-  nextBtnText: { fontSize: 12, color: "#1565C0", fontWeight: "500" },
-  doneBtn: { flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: "#2E7D32", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, marginTop: 10, alignSelf: "flex-start" },
-  doneBtnText: { fontSize: 12, color: "#fff", fontWeight: "500" },
+  stepLabel: { fontSize: 16, fontWeight: "500", color: colors.textMuted, marginBottom: 3 },
+  stepDesc: { fontSize: 11, color: colors.textMuted },
+  nextBtn: { flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: colors.accent, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, marginTop: 10, alignSelf: "flex-start" },
+  nextBtnText: { fontSize: 12, color: colors.white, fontWeight: "500" },
+  doneBtn: { flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: colors.success, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, marginTop: 10, alignSelf: "flex-start" },
+  doneBtnText: { fontSize: 12, color: colors.white, fontWeight: "500" },
 });

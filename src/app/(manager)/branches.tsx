@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { getToken } from "../../auth";
 import { getBranches, createBranch } from "../../services/branches.service";
+import { colors } from "../../constants/Colors";
 
 export default function BranchesScreen() {
   const [branches, setBranches] = useState<any[]>([]);
@@ -49,12 +50,12 @@ export default function BranchesScreen() {
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView style={{ flex: 1, backgroundColor: "#1565C0" }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.primary }}>
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
 
           <View style={styles.header}>
             <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: 8 }}>
-              <Ionicons name="arrow-back" size={20} color="#fff" />
+              <Ionicons name="arrow-back" size={20} color={colors.white} />
             </TouchableOpacity>
             <View style={styles.headerRow}>
               <View>
@@ -62,7 +63,7 @@ export default function BranchesScreen() {
                 <Text style={styles.headerSub}>{branches.length} locations</Text>
               </View>
               <TouchableOpacity style={styles.addBtn} onPress={() => setShowModal(true)}>
-                <Ionicons name="add" size={18} color="#fff" />
+                <Ionicons name="add" size={18} color={colors.white} />
                 <Text style={styles.addBtnText}>Add</Text>
               </TouchableOpacity>
             </View>
@@ -70,9 +71,9 @@ export default function BranchesScreen() {
 
           <View style={styles.body}>
 
-            {loading && <ActivityIndicator size="large" color="#1565C0" style={{ marginVertical: 30 }} />}
+            {loading && <ActivityIndicator size="large" color={colors.primary} style={{ marginVertical: 30 }} />}
             {!loading && branches.length === 0 && (
-              <Text style={{ textAlign: "center", color: "#888", marginVertical: 30 }}>
+              <Text style={{ textAlign: "center", color: colors.textMuted, marginVertical: 30 }}>
                 No branches yet. Add your first one.
               </Text>
             )}
@@ -81,7 +82,7 @@ export default function BranchesScreen() {
               <View key={branch.branchId} style={styles.card}>
                 <View style={styles.cardTop}>
                   <View style={styles.iconCircle}>
-                    <Ionicons name="business-outline" size={18} color="#1565C0" />
+                    <Ionicons name="business-outline" size={18} color={colors.primary} />
                   </View>
                   <View style={styles.cardTopInfo}>
                     <Text style={styles.branchName}>{branch.name}</Text>
@@ -89,11 +90,11 @@ export default function BranchesScreen() {
                   </View>
                   <View style={[
                     styles.tag,
-                    branch.isMain ? { backgroundColor: "#E8F5E9" } : { backgroundColor: "#E3F2FD" }
+                    branch.isMain ? { backgroundColor: colors.successBg } : { backgroundColor: colors.blueTint }
                   ]}>
                     <Text style={[
                       styles.tagText,
-                      branch.isMain ? { color: "#1B5E20" } : { color: "#0C447C" }
+                      branch.isMain ? { color: colors.success } : { color: colors.primary }
                     ]}>
                       {branch.isMain ? "Main" : "Branch"}
                     </Text>
@@ -104,11 +105,11 @@ export default function BranchesScreen() {
 
                 <View style={styles.statsRow}>
                   <View style={styles.statItem}>
-                    <Ionicons name="people-outline" size={14} color="#888" />
+                    <Ionicons name="people-outline" size={14} color={colors.textMuted} />
                     <Text style={styles.statText}>{branch.workerCount} workers</Text>
                   </View>
                   <View style={styles.statItem}>
-                    <Ionicons name="construct-outline" size={14} color="#888" />
+                    <Ionicons name="construct-outline" size={14} color={colors.textMuted} />
                     <Text style={styles.statText}>{branch.machineCount} machines</Text>
                   </View>
                 </View>
@@ -128,14 +129,14 @@ export default function BranchesScreen() {
                       },
                     })}
                   >
-                    <Ionicons name="eye-outline" size={14} color="#1565C0" />
+                    <Ionicons name="eye-outline" size={14} color={colors.primary} />
                     <Text style={styles.actionBtnText}>View details</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.actionBtn}
                     onPress={() => router.push("/(manager)/shipments")}
                   >
-                    <Ionicons name="swap-horizontal-outline" size={14} color="#1565C0" />
+                    <Ionicons name="swap-horizontal-outline" size={14} color={colors.primary} />
                     <Text style={styles.actionBtnText}>Shipments</Text>
                   </TouchableOpacity>
                 </View>
@@ -154,7 +155,7 @@ export default function BranchesScreen() {
               <TextInput
                 style={styles.modalInput}
                 placeholder="e.g. Accra Branch"
-                placeholderTextColor="#aaa"
+                placeholderTextColor={colors.textMuted}
                 value={newName}
                 onChangeText={setNewName}
               />
@@ -163,7 +164,7 @@ export default function BranchesScreen() {
               <TextInput
                 style={styles.modalInput}
                 placeholder="e.g. Tema Industrial Area"
-                placeholderTextColor="#aaa"
+                placeholderTextColor={colors.textMuted}
                 value={newLocation}
                 onChangeText={setNewLocation}
               />
@@ -186,37 +187,37 @@ export default function BranchesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F7FA" },
-  header: { backgroundColor: "#1565C0", paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16 },
+  container: { flex: 1, backgroundColor: colors.background },
+  header: { backgroundColor: colors.primary, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16 },
   headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  headerTitle: { fontSize: 16, fontWeight: "500", color: "#fff" },
-  headerSub: { fontSize: 11, color: "#90CAF9", marginTop: 2 },
+  headerTitle: { fontSize: 16, fontWeight: "500", color: colors.white },
+  headerSub: { fontSize: 11, color: colors.headerSubtitle, marginTop: 2 },
   addBtn: { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(255,255,255,0.2)", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
-  addBtnText: { fontSize: 12, color: "#fff", fontWeight: "500" },
+  addBtnText: { fontSize: 12, color: colors.white, fontWeight: "500" },
   body: { padding: 16 },
-  card: { backgroundColor: "#fff", borderRadius: 12, borderWidth: 0.5, borderColor: "#e0e0e0", padding: 14, marginBottom: 12 },
+  card: { backgroundColor: colors.white, borderRadius: 12, borderWidth: 0.5, borderColor: colors.border, padding: 14, marginBottom: 12 },
   cardTop: { flexDirection: "row", alignItems: "center", gap: 10 },
-  iconCircle: { width: 38, height: 38, borderRadius: 19, backgroundColor: "#E3F2FD", justifyContent: "center", alignItems: "center" },
+  iconCircle: { width: 38, height: 38, borderRadius: 19, backgroundColor: colors.blueTint, justifyContent: "center", alignItems: "center" },
   cardTopInfo: { flex: 1 },
-  branchName: { fontSize: 13, fontWeight: "500", color: "#1A1A1A" },
-  branchAddress: { fontSize: 11, color: "#888", marginTop: 2 },
+  branchName: { fontSize: 13, fontWeight: "500", color: colors.textDark },
+  branchAddress: { fontSize: 11, color: colors.textMuted, marginTop: 2 },
   tag: { borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3 },
   tagText: { fontSize: 10, fontWeight: "500" },
   divider: { height: 0.5, backgroundColor: "#f0f0f0", marginVertical: 12 },
   statsRow: { flexDirection: "row", gap: 16, marginBottom: 12 },
   statItem: { flexDirection: "row", alignItems: "center", gap: 4 },
-  statText: { fontSize: 11, color: "#888" },
+  statText: { fontSize: 11, color: colors.textMuted },
   cardActions: { flexDirection: "row", gap: 10 },
-  actionBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5, backgroundColor: "#E3F2FD", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, flex: 1 },
-  actionBtnText: { fontSize: 11, color: "#1565C0", fontWeight: "500" },
+  actionBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5, backgroundColor: colors.blueTint, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, flex: 1 },
+  actionBtnText: { fontSize: 11, color: colors.primary, fontWeight: "500" },
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" },
-  modalCard: { backgroundColor: "#fff", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24 },
-  modalTitle: { fontSize: 16, fontWeight: "500", color: "#1A1A1A", marginBottom: 16 },
-  modalLabel: { fontSize: 12, fontWeight: "500", color: "#1A1A1A", marginBottom: 6 },
-  modalInput: { backgroundColor: "#F5F7FA", borderRadius: 8, borderWidth: 0.5, borderColor: "#e0e0e0", padding: 11, fontSize: 13, color: "#1A1A1A", marginBottom: 14 },
+  modalCard: { backgroundColor: colors.white, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24 },
+  modalTitle: { fontSize: 16, fontWeight: "500", color: colors.textDark, marginBottom: 16 },
+  modalLabel: { fontSize: 12, fontWeight: "500", color: colors.textDark, marginBottom: 6 },
+  modalInput: { backgroundColor: colors.background, borderRadius: 8, borderWidth: 0.5, borderColor: colors.border, padding: 11, fontSize: 13, color: colors.textDark, marginBottom: 14 },
   modalButtons: { flexDirection: "row", gap: 10, marginTop: 6 },
   modalCancel: { flex: 1, backgroundColor: "#F5F5F5", borderRadius: 8, padding: 13, alignItems: "center" },
-  modalCancelText: { fontSize: 14, color: "#888", fontWeight: "500" },
-  modalSave: { flex: 1, backgroundColor: "#1565C0", borderRadius: 8, padding: 13, alignItems: "center" },
-  modalSaveText: { fontSize: 14, color: "#fff", fontWeight: "500" },
+  modalCancelText: { fontSize: 14, color: colors.textMuted, fontWeight: "500" },
+  modalSave: { flex: 1, backgroundColor: colors.accent, borderRadius: 8, padding: 13, alignItems: "center" },
+  modalSaveText: { fontSize: 14, color: colors.white, fontWeight: "500" },
 });

@@ -18,3 +18,4 @@ export const getProductionByFactory = async (token: string) => {
   if (!response.ok) throw new Error("Failed to fetch production records");
   return response.json();
 };
+

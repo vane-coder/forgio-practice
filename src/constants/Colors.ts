@@ -1,13 +1,22 @@
-export const Colors = {
-  primary: "#1565C0",
-  primaryLight: "#E3F2FD",
-  primaryMid: "#90CAF9",
+export const colors = {
+  primary: "#0C447C",
+  primaryLight: "#B5D4F4",
+  headerSubtitle: "#8FC1E3",
+  accent: "#0F6E56",
+  accentLight: "#DDEDE9",
+  blueTint: "#E1F0F5",
+  background: "#F4F6F5",
   white: "#FFFFFF",
-  dark: "#1A1A1A",
-  grey: "#4A4A4A",
-  lightGrey: "#F5F5F5",
-  border: "#CCCCCC",
+  
+  textDark: "#1A1A1A",
+  textMuted: "#888888",
+  
+  border: "#E0E0E0",
   success: "#2E7D32",
-  warning: "#F57F17",
-  error: "#C62828",
+  successBg: "#E8F5E9",
+  warning: "#E65100",
+  warningBg: "#FFF3E0",
+  danger: "#C62828",
+  dangerBg: "#FFEBEE",
+
 };

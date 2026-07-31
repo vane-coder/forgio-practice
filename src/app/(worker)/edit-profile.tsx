@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { getToken } from "../../auth";
 import { API_BASE_URL } from "../../services/api.config";
+import { colors } from "../../constants/Colors";
 
 export default function WorkerEditProfileScreen() {
   const [name, setName] = useState("");
@@ -54,16 +55,16 @@ export default function WorkerEditProfileScreen() {
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView style={{ flex: 1, backgroundColor: "#1565C0" }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.primary }}>
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
           <View style={styles.header}>
             <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: 8 }}>
-              <Ionicons name="arrow-back" size={20} color="#fff" />
+              <Ionicons name="arrow-back" size={20} color={colors.white} />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Edit profile</Text>
           </View>
           <View style={styles.body}>
-            {loading ? <ActivityIndicator size="large" color="#1565C0" style={{ marginVertical: 40 }} /> : (
+            {loading ? <ActivityIndicator size="large" color={colors.primary} style={{ marginVertical: 40 }} /> : (
               <>
                 <View style={styles.avatarSection}>
                   <View style={styles.avatar}>
@@ -75,7 +76,7 @@ export default function WorkerEditProfileScreen() {
                 <Text style={styles.label}>Phone number</Text>
                 <TextInput style={styles.input} value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
                 <TouchableOpacity style={styles.saveBtn} onPress={handleSave} disabled={saving}>
-                  {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveBtnText}>Save changes</Text>}
+                  {saving ? <ActivityIndicator color={colors.white} /> : <Text style={styles.saveBtnText}>Save changes</Text>}
                 </TouchableOpacity>
               </>
             )}
@@ -87,15 +88,15 @@ export default function WorkerEditProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F7FA" },
-  header: { backgroundColor: "#1565C0", paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16 },
-  headerTitle: { fontSize: 16, fontWeight: "500", color: "#fff" },
+  container: { flex: 1, backgroundColor: colors.background },
+  header: { backgroundColor: colors.primary, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16 },
+  headerTitle: { fontSize: 16, fontWeight: "500", color: colors.white },
   body: { padding: 16 },
   avatarSection: { alignItems: "center", marginBottom: 24 },
-  avatar: { width: 80, height: 80, borderRadius: 40, backgroundColor: "#1565C0", justifyContent: "center", alignItems: "center" },
-  avatarText: { fontSize: 28, fontWeight: "bold", color: "#90CAF9" },
-  label: { fontSize: 13, fontWeight: "500", color: "#1A1A1A", marginBottom: 8 },
-  input: { backgroundColor: "#fff", borderRadius: 10, borderWidth: 0.5, borderColor: "#e0e0e0", padding: 12, fontSize: 14, color: "#1A1A1A", marginBottom: 16 },
-  saveBtn: { backgroundColor: "#1565C0", borderRadius: 10, padding: 14, alignItems: "center", marginTop: 8, marginBottom: 24 },
-  saveBtnText: { fontSize: 14, fontWeight: "500", color: "#fff" },
+  avatar: { width: 80, height: 80, borderRadius: 40, backgroundColor: colors.primary, justifyContent: "center", alignItems: "center" },
+  avatarText: { fontSize: 28, fontWeight: "bold", color: colors.headerSubtitle },
+  label: { fontSize: 13, fontWeight: "500", color: colors.textDark, marginBottom: 8 },
+  input: { backgroundColor: colors.white, borderRadius: 10, borderWidth: 0.5, borderColor: colors.border, padding: 12, fontSize: 14, color: colors.textDark, marginBottom: 16 },
+  saveBtn: { backgroundColor: colors.accent, borderRadius: 10, padding: 14, alignItems: "center", marginTop: 8, marginBottom: 24 },
+  saveBtnText: { fontSize: 14, fontWeight: "500", color: colors.white },
 });

@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-nati
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { colors } from "../../constants/Colors";
 
 const faqs = [
   { q: "How do I enter my daily production?", a: "From the home screen tap Enter production, fill in the product name, quantity and shift, then tap Submit." },
@@ -17,12 +18,12 @@ export default function WorkerHelpScreen() {
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView style={{ flex: 1, backgroundColor: "#1565C0" }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.primary }}>
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
 
           <View style={styles.header}>
             <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: 8 }}>
-              <Ionicons name="arrow-back" size={20} color="#fff" />
+              <Ionicons name="arrow-back" size={20} color={colors.white} />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Help & support</Text>
             <Text style={styles.headerSub}>Frequently asked questions</Text>
@@ -38,7 +39,7 @@ export default function WorkerHelpScreen() {
                     onPress={() => setExpanded(expanded === i ? null : i)}
                   >
                     <Text style={styles.faqQuestionText}>{faq.q}</Text>
-                    <Ionicons name={expanded === i ? "chevron-up" : "chevron-down"} size={16} color="#888" />
+                    <Ionicons name={expanded === i ? "chevron-up" : "chevron-down"} size={16} color={colors.textMuted} />
                   </TouchableOpacity>
                   {expanded === i && (
                     <Text style={styles.faqAnswer}>{faq.a}</Text>
@@ -48,7 +49,7 @@ export default function WorkerHelpScreen() {
             </View>
 
             <View style={styles.contactCard}>
-              <Ionicons name="mail-outline" size={20} color="#1565C0" />
+              <Ionicons name="mail-outline" size={20} color={colors.primary} />
               <View style={styles.contactInfo}>
                 <Text style={styles.contactTitle}>Still need help?</Text>
                 <Text style={styles.contactText}>Email us at support@forgio.com</Text>
@@ -63,18 +64,18 @@ export default function WorkerHelpScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F7FA" },
-  header: { backgroundColor: "#1565C0", paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16 },
-  headerTitle: { fontSize: 16, fontWeight: "500", color: "#fff" },
-  headerSub: { fontSize: 11, color: "#90CAF9", marginTop: 2 },
+  container: { flex: 1, backgroundColor: colors.background },
+  header: { backgroundColor: colors.primary, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16 },
+  headerTitle: { fontSize: 16, fontWeight: "500", color: colors.white },
+  headerSub: { fontSize: 11, color: colors.headerSubtitle, marginTop: 2 },
   body: { padding: 16 },
-  faqList: { backgroundColor: "#fff", borderRadius: 12, borderWidth: 0.5, borderColor: "#e0e0e0", overflow: "hidden", marginBottom: 16 },
-  faqItem: { borderBottomWidth: 0.5, borderBottomColor: "#f0f0f0" },
+  faqList: { backgroundColor: colors.white, borderRadius: 12, borderWidth: 0.5, borderColor: colors.border, overflow: "hidden", marginBottom: 16 },
+  faqItem: { borderBottomWidth: 0.5, borderBottomColor: colors.border },
   faqQuestion: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 14 },
-  faqQuestionText: { flex: 1, fontSize: 13, fontWeight: "500", color: "#1A1A1A", paddingRight: 10 },
-  faqAnswer: { fontSize: 12, color: "#666", lineHeight: 18, paddingHorizontal: 14, paddingBottom: 14 },
-  contactCard: { flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: "#E3F2FD", borderRadius: 12, padding: 16, marginBottom: 24 },
+  faqQuestionText: { flex: 1, fontSize: 13, fontWeight: "500", color: colors.textDark, paddingRight: 10 },
+  faqAnswer: { fontSize: 12, color: colors.textMuted, lineHeight: 18, paddingHorizontal: 14, paddingBottom: 14 },
+  contactCard: { flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: colors.blueTint, borderRadius: 12, padding: 16, marginBottom: 24 },
   contactInfo: { flex: 1 },
-  contactTitle: { fontSize: 13, fontWeight: "500", color: "#0C447C" },
-  contactText: { fontSize: 12, color: "#1565C0", marginTop: 2 },
+  contactTitle: { fontSize: 13, fontWeight: "500", color: colors.primary },
+  contactText: { fontSize: 12, color: colors.primary, marginTop: 2 },
 });

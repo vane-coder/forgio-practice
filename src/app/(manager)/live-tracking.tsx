@@ -7,6 +7,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { getToken } from "../../auth";
 import { trackShipment } from "../../services/gps.service";
 import { updateShipmentStatus, getShipments } from "../../services/shipment.service";
+import { colors } from "../../constants/Colors";
 
 export default function LiveTrackingScreen() {
   const params = useLocalSearchParams<{ shipmentId: string }>();
@@ -66,11 +67,11 @@ export default function LiveTrackingScreen() {
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView style={{ flex: 1, backgroundColor: "#1565C0" }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.primary }}>
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
           <View style={styles.header}>
             <TouchableOpacity style={styles.backRow} onPress={() => router.back()}>
-              <Ionicons name="arrow-back" size={18} color="#90CAF9" />
+              <Ionicons name="arrow-back" size={18} color={colors.headerSubtitle} />
               <Text style={styles.headerTitle}>Live tracking</Text>
             </TouchableOpacity>
             <Text style={styles.headerSub}>
@@ -80,12 +81,12 @@ export default function LiveTrackingScreen() {
 
           <View style={styles.body}>
             {loading ? (
-              <ActivityIndicator size="large" color="#1565C0" style={{ marginVertical: 40 }} />
+              <ActivityIndicator size="large" color={colors.primary} style={{ marginVertical: 40 }} />
             ) : !shipmentId ? (
               <View>
                 <Text style={styles.pickerHeading}>Select a shipment to track</Text>
                 {shipments.length === 0 && (
-                  <Text style={{ textAlign: "center", color: "#888", marginVertical: 30 }}>No shipments available</Text>
+                  <Text style={{ textAlign: "center", color: colors.textMuted, marginVertical: 30 }}>No shipments available</Text>
                 )}
                 {shipments.map((s) => {
                   const active = s.status === "IN_TRANSIT" || s.status === "DEPARTED";
@@ -95,14 +96,14 @@ export default function LiveTrackingScreen() {
                       style={styles.pickerItem}
                       onPress={() => { setLoading(true); setSelectedId(s.shipmentId); }}
                     >
-                      <View style={[styles.pickerDot, { backgroundColor: active ? "#2E7D32" : "#aaa" }]} />
+                      <View style={[styles.pickerDot, { backgroundColor: active ? colors.success : colors.textMuted }]} />
                       <View style={{ flex: 1 }}>
                         <Text style={styles.pickerRoute}>{s.fromBranchName} → {s.toBranchName}</Text>
                         <Text style={styles.pickerMeta}>
                           #{s.shipmentId.substring(0, 8)} · {String(s.status).replace("_", " ").toLowerCase()}
                         </Text>
                       </View>
-                      <Ionicons name="chevron-forward" size={16} color="#888" />
+                      <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
                     </TouchableOpacity>
                   );
                 })}
@@ -114,7 +115,7 @@ export default function LiveTrackingScreen() {
                     style={styles.map}
                     initialRegion={{ latitude: currentLat, longitude: currentLng, latitudeDelta: 2.5, longitudeDelta: 2.5 }}
                   >
-                    <Marker coordinate={{ latitude: currentLat, longitude: currentLng }} title="Current location" pinColor="#E65100" />
+                    <Marker coordinate={{ latitude: currentLat, longitude: currentLng }} title="Current location" pinColor={colors.warning} />
                   </MapView>
                 </View>
 
@@ -142,22 +143,22 @@ export default function LiveTrackingScreen() {
                 </View>
 
                 <TouchableOpacity style={styles.arrivedBtn} onPress={handleMarkArrived} disabled={marking}>
-                  {marking ? <ActivityIndicator color="#fff" /> : (
+                  {marking ? <ActivityIndicator color={colors.white} /> : (
                     <>
-                      <Ionicons name="checkmark-circle-outline" size={18} color="#fff" />
+                      <Ionicons name="checkmark-circle-outline" size={18} color={colors.white} />
                       <Text style={styles.arrivedBtnText}>Mark as arrived</Text>
                     </>
                   )}
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.refreshBtn} onPress={() => { setLoading(true); load(); }}>
-                  <Ionicons name="refresh-outline" size={18} color="#1565C0" />
+                  <Ionicons name="refresh-outline" size={18} color={colors.primary} />
                   <Text style={styles.refreshBtnText}>Refresh location</Text>
                 </TouchableOpacity>
 
                 {!params.shipmentId && (
                   <TouchableOpacity style={styles.changeBtn} onPress={() => setSelectedId(undefined)}>
-                    <Ionicons name="list-outline" size={16} color="#888" />
+                    <Ionicons name="list-outline" size={16} color={colors.textMuted} />
                     <Text style={styles.changeBtnText}>Choose another shipment</Text>
                   </TouchableOpacity>
                 )}
@@ -171,29 +172,29 @@ export default function LiveTrackingScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F7FA" },
-  header: { backgroundColor: "#1565C0", paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16 },
+  container: { flex: 1, backgroundColor: colors.background },
+  header: { backgroundColor: colors.primary, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16 },
   backRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 4 },
-  headerTitle: { fontSize: 16, fontWeight: "500", color: "#fff" },
-  headerSub: { fontSize: 11, color: "#90CAF9", marginLeft: 26 },
+  headerTitle: { fontSize: 16, fontWeight: "500", color: colors.white },
+  headerSub: { fontSize: 11, color: colors.headerSubtitle, marginLeft: 26 },
   body: { padding: 16 },
-  mapContainer: { borderRadius: 12, overflow: "hidden", marginBottom: 14, borderWidth: 0.5, borderColor: "#e0e0e0" },
+  mapContainer: { borderRadius: 12, overflow: "hidden", marginBottom: 14, borderWidth: 0.5, borderColor: colors.border },
   map: { height: 220, width: "100%" },
-  card: { backgroundColor: "#fff", borderRadius: 12, borderWidth: 0.5, borderColor: "#e0e0e0", padding: 12, marginBottom: 14 },
+  card: { backgroundColor: colors.white, borderRadius: 12, borderWidth: 0.5, borderColor: colors.border, padding: 12, marginBottom: 14 },
   detailRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 7, borderBottomWidth: 0.5, borderBottomColor: "#f0f0f0" },
-  detailLabel: { fontSize: 11, color: "#888" },
-  detailValue: { fontSize: 11, fontWeight: "500", color: "#1A1A1A" },
-  badgeOrange: { backgroundColor: "#FFF3E0", borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3 },
-  badgeOrangeText: { fontSize: 10, color: "#854F0B" },
-  arrivedBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: "#2E7D32", borderRadius: 10, padding: 14, marginBottom: 10 },
-  arrivedBtnText: { fontSize: 14, fontWeight: "500", color: "#fff" },
-  refreshBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: "#fff", borderRadius: 10, borderWidth: 0.5, borderColor: "#1565C0", padding: 14, marginBottom: 10 },
-  refreshBtnText: { fontSize: 14, fontWeight: "500", color: "#1565C0" },
+  detailLabel: { fontSize: 11, color: colors.textMuted },
+  detailValue: { fontSize: 11, fontWeight: "500", color: colors.textDark },
+  badgeOrange: { backgroundColor: colors.warningBg, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3 },
+  badgeOrangeText: { fontSize: 10, color: colors.warning },
+  arrivedBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: colors.success, borderRadius: 10, padding: 14, marginBottom: 10 },
+  arrivedBtnText: { fontSize: 14, fontWeight: "500", color: colors.white },
+  refreshBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: colors.white, borderRadius: 10, borderWidth: 0.5, borderColor: colors.primary, padding: 14, marginBottom: 10 },
+  refreshBtnText: { fontSize: 14, fontWeight: "500", color: colors.primary },
   changeBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, padding: 10, marginBottom: 20 },
-  changeBtnText: { fontSize: 13, color: "#888", fontWeight: "500" },
-  pickerHeading: { fontSize: 13, fontWeight: "500", color: "#555", marginBottom: 12 },
-  pickerItem: { flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: "#fff", borderRadius: 10, borderWidth: 0.5, borderColor: "#e0e0e0", padding: 14, marginBottom: 10 },
+  changeBtnText: { fontSize: 13, color: colors.textMuted, fontWeight: "500" },
+  pickerHeading: { fontSize: 13, fontWeight: "500", color: colors.textMuted, marginBottom: 12 },
+  pickerItem: { flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: colors.white, borderRadius: 10, borderWidth: 0.5, borderColor: colors.border, padding: 14, marginBottom: 10 },
   pickerDot: { width: 9, height: 9, borderRadius: 5 },
-  pickerRoute: { fontSize: 13, fontWeight: "500", color: "#1A1A1A" },
-  pickerMeta: { fontSize: 11, color: "#888", marginTop: 2 },
+  pickerRoute: { fontSize: 13, fontWeight: "500", color: colors.textDark },
+  pickerMeta: { fontSize: 11, color: colors.textMuted, marginTop: 2 },
 });

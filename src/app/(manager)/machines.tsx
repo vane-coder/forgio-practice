@@ -7,11 +7,12 @@ import { useEffect } from "react";
 import { ActivityIndicator } from "react-native";
 import { getToken } from "../../auth";
 import { getMachines, updateMachineStatus, createMachine } from "../../services/machines.service";
+import { colors } from "../../constants/Colors";
 
 const getStatusStyle = (status: string) => {
-  if (status === "RUNNING") return { bg: "#E8F5E9", color: "#2E7D32", label: "Running", icon: "checkmark-circle-outline" };
-  if (status === "STOPPED") return { bg: "#FFEBEE", color: "#C62828", label: "Stopped", icon: "close-circle-outline" };
-  return { bg: "#FFF3E0", color: "#E65100", label: "Maintenance", icon: "construct-outline" };
+  if (status === "RUNNING") return { bg: colors.successBg, color: colors.success, label: "Running", icon: "checkmark-circle-outline" };
+  if (status === "STOPPED") return { bg: colors.dangerBg, color: colors.danger, label: "Stopped", icon: "close-circle-outline" };
+  return { bg: colors.warningBg, color: colors.warning, label: "Maintenance", icon: "construct-outline" };
 };
 
 export default function MachinesScreen() {
@@ -67,12 +68,12 @@ export default function MachinesScreen() {
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView style={{ flex: 1, backgroundColor: "#1565C0" }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.primary }}>
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
 
           <View style={styles.header}>
             <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: 8 }}>
-              <Ionicons name="arrow-back" size={20} color="#fff" />
+              <Ionicons name="arrow-back" size={20} color={colors.white} />
             </TouchableOpacity>
             <View style={styles.headerRow}>
               <View>
@@ -80,7 +81,7 @@ export default function MachinesScreen() {
                 <Text style={styles.headerSub}>{machines.length} machines · {stoppedCount} stopped</Text>
               </View>
               <TouchableOpacity style={styles.addBtn} onPress={() => setShowAddModal(true)}>
-                <Ionicons name="add" size={18} color="#fff" />
+                <Ionicons name="add" size={18} color={colors.white} />
                 <Text style={styles.addBtnText}>Add</Text>
               </TouchableOpacity>
             </View>
@@ -89,9 +90,9 @@ export default function MachinesScreen() {
           <View style={styles.body}>
 
             {/* Machine cards */}
-            {loading && <ActivityIndicator size="large" color="#1565C0" style={{ marginVertical: 30 }} />}
+            {loading && <ActivityIndicator size="large" color={colors.primary} style={{ marginVertical: 30 }} />}
             {!loading && machines.length === 0 && (
-              <Text style={{ textAlign: "center", color: "#888", marginVertical: 30 }}>No machines yet</Text>
+              <Text style={{ textAlign: "center", color: colors.textMuted, marginVertical: 30 }}>No machines yet</Text>
             )}
             {!loading && machines.map((machine) => {
               const badge = getStatusStyle(machine.status);
@@ -99,7 +100,7 @@ export default function MachinesScreen() {
                 <View key={machine.machineId} style={styles.card}>
                   <View style={styles.cardTop}>
                     <View style={styles.machineIcon}>
-                      <Ionicons name="settings-outline" size={20} color="#1565C0" />
+                      <Ionicons name="settings-outline" size={20} color={colors.primary} />
                     </View>
                     <View style={styles.machineInfo}>
                       <Text style={styles.machineName}>{machine.name}</Text>
@@ -114,11 +115,11 @@ export default function MachinesScreen() {
 
                   <View style={styles.cardFooter}>
                     <View style={styles.footerItem}>
-                      <Ionicons name="calendar-outline" size={13} color="#888" />
+                      <Ionicons name="calendar-outline" size={13} color={colors.textMuted} />
                       <Text style={styles.footerText}>Last service: {machine.lastServiceDate || "N/A"}</Text>
                     </View>
                     <View style={styles.footerItem}>
-                      <Ionicons name="alert-circle-outline" size={13} color="#888" />
+                      <Ionicons name="alert-circle-outline" size={13} color={colors.textMuted} />
                       <Text style={styles.footerText}>{machine.status}</Text>
                     </View>
                   </View>
@@ -128,11 +129,11 @@ export default function MachinesScreen() {
                       style={styles.actionBtn}
                       onPress={() => { setSelectedMachine(machine); setShowModal(true); }}
                     >
-                      <Ionicons name="swap-horizontal-outline" size={14} color="#1565C0" />
+                      <Ionicons name="swap-horizontal-outline" size={14} color={colors.primary} />
                       <Text style={styles.actionBtnText}>Update status</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.actionBtn}>
-                      <Ionicons name="time-outline" size={14} color="#1565C0" />
+                      <Ionicons name="time-outline" size={14} color={colors.primary} />
                       <Text style={styles.actionBtnText}>View history</Text>
                     </TouchableOpacity>
                   </View>
@@ -193,7 +194,7 @@ export default function MachinesScreen() {
               <TextInput
                 style={styles.input}
                 placeholder="e.g. Sewing Machine 4"
-                placeholderTextColor="#999"
+                placeholderTextColor={colors.textMuted}
                 value={newName}
                 onChangeText={setNewName}
               />
@@ -202,7 +203,7 @@ export default function MachinesScreen() {
               <TextInput
                 style={styles.input}
                 placeholder="YYYY-MM-DD"
-                placeholderTextColor="#999"
+                placeholderTextColor={colors.textMuted}
                 value={newServiceDate}
                 onChangeText={setNewServiceDate}
               />
@@ -213,7 +214,7 @@ export default function MachinesScreen() {
                 disabled={creating}
               >
                 {creating ? (
-                  <ActivityIndicator size="small" color="#fff" />
+                  <ActivityIndicator size="small" color={colors.white} />
                 ) : (
                   <Text style={styles.saveBtnText}>Save</Text>
                 )}
@@ -231,39 +232,39 @@ export default function MachinesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F7FA" },
-  header: { backgroundColor: "#1565C0", paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16 },
+  container: { flex: 1, backgroundColor: colors.background },
+  header: { backgroundColor: colors.primary, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16 },
   headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  headerTitle: { fontSize: 16, fontWeight: "500", color: "#fff" },
-  headerSub: { fontSize: 11, color: "#90CAF9", marginTop: 2 },
+  headerTitle: { fontSize: 16, fontWeight: "500", color: colors.white },
+  headerSub: { fontSize: 11, color: colors.headerSubtitle, marginTop: 2 },
   addBtn: { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(255,255,255,0.2)", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
-  addBtnText: { fontSize: 12, color: "#fff", fontWeight: "500" },
+  addBtnText: { fontSize: 12, color: colors.white, fontWeight: "500" },
   body: { padding: 16 },
-  card: { backgroundColor: "#fff", borderRadius: 12, borderWidth: 0.5, borderColor: "#e0e0e0", padding: 14, marginBottom: 12 },
+  card: { backgroundColor: colors.white, borderRadius: 12, borderWidth: 0.5, borderColor: colors.border, padding: 14, marginBottom: 12 },
   cardTop: { flexDirection: "row", alignItems: "center", gap: 10 },
-  machineIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: "#E3F2FD", justifyContent: "center", alignItems: "center" },
+  machineIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.blueTint, justifyContent: "center", alignItems: "center" },
   machineInfo: { flex: 1 },
-  machineName: { fontSize: 13, fontWeight: "500", color: "#1A1A1A" },
-  machineType: { fontSize: 11, color: "#888", marginTop: 2 },
+  machineName: { fontSize: 13, fontWeight: "500", color: colors.textDark },
+  machineType: { fontSize: 11, color: colors.textMuted, marginTop: 2 },
   badge: { borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3 },
   badgeText: { fontSize: 10, fontWeight: "500" },
   divider: { height: 0.5, backgroundColor: "#f0f0f0", marginVertical: 12 },
   cardFooter: { flexDirection: "row", gap: 16, marginBottom: 12 },
   footerItem: { flexDirection: "row", alignItems: "center", gap: 4 },
-  footerText: { fontSize: 11, color: "#888" },
+  footerText: { fontSize: 11, color: colors.textMuted },
   cardActions: { flexDirection: "row", gap: 10 },
-  actionBtn: { flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: "#E3F2FD", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, flex: 1, justifyContent: "center" },
-  actionBtnText: { fontSize: 11, color: "#1565C0", fontWeight: "500" },
+  actionBtn: { flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: colors.blueTint, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, flex: 1, justifyContent: "center" },
+  actionBtnText: { fontSize: 11, color: colors.primary, fontWeight: "500" },
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" },
-  modalCard: { backgroundColor: "#fff", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24 },
-  modalTitle: { fontSize: 16, fontWeight: "500", color: "#1A1A1A", marginBottom: 4 },
-  modalSub: { fontSize: 13, color: "#888", marginBottom: 16 },
+  modalCard: { backgroundColor: colors.white, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24 },
+  modalTitle: { fontSize: 16, fontWeight: "500", color: colors.textDark, marginBottom: 4 },
+  modalSub: { fontSize: 13, color: colors.textMuted, marginBottom: 16 },
   statusOption: { flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 10, padding: 14, marginBottom: 10 },
   statusOptionText: { fontSize: 14, fontWeight: "500" },
   cancelBtn: { backgroundColor: "#F5F5F5", borderRadius: 10, padding: 14, alignItems: "center", marginTop: 4 },
-  cancelBtnText: { fontSize: 14, color: "#888", fontWeight: "500" },
-  inputLabel: { fontSize: 12, color: "#555", fontWeight: "500", marginBottom: 6, marginTop: 8 },
-  input: { borderWidth: 1, borderColor: "#e0e0e0", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: "#1A1A1A", marginBottom: 4 },
-  saveBtn: { backgroundColor: "#1565C0", borderRadius: 10, padding: 14, alignItems: "center", marginTop: 12 },
-  saveBtnText: { fontSize: 14, color: "#fff", fontWeight: "600" },
+  cancelBtnText: { fontSize: 14, color: colors.textMuted, fontWeight: "500" },
+  inputLabel: { fontSize: 12, color: colors.textMuted, fontWeight: "500", marginBottom: 6, marginTop: 8 },
+  input: { borderWidth: 1, borderColor: colors.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: colors.textDark, marginBottom: 4 },
+  saveBtn: { backgroundColor: colors.accent, borderRadius: 10, padding: 14, alignItems: "center", marginTop: 12 },
+  saveBtnText: { fontSize: 14, color: colors.white, fontWeight: "600" },
 });

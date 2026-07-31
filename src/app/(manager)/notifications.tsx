@@ -10,12 +10,13 @@ import { Alert, ActivityIndicator } from "react-native";
 import { getToken } from "../../auth";
 import { sendBulkNotification, getSentNotifications } from "../../services/notifications.service";
 import { getDepartments } from "../../services/departments.service";
+import { colors } from "../../constants/Colors";
 
 const getTypeStyle = (type: string) => {
-  if (type === "MEETING") return { bg: "#E3F2FD", color: "#0C447C", icon: "people-outline" };
-  if (type === "ALERT") return { bg: "#FFEBEE", color: "#C62828", icon: "alert-circle-outline" };
-  if (type === "WEATHER") return { bg: "#E8F5E9", color: "#1B5E20", icon: "partly-sunny-outline" };
-  return { bg: "#F5F5F5", color: "#666", icon: "notifications-outline" };
+  if (type === "MEETING") return { bg: colors.blueTint, color: colors.primary, icon: "people-outline" };
+  if (type === "ALERT") return { bg: colors.dangerBg, color: colors.danger, icon: "alert-circle-outline" };
+  if (type === "WEATHER") return { bg: colors.successBg, color: "#1B5E20", icon: "partly-sunny-outline" };
+  return { bg: "#F5F5F5", color: colors.textMuted, icon: "notifications-outline" };
 };
 
 export default function NotificationsScreen() {
@@ -72,12 +73,12 @@ export default function NotificationsScreen() {
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView style={{ flex: 1, backgroundColor: "#1565C0" }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.primary }}>
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
 
           <View style={styles.header}>
             <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: 8 }}>
-              <Ionicons name="arrow-back" size={20} color="#fff" />
+              <Ionicons name="arrow-back" size={20} color={colors.white} />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Notifications</Text>
             <Text style={styles.headerSub}>Send messages to your team</Text>
@@ -116,7 +117,7 @@ export default function NotificationsScreen() {
                     </TouchableOpacity>
                   ))}
                   {departments.length === 0 && (
-                    <Text style={{ fontSize: 12, color: "#aaa", paddingVertical: 6 }}>
+                    <Text style={{ fontSize: 12, color: colors.textMuted, paddingVertical: 6 }}>
                       No departments yet — create one to target specific teams.
                     </Text>
                   )}
@@ -141,7 +142,7 @@ export default function NotificationsScreen() {
                 <TextInput
                   style={styles.messageInput}
                   placeholder="Type your message here..."
-                  placeholderTextColor="#aaa"
+                  placeholderTextColor={colors.textMuted}
                   value={message}
                   onChangeText={setMessage}
                   multiline
@@ -149,7 +150,7 @@ export default function NotificationsScreen() {
                 />
 
                 <TouchableOpacity style={styles.sendBtn} onPress={handleSend} disabled={sending}>
-                  <Ionicons name="send-outline" size={18} color="#fff" />
+                  <Ionicons name="send-outline" size={18} color={colors.white} />
                   <Text style={styles.sendBtnText}>{sending ? "Sending..." : "Send notification"}</Text>
                 </TouchableOpacity>
               </>
@@ -158,7 +159,7 @@ export default function NotificationsScreen() {
                 <Text style={styles.sectionTitle}>Previously sent</Text>
                 <View style={styles.historyList}>
                   {sent.length === 0 && (
-                    <Text style={{ textAlign: "center", color: "#888", padding: 20 }}>
+                    <Text style={{ textAlign: "center", color: colors.textMuted, padding: 20 }}>
                       No notifications sent yet.
                     </Text>
                   )}
@@ -180,7 +181,7 @@ export default function NotificationsScreen() {
                           </View>
                           <Text style={styles.historyMessage}>{n.message}</Text>
                           <View style={styles.historyTargetRow}>
-                            <Ionicons name="people-outline" size={12} color="#888" />
+                            <Ionicons name="people-outline" size={12} color={colors.textMuted} />
                             <Text style={styles.historyTarget}>
                               {n.targetDeptName || n.targetRole || "All workers"}
                             </Text>
@@ -200,35 +201,35 @@ export default function NotificationsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F7FA" },
-  header: { backgroundColor: "#1565C0", paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16 },
-  headerTitle: { fontSize: 20, fontWeight: "500", color: "#fff" },
-  headerSub: { fontSize: 11, color: "#90CAF9", marginTop: 2 },
+  container: { flex: 1, backgroundColor: colors.background },
+  header: { backgroundColor: colors.primary, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16 },
+  headerTitle: { fontSize: 20, fontWeight: "500", color: colors.white },
+  headerSub: { fontSize: 11, color: colors.headerSubtitle, marginTop: 2 },
   body: { padding: 16 },
-  tabRow: { flexDirection: "row", backgroundColor: "#fff", borderRadius: 10, borderWidth: 0.5, borderColor: "#e0e0e0", overflow: "hidden", marginBottom: 16 },
+  tabRow: { flexDirection: "row", backgroundColor: colors.white, borderRadius: 10, borderWidth: 0.5, borderColor: colors.border, overflow: "hidden", marginBottom: 16 },
   tab: { flex: 1, paddingVertical: 10, alignItems: "center" },
-  tabActive: { backgroundColor: "#1565C0" },
-  tabText: { fontSize: 13, color: "#888" },
-  tabTextActive: { color: "#fff", fontWeight: "500" },
-  label: { fontSize: 14, fontWeight: "500", color: "#1A1A1A", marginBottom: 8 },
+  tabActive: { backgroundColor: colors.accent },
+  tabText: { fontSize: 13, color: colors.textMuted },
+  tabTextActive: { color: colors.white, fontWeight: "500" },
+  label: { fontSize: 14, fontWeight: "500", color: colors.textDark, marginBottom: 8 },
   chipRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 16 },
-  chip: { borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, backgroundColor: "#fff", borderWidth: 0.5, borderColor: "#e0e0e0" },
-  chipActive: { backgroundColor: "#1565C0", borderColor: "#1565C0" },
-  chipText: { fontSize: 14, color: "#888" },
-  chipTextActive: { color: "#fff", fontWeight: "500" },
-  messageInput: { backgroundColor: "#fff", borderRadius: 10, borderWidth: 0.5, borderColor: "#e0e0e0", padding: 12, fontSize: 13, color: "#1A1A1A", minHeight: 100, textAlignVertical: "top", marginBottom: 14 },
-  sendBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: "#1565C0", borderRadius: 10, padding: 14, marginBottom: 24 },
-  sendBtnText: { fontSize: 14, fontWeight: "500", color: "#fff" },
-  sectionTitle: { fontSize: 13, fontWeight: "500", color: "#1A1A1A", marginBottom: 10 },
+  chip: { borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, backgroundColor: colors.white, borderWidth: 0.5, borderColor: colors.border },
+  chipActive: { backgroundColor: colors.accent, borderColor: colors.accent },
+  chipText: { fontSize: 14, color: colors.textMuted },
+  chipTextActive: { color: colors.white, fontWeight: "500" },
+  messageInput: { backgroundColor: colors.white, borderRadius: 10, borderWidth: 0.5, borderColor: colors.border, padding: 12, fontSize: 13, color: colors.textDark, minHeight: 100, textAlignVertical: "top", marginBottom: 14 },
+  sendBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: colors.accent, borderRadius: 10, padding: 14, marginBottom: 24 },
+  sendBtnText: { fontSize: 14, fontWeight: "500", color: colors.white },
+  sectionTitle: { fontSize: 13, fontWeight: "500", color: colors.textDark, marginBottom: 10 },
   historyList: { gap: 10, marginBottom: 24 },
-  historyItem: { flexDirection: "row", gap: 12, backgroundColor: "#fff", borderRadius: 12, borderWidth: 0.5, borderColor: "#e0e0e0", padding: 14 },
+  historyItem: { flexDirection: "row", gap: 12, backgroundColor: colors.white, borderRadius: 12, borderWidth: 0.5, borderColor: colors.border, padding: 14 },
   historyIconWrap: { width: 40, height: 40, borderRadius: 20, justifyContent: "center", alignItems: "center", flexShrink: 0 },
   historyContent: { flex: 1 },
   historyTopRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 },
   typePill: { borderRadius: 20, paddingHorizontal: 8, paddingVertical: 2 },
   typePillText: { fontSize: 9, fontWeight: "600" },
-  historyMessage: { fontSize: 13, color: "#1A1A1A", lineHeight: 18, marginBottom: 8 },
+  historyMessage: { fontSize: 13, color: colors.textDark, lineHeight: 18, marginBottom: 8 },
   historyTargetRow: { flexDirection: "row", alignItems: "center", gap: 4 },
-  historyTarget: { fontSize: 11, color: "#888", fontWeight: "500" },
-  historySentAt: { fontSize: 10, color: "#aaa" },
+  historyTarget: { fontSize: 11, color: colors.textMuted, fontWeight: "500" },
+  historySentAt: { fontSize: 10, color: colors.textMuted },
 });

@@ -6,12 +6,13 @@ import { router } from "expo-router";
 import { getToken } from "../../auth";
 import { getShipments, createShipment } from "../../services/shipment.service";
 import { getBranches } from "../../services/branches.service";
+import { colors } from "../../constants/Colors";
 
 const getStatusStyle = (status: string) => {
-  if (status === "IN_TRANSIT") return { bg: "#E3F2FD", color: "#0C447C", label: "In transit" };
-  if (status === "ARRIVED") return { bg: "#E8F5E9", color: "#1B5E20", label: "Arrived" };
-  if (status === "DEPARTED") return { bg: "#FFF3E0", color: "#E65100", label: "Departed" };
-  return { bg: "#F5F5F5", color: "#666", label: "Pending" };
+  if (status === "IN_TRANSIT") return { bg: colors.blueTint, color: colors.primary, label: "In transit" };
+  if (status === "ARRIVED") return { bg: colors.successBg, color: colors.success, label: "Arrived" };
+  if (status === "DEPARTED") return { bg: colors.warningBg, color: colors.warning, label: "Departed" };
+  return { bg: colors.background, color: colors.textMuted, label: "Pending" };
 };
 
 export default function ShipmentsScreen() {
@@ -63,11 +64,11 @@ export default function ShipmentsScreen() {
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView style={{ flex: 1, backgroundColor: "#1565C0" }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.primary }}>
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
           <View style={styles.header}>
             <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: 8 }}>
-              <Ionicons name="arrow-back" size={20} color="#fff" />
+              <Ionicons name="arrow-back" size={20} color={colors.white} />
             </TouchableOpacity>
             <View style={styles.headerRow}>
               <View>
@@ -75,7 +76,7 @@ export default function ShipmentsScreen() {
                 <Text style={styles.headerSub}>{shipments.length} total shipments</Text>
               </View>
               <TouchableOpacity style={styles.newBtn} onPress={() => setShowModal(true)}>
-                <Ionicons name="add" size={18} color="#fff" />
+                <Ionicons name="add" size={18} color={colors.white} />
                 <Text style={styles.newBtnText}>New</Text>
               </TouchableOpacity>
             </View>
@@ -92,9 +93,9 @@ export default function ShipmentsScreen() {
               ))}
             </View>
 
-            {loading && <ActivityIndicator size="large" color="#1565C0" style={{ marginVertical: 30 }} />}
+            {loading && <ActivityIndicator size="large" color={colors.primary} style={{ marginVertical: 30 }} />}
             {!loading && filtered.length === 0 && (
-              <Text style={{ textAlign: "center", color: "#888", marginVertical: 30 }}>No shipments yet</Text>
+              <Text style={{ textAlign: "center", color: colors.textMuted, marginVertical: 30 }}>No shipments yet</Text>
             )}
 
            {!loading && filtered.map((s) => {
@@ -103,7 +104,7 @@ export default function ShipmentsScreen() {
                 <View key={s.shipmentId} style={styles.card}>
                   <View style={styles.cardHeader}>
                     <View style={styles.idRow}>
-                      <Ionicons name="cube-outline" size={14} color="#1565C0" />
+                      <Ionicons name="cube-outline" size={14} color={colors.primary} />
                       <Text style={styles.shipmentId}>#{s.shipmentId.substring(0, 8).toUpperCase()}</Text>
                     </View>
                     <View style={[styles.badge, { backgroundColor: badge.bg }]}>
@@ -134,18 +135,18 @@ export default function ShipmentsScreen() {
 
                   <View style={styles.cardFooter}>
                     <View style={styles.footerItem}>
-                      <Ionicons name="person-circle-outline" size={15} color="#888" />
+                      <Ionicons name="person-circle-outline" size={15} color={colors.textMuted} />
                       <Text style={styles.footerText}>{s.driverName || "Unassigned"}</Text>
                     </View>
                     <View style={styles.footerItem}>
-                      <Ionicons name="calendar-outline" size={13} color="#888" />
+                      <Ionicons name="calendar-outline" size={13} color={colors.textMuted} />
                       <Text style={styles.footerText}>{s.createdAt ? new Date(s.createdAt).toLocaleDateString() : ""}</Text>
                     </View>
                   </View>
 
                   {s.notes ? (
                     <View style={styles.notesBox}>
-                      <Ionicons name="document-text-outline" size={13} color="#888" />
+                      <Ionicons name="document-text-outline" size={13} color={colors.textMuted} />
                       <Text style={styles.notesText}>{s.notes}</Text>
                     </View>
                   ) : null}
@@ -155,7 +156,7 @@ export default function ShipmentsScreen() {
                       style={styles.trackBtn}
                       onPress={() => router.push({ pathname: "/(manager)/live-tracking", params: { shipmentId: s.shipmentId } })}
                     >
-                      <Ionicons name="navigate-outline" size={14} color="#1565C0" />
+                      <Ionicons name="navigate-outline" size={14} color={colors.accent} />
                       <Text style={styles.trackBtnText}>Track live</Text>
                     </TouchableOpacity>
                   )}
@@ -173,7 +174,7 @@ export default function ShipmentsScreen() {
               <ScrollView style={{ maxHeight: 100, marginBottom: 12 }}>
                 {branches.map((b) => (
                   <TouchableOpacity key={b.branchId} style={[styles.branchOption, fromBranchId === b.branchId && styles.branchOptionActive]} onPress={() => setFromBranchId(b.branchId)}>
-                    <Text style={[styles.branchOptionText, fromBranchId === b.branchId && { color: "#fff" }]}>{b.name}</Text>
+                    <Text style={[styles.branchOptionText, fromBranchId === b.branchId && { color: colors.white }]}>{b.name}</Text>
                   </TouchableOpacity>
                 ))}
               </ScrollView>
@@ -181,14 +182,14 @@ export default function ShipmentsScreen() {
               <ScrollView style={{ maxHeight: 100, marginBottom: 12 }}>
                 {branches.map((b) => (
                   <TouchableOpacity key={b.branchId} style={[styles.branchOption, toBranchId === b.branchId && styles.branchOptionActive]} onPress={() => setToBranchId(b.branchId)}>
-                    <Text style={[styles.branchOptionText, toBranchId === b.branchId && { color: "#fff" }]}>{b.name}</Text>
+                    <Text style={[styles.branchOptionText, toBranchId === b.branchId && { color: colors.white }]}>{b.name}</Text>
                   </TouchableOpacity>
                 ))}
               </ScrollView>
               <Text style={styles.label}>Notes (optional)</Text>
-              <TextInput style={styles.input} value={notes} onChangeText={setNotes} placeholder="Any notes..." placeholderTextColor="#aaa" multiline />
+              <TextInput style={styles.input} value={notes} onChangeText={setNotes} placeholder="Any notes..." placeholderTextColor={colors.textMuted} multiline />
               <TouchableOpacity style={styles.confirmBtn} onPress={handleCreate} disabled={creating}>
-                {creating ? <ActivityIndicator color="#fff" /> : <Text style={styles.confirmBtnText}>Create shipment</Text>}
+                {creating ? <ActivityIndicator color={colors.white} /> : <Text style={styles.confirmBtnText}>Create shipment</Text>}
               </TouchableOpacity>
               <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowModal(false)}>
                 <Text style={styles.cancelBtnText}>Cancel</Text>
@@ -202,54 +203,54 @@ export default function ShipmentsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F7FA" },
-  header: { backgroundColor: "#1565C0", paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16 },
+  container: { flex: 1, backgroundColor: colors.background },
+  header: { backgroundColor: colors.primary, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16 },
   headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  headerTitle: { fontSize: 16, fontWeight: "500", color: "#fff" },
-  headerSub: { fontSize: 11, color: "#90CAF9", marginTop: 2 },
+  headerTitle: { fontSize: 16, fontWeight: "500", color: colors.white },
+  headerSub: { fontSize: 11, color: colors.headerSubtitle, marginTop: 2 },
   newBtn: { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(255,255,255,0.2)", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
-  newBtnText: { fontSize: 12, color: "#fff", fontWeight: "500" },
+  newBtnText: { fontSize: 12, color: colors.white, fontWeight: "500" },
   body: { padding: 16 },
   filterRow: { flexDirection: "row", gap: 8, marginBottom: 14, flexWrap: "wrap" },
-  filterTab: { borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, backgroundColor: "#fff", borderWidth: 0.5, borderColor: "#e0e0e0" },
-  filterTabActive: { backgroundColor: "#1565C0", borderColor: "#1565C0" },
-  filterText: { fontSize: 12, color: "#888" },
-  filterTextActive: { color: "#fff", fontWeight: "500" },
-  card: { backgroundColor: "#fff", borderRadius: 12, borderWidth: 0.5, borderColor: "#e0e0e0", padding: 14, marginBottom: 12 },
+  filterTab: { borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, backgroundColor: colors.white, borderWidth: 0.5, borderColor: colors.border },
+  filterTabActive: { backgroundColor: colors.accent, borderColor: colors.accent },
+  filterText: { fontSize: 12, color: colors.textMuted },
+  filterTextActive: { color: colors.white, fontWeight: "500" },
+  card: { backgroundColor: colors.white, borderRadius: 12, borderWidth: 0.5, borderColor: colors.border, padding: 14, marginBottom: 12 },
   cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 },
-  shipmentId: { fontSize: 13, fontWeight: "500", color: "#1A1A1A" },
+  shipmentId: { fontSize: 13, fontWeight: "500", color: colors.textDark },
   badge: { borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3 ,flexDirection:"row",alignItems:"center",gap:4},
   badgeText: { fontSize: 10, fontWeight: "500" },
   routeRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 10 },
   routeStop: { flexDirection: "row", alignItems: "center", gap: 4, flex: 1 },
-  routeText: { fontSize: 12, color: "#1A1A1A" },
-  divider: { height: 0.5, backgroundColor: "#f0f0f0", marginBottom: 10 },
+  routeText: { fontSize: 12, color: colors.textDark },
+  divider: { height: 0.5, backgroundColor: colors.border, marginBottom: 10 },
   cardFooter: { flexDirection: "row", justifyContent: "space-between" },
   footerItem: { flexDirection: "row", alignItems: "center", gap: 4 },
-  footerText: { fontSize: 11, color: "#888" },
-  trackBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: "#E3F2FD", borderRadius: 8, padding: 10, marginTop: 10 },
-  trackBtnText: { fontSize: 12, color: "#1565C0", fontWeight: "500" },
+  footerText: { fontSize: 11, color: colors.textMuted },
+  trackBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: colors.accentLight, borderRadius: 8, padding: 10, marginTop: 10 },
+  trackBtnText: { fontSize: 12, color: colors.accent, fontWeight: "500" },
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" },
-  modalCard: { backgroundColor: "#fff", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24 },
-  modalTitle: { fontSize: 16, fontWeight: "500", color: "#1A1A1A", marginBottom: 16 },
-  label: { fontSize: 13, fontWeight: "500", color: "#1A1A1A", marginBottom: 8 },
-  input: { backgroundColor: "#F5F7FA", borderRadius: 10, borderWidth: 0.5, borderColor: "#e0e0e0", padding: 12, fontSize: 13, color: "#1A1A1A", marginBottom: 16, minHeight: 60, textAlignVertical: "top" },
-  confirmBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", backgroundColor: "#1565C0", borderRadius: 10, padding: 14, marginBottom: 10 },
-  confirmBtnText: { fontSize: 14, fontWeight: "500", color: "#fff" },
-  cancelBtn: { backgroundColor: "#F5F5F5", borderRadius: 10, padding: 14, alignItems: "center" },
-  cancelBtnText: { fontSize: 14, color: "#888", fontWeight: "500" },
-  branchOption: { borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 4, backgroundColor: "#F5F7FA" },
-  branchOptionActive: { backgroundColor: "#1565C0" },
-  branchOptionText: { fontSize: 13, color: "#1A1A1A" },
+  modalCard: { backgroundColor: colors.white, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24 },
+  modalTitle: { fontSize: 16, fontWeight: "500", color: colors.textDark, marginBottom: 16 },
+  label: { fontSize: 13, fontWeight: "500", color: colors.textDark, marginBottom: 8 },
+  input: { backgroundColor: colors.background, borderRadius: 10, borderWidth: 0.5, borderColor: colors.border, padding: 12, fontSize: 13, color: colors.textDark, marginBottom: 16, minHeight: 60, textAlignVertical: "top" },
+  confirmBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", backgroundColor: colors.accent, borderRadius: 10, padding: 14, marginBottom: 10 },
+  confirmBtnText: { fontSize: 14, fontWeight: "500", color: colors.white },
+  cancelBtn: { backgroundColor: colors.background, borderRadius: 10, padding: 14, alignItems: "center" },
+  cancelBtnText: { fontSize: 14, color: colors.textMuted, fontWeight: "500" },
+  branchOption: { borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 4, backgroundColor: colors.background },
+  branchOptionActive: { backgroundColor: colors.accent },
+  branchOptionText: { fontSize: 13, color: colors.textDark },
   idRow: { flexDirection: "row", alignItems: "center", gap: 6 },
   badgeDot: { width: 6, height: 6, borderRadius: 3 },
   routeTrack: { flexDirection: "row", gap: 12, marginBottom: 12 },
   routeCol: { alignItems: "center", paddingTop: 4 },
-  dotBlue: { width: 9, height: 9, borderRadius: 5, backgroundColor: "#1565C0" },
-  routeConnector: { width: 2, flex: 1, minHeight: 20, backgroundColor: "#E3F2FD", marginVertical: 3 },
-  dotGreen: { width: 9, height: 9, borderRadius: 5, backgroundColor: "#2E7D32" },
+  dotBlue: { width: 9, height: 9, borderRadius: 5, backgroundColor: colors.primary },
+  routeConnector: { width: 2, flex: 1, minHeight: 20, backgroundColor: colors.blueTint, marginVertical: 3 },
+  dotGreen: { width: 9, height: 9, borderRadius: 5, backgroundColor: colors.success },
   routeLabels: { flex: 1 },
-  routeCaption: { fontSize: 10, color: "#aaa", marginBottom: 1 },
-  notesBox: { flexDirection: "row", alignItems: "flex-start", gap: 6, backgroundColor: "#F5F7FA", borderRadius: 8, padding: 10, marginTop: 10 },
-  notesText: { flex: 1, fontSize: 11, color: "#666", lineHeight: 16 },
+  routeCaption: { fontSize: 10, color: colors.textMuted, marginBottom: 1 },
+  notesBox: { flexDirection: "row", alignItems: "flex-start", gap: 6, backgroundColor: colors.background, borderRadius: 8, padding: 10, marginTop: 10 },
+  notesText: { flex: 1, fontSize: 11, color: colors.textMuted, lineHeight: 16 },
 });

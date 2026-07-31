@@ -8,10 +8,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { getToken } from "../../auth";
 import { getMaterials, addMaterial } from "../../services/materials.service";
+import { colors } from "../../constants/Colors";
 
 const getStatusStyle = (lowStock: boolean) => {
-  if (lowStock) return { bg: "#FFEBEE", color: "#C62828", label: "Low" };
-  return { bg: "#E8F5E9", color: "#2E7D32", label: "OK" };
+  if (lowStock) return { bg: colors.dangerBg, color: colors.danger, label: "Low" };
+  return { bg: colors.successBg, color: colors.success, label: "OK" };
 };
 
 const getProgressWidth = (stock: number, reorder: number) => {
@@ -86,12 +87,12 @@ export default function MaterialsScreen() {
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView style={{ flex: 1, backgroundColor: "#1565C0" }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.primary }}>
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
 
           <View style={styles.header}>
             <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: 8 }}>
-              <Ionicons name="arrow-back" size={20} color="#fff" />
+              <Ionicons name="arrow-back" size={20} color={colors.white} />
             </TouchableOpacity>
             <View style={styles.headerRow}>
               <View>
@@ -99,7 +100,7 @@ export default function MaterialsScreen() {
                 <Text style={styles.headerSub}>{materials.length} items · {lowCount} low stock</Text>
               </View>
               <TouchableOpacity style={styles.addBtn} onPress={() => setShowModal(true)}>
-                <Ionicons name="add" size={18} color="#fff" />
+                <Ionicons name="add" size={18} color={colors.white} />
                 <Text style={styles.addBtnText}>Add</Text>
               </TouchableOpacity>
             </View>
@@ -109,7 +110,7 @@ export default function MaterialsScreen() {
 
             {lowCount > 0 && (
               <View style={styles.alertCard}>
-                <Ionicons name="alert-circle-outline" size={18} color="#C62828" />
+                <Ionicons name="alert-circle-outline" size={18} color={colors.danger} />
                 <Text style={styles.alertText}>
                   {lowCount} material{lowCount > 1 ? "s are" : " is"} below reorder level. Order soon.
                 </Text>
@@ -117,11 +118,11 @@ export default function MaterialsScreen() {
             )}
 
             <View style={styles.searchBar}>
-              <Ionicons name="search-outline" size={16} color="#888" />
+              <Ionicons name="search-outline" size={16} color={colors.textMuted} />
               <TextInput
                 style={styles.searchInput}
                 placeholder="Search materials..."
-                placeholderTextColor="#aaa"
+                placeholderTextColor={colors.textMuted}
                 value={search}
                 onChangeText={setSearch}
               />
@@ -129,7 +130,7 @@ export default function MaterialsScreen() {
 
             {loading && (
               <View style={{ paddingVertical: 40, alignItems: "center" }}>
-                <ActivityIndicator size="large" color="#1565C0" />
+                <ActivityIndicator size="large" color={colors.primary} />
               </View>
             )}
 
@@ -144,7 +145,7 @@ export default function MaterialsScreen() {
                     >
                       <View style={styles.itemTop}>
                         <View style={styles.itemIcon}>
-                          <Ionicons name="cube-outline" size={18} color="#1565C0" />
+                          <Ionicons name="cube-outline" size={18} color={colors.primary} />
                         </View>
                         <View style={styles.itemInfo}>
                           <Text style={styles.itemName}>{mat.name}</Text>
@@ -162,7 +163,7 @@ export default function MaterialsScreen() {
                           styles.progressFill,
                           {
                             width: getProgressWidth(mat.quantityInStock, mat.reorderLevel),
-                            backgroundColor: mat.lowStock ? "#C62828" : "#2E7D32"
+                            backgroundColor: mat.lowStock ? colors.danger : colors.success
                           }
                         ]} />
                       </View>
@@ -177,7 +178,7 @@ export default function MaterialsScreen() {
 
             {!loading && filtered.length === 0 && (
               <View style={{ paddingVertical: 30, alignItems: "center" }}>
-                <Text style={{ color: "#888", fontSize: 13 }}>No materials yet. Add your first one.</Text>
+                <Text style={{ color: colors.textMuted, fontSize: 13 }}>No materials yet. Add your first one.</Text>
               </View>
             )}
 
@@ -185,7 +186,7 @@ export default function MaterialsScreen() {
               style={styles.marketplaceBtn}
               onPress={() => router.push("/(manager)/marketplace")}
             >
-              <Ionicons name="cart-outline" size={18} color="#1565C0" />
+              <Ionicons name="cart-outline" size={18} color={colors.accent} />
               <Text style={styles.marketplaceBtnText}>Buy from marketplace</Text>
             </TouchableOpacity>
 
@@ -198,16 +199,16 @@ export default function MaterialsScreen() {
               <Text style={styles.modalTitle}>Add new material</Text>
 
               <Text style={styles.modalLabel}>Name</Text>
-              <TextInput style={styles.modalInput} placeholder="e.g. Cotton Fabric" placeholderTextColor="#aaa" value={newName} onChangeText={setNewName} />
+              <TextInput style={styles.modalInput} placeholder="e.g. Cotton Fabric" placeholderTextColor={colors.textMuted} value={newName} onChangeText={setNewName} />
 
               <Text style={styles.modalLabel}>Unit</Text>
-              <TextInput style={styles.modalInput} placeholder="e.g. kg, L, units" placeholderTextColor="#aaa" value={newUnit} onChangeText={setNewUnit} />
+              <TextInput style={styles.modalInput} placeholder="e.g. kg, L, units" placeholderTextColor={colors.textMuted} value={newUnit} onChangeText={setNewUnit} />
 
               <Text style={styles.modalLabel}>Current stock</Text>
-              <TextInput style={styles.modalInput} placeholder="e.g. 100" placeholderTextColor="#aaa" value={newStock} onChangeText={setNewStock} keyboardType="numeric" />
+              <TextInput style={styles.modalInput} placeholder="e.g. 100" placeholderTextColor={colors.textMuted} value={newStock} onChangeText={setNewStock} keyboardType="numeric" />
 
               <Text style={styles.modalLabel}>Cost per unit (GHS)</Text>
-              <TextInput style={styles.modalInput} placeholder="e.g. 12" placeholderTextColor="#aaa" value={newCost} onChangeText={setNewCost} keyboardType="numeric" />
+              <TextInput style={styles.modalInput} placeholder="e.g. 12" placeholderTextColor={colors.textMuted} value={newCost} onChangeText={setNewCost} keyboardType="numeric" />
 
               <View style={styles.modalButtons}>
                 <TouchableOpacity style={styles.modalCancel} onPress={() => setShowModal(false)}>
@@ -227,40 +228,40 @@ export default function MaterialsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F7FA" },
-  header: { backgroundColor: "#1565C0", paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16 },
+  container: { flex: 1, backgroundColor: colors.background },
+  header: { backgroundColor: colors.primary, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16 },
   headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  headerTitle: { fontSize: 16, fontWeight: "500", color: "#fff" },
-  headerSub: { fontSize: 11, color: "#90CAF9", marginTop: 2 },
+  headerTitle: { fontSize: 16, fontWeight: "500", color: colors.white },
+  headerSub: { fontSize: 11, color: colors.headerSubtitle, marginTop: 2 },
   addBtn: { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(255,255,255,0.2)", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
-  addBtnText: { fontSize: 12, color: "#fff", fontWeight: "500" },
+  addBtnText: { fontSize: 12, color: colors.white, fontWeight: "500" },
   body: { padding: 16 },
-  alertCard: { flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: "#FFEBEE", borderRadius: 10, padding: 12, marginBottom: 12, borderLeftWidth: 3, borderLeftColor: "#C62828" },
-  alertText: { flex: 1, fontSize: 12, color: "#C62828", lineHeight: 17 },
-  searchBar: { flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: "#fff", borderRadius: 10, borderWidth: 0.5, borderColor: "#e0e0e0", paddingHorizontal: 12, paddingVertical: 10, marginBottom: 14 },
-  searchInput: { flex: 1, fontSize: 13, color: "#1A1A1A" },
-  list: { backgroundColor: "#fff", borderRadius: 12, borderWidth: 0.5, borderColor: "#e0e0e0", overflow: "hidden", marginBottom: 14 },
-  item: { padding: 14, borderBottomWidth: 0.5, borderBottomColor: "#f0f0f0" },
+  alertCard: { flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: colors.dangerBg, borderRadius: 10, padding: 12, marginBottom: 12, borderLeftWidth: 3, borderLeftColor: colors.danger },
+  alertText: { flex: 1, fontSize: 12, color: colors.danger, lineHeight: 17 },
+  searchBar: { flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: colors.white, borderRadius: 10, borderWidth: 0.5, borderColor: colors.border, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 14 },
+  searchInput: { flex: 1, fontSize: 13, color: colors.textDark },
+  list: { backgroundColor: colors.white, borderRadius: 12, borderWidth: 0.5, borderColor: colors.border, overflow: "hidden", marginBottom: 14 },
+  item: { padding: 14, borderBottomWidth: 0.5, borderBottomColor: colors.border },
   itemTop: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 10 },
-  itemIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: "#E3F2FD", justifyContent: "center", alignItems: "center" },
+  itemIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.blueTint, justifyContent: "center", alignItems: "center" },
   itemInfo: { flex: 1 },
-  itemName: { fontSize: 13, fontWeight: "500", color: "#1A1A1A" },
-  itemStock: { fontSize: 10, color: "#888", marginTop: 2 },
+  itemName: { fontSize: 13, fontWeight: "500", color: colors.textDark },
+  itemStock: { fontSize: 10, color: colors.textMuted, marginTop: 2 },
   badge: { borderRadius: 20, paddingHorizontal: 8, paddingVertical: 3 },
   badgeText: { fontSize: 10, fontWeight: "500" },
-  progressTrack: { height: 4, backgroundColor: "#F0F0F0", borderRadius: 4, marginBottom: 4 },
+  progressTrack: { height: 4, backgroundColor: colors.border, borderRadius: 4, marginBottom: 4 },
   progressFill: { height: 4, borderRadius: 4 },
-  reorderText: { fontSize: 10, color: "#aaa" },
-  marketplaceBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: "#E3F2FD", borderRadius: 10, padding: 14, marginBottom: 24 },
-  marketplaceBtnText: { fontSize: 13, fontWeight: "500", color: "#1565C0" },
+  reorderText: { fontSize: 10, color: colors.textMuted },
+  marketplaceBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: colors.blueTint, borderRadius: 10, padding: 14, marginBottom: 24 },
+  marketplaceBtnText: { fontSize: 13, fontWeight: "500", color: colors.accent },
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" },
-  modalCard: { backgroundColor: "#fff", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24 },
-  modalTitle: { fontSize: 16, fontWeight: "500", color: "#1A1A1A", marginBottom: 16 },
-  modalLabel: { fontSize: 12, fontWeight: "500", color: "#1A1A1A", marginBottom: 6 },
-  modalInput: { backgroundColor: "#F5F7FA", borderRadius: 8, borderWidth: 0.5, borderColor: "#e0e0e0", padding: 11, fontSize: 13, color: "#1A1A1A", marginBottom: 14 },
+  modalCard: { backgroundColor: colors.white, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24 },
+  modalTitle: { fontSize: 16, fontWeight: "500", color: colors.textDark, marginBottom: 16 },
+  modalLabel: { fontSize: 12, fontWeight: "500", color: colors.textDark, marginBottom: 6 },
+  modalInput: { backgroundColor: colors.background, borderRadius: 8, borderWidth: 0.5, borderColor: colors.border, padding: 11, fontSize: 13, color: colors.textDark, marginBottom: 14 },
   modalButtons: { flexDirection: "row", gap: 10, marginTop: 6 },
-  modalCancel: { flex: 1, backgroundColor: "#F5F5F5", borderRadius: 8, padding: 13, alignItems: "center" },
-  modalCancelText: { fontSize: 14, color: "#888", fontWeight: "500" },
-  modalSave: { flex: 1, backgroundColor: "#1565C0", borderRadius: 8, padding: 13, alignItems: "center" },
-  modalSaveText: { fontSize: 14, color: "#fff", fontWeight: "500" },
+  modalCancel: { flex: 1, backgroundColor: colors.background, borderRadius: 8, padding: 13, alignItems: "center" },
+  modalCancelText: { fontSize: 14, color: colors.textMuted, fontWeight: "500" },
+  modalSave: { flex: 1, backgroundColor: colors.accent, borderRadius: 8, padding: 13, alignItems: "center" },
+  modalSaveText: { fontSize: 14, color: colors.white, fontWeight: "500" },
 });
