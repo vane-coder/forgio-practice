@@ -4,7 +4,7 @@ import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { getToken } from "../../auth";
-import { getMaterials, updateMaterial } from "../../services/materials.service";
+import { getMaterials, consumeMaterial } from "../../services/materials.service";
 import { colors } from "../../constants/Colors";
 
 export default function RecordMaterialScreen() {
@@ -34,13 +34,7 @@ export default function RecordMaterialScreen() {
       const token = await getToken();
       if (!token) return;
       await Promise.all(
-        entries.map(([id, qty]) => {
-          const mat = materials.find((m) => m.materialId === id);
-          const used = parseFloat(qty);
-          const currentStock = Number(mat?.quantityInStock ?? 0);
-          const newStock = Math.max(0, currentStock - used);
-          return updateMaterial(token, id, { name: mat?.name, quantityInStock: newStock });
-        })
+        entries.map(([id, qty]) => consumeMaterial(token, id, parseFloat(qty)))
       );
       Alert.alert("Saved", "Material usage recorded.");
       router.push("/(worker)/home");

@@ -4,9 +4,51 @@ import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
 import { getToken } from "../../auth";
+import { API_BASE_URL } from "../../services/api.config";
 import { getMaterials } from "../../services/materials.service";
-import { getMachines } from "../../services/machines.service";
+import { getMachines, getBreakdownLogs } from "../../services/machines.service";
+import { getProductionByFactory } from "../../services/production.service";
+import { getWorkersWithPermissions } from "../../services/permissions.service";
+import { getShipments } from "../../services/shipment.service";
+import { getNewsFeed } from "../../services/newsfeed.service";
 import { colors } from "../../constants/Colors";
+import ManagerSidebar from "../../components/ManagerSidebar";
+
+type Activity = {
+  id: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  color: string;
+  title: string;
+  sub: string;
+  time: number; // ms epoch for sorting
+  route?: string;
+  params?: Record<string, string>;
+};
+
+const isToday = (iso?: string) => {
+  if (!iso) return false;
+  const d = new Date(iso);
+  const now = new Date();
+  return (
+    d.getFullYear() === now.getFullYear() &&
+    d.getMonth() === now.getMonth() &&
+    d.getDate() === now.getDate()
+  );
+};
+
+const relativeTime = (iso?: string) => {
+  if (!iso) return "";
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return "";
+  const diffMs = Date.now() - then;
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days}d ago`;
+};
 
 export default function DashboardScreen() {
   const [username, setUsername] = useState("");
@@ -14,70 +56,164 @@ export default function DashboardScreen() {
   const [materialCount, setMaterialCount] = useState(0);
   const [lowStockCount, setLowStockCount] = useState(0);
   const [machineCount, setMachineCount] = useState(0);
+  const [workerCount, setWorkerCount] = useState<number | null>(null);
+  const [todayProduction, setTodayProduction] = useState<number | null>(null);
+  const [activity, setActivity] = useState<Activity[]>([]);
   const [aiInsight, setAiInsight] = useState("Loading insights...");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const load = React.useCallback(async () => {
+    try {
+      const token = await getToken();
+      if (!token) return;
+
+      // real logged-in user
+      try {
+        const res = await fetch(`${API_BASE_URL}/profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const p = await res.json();
+          setUsername(p.name || "");
+          setInitials(
+            (p.name || "?")
+              .split(" ")
+              .map((n: string) => n[0])
+              .join("")
+              .substring(0, 2)
+              .toUpperCase()
+          );
+        }
+      } catch { }
+
+      // materials
+      try {
+        const mats = await getMaterials(token);
+        if (Array.isArray(mats)) {
+          setMaterialCount(mats.length);
+          setLowStockCount(mats.filter((m: any) => m.lowStock).length);
+        }
+      } catch { }
+
+      // machines
+      try {
+        const machines = await getMachines(token);
+        if (Array.isArray(machines)) setMachineCount(machines.length);
+      } catch { }
+
+      // workers
+      try {
+        const workers = await getWorkersWithPermissions(token);
+        if (Array.isArray(workers)) setWorkerCount(workers.length);
+      } catch { }
+
+      // today's production + recent production activity
+      let prodActivity: Activity[] = [];
+      try {
+        const entries = await getProductionByFactory(token);
+        if (Array.isArray(entries)) {
+          const total = entries
+            .filter((e: any) => isToday(e.date))
+            .reduce((sum: number, e: any) => sum + (Number(e.quantityProduced) || 0), 0);
+          setTodayProduction(total);
+          prodActivity = entries.map((e: any) => ({
+            id: `prod-${e.entryId}`,
+            icon: "cube-outline" as const,
+            color: colors.success,
+            title: `${e.quantityProduced} ${e.productName || "units"} produced`,
+            sub: relativeTime(e.date),
+            time: new Date(e.date).getTime() || 0,
+            route: "/(manager)/reports",
+          }));
+        }
+      } catch { }
+
+      // recent shipments activity
+      let shipActivity: Activity[] = [];
+      try {
+        const shipments = await getShipments(token);
+        if (Array.isArray(shipments)) {
+          shipActivity = shipments.map((s: any) => {
+            const ts = s.arrivedAt || s.departedAt || s.createdAt;
+            return {
+              id: `ship-${s.shipmentId}`,
+              icon: "navigate-outline" as const,
+              color: colors.primary,
+              title: `Shipment ${String(s.status || "").replace("_", " ").toLowerCase()}`,
+              sub: `${s.fromBranchName ?? "Origin"} → ${s.toBranchName ?? "Destination"} · ${relativeTime(ts)}`,
+              time: new Date(ts).getTime() || 0,
+              route: s.status === "IN_TRANSIT" ? "/(manager)/live-tracking" : "/(manager)/shipments",
+              params: s.status === "IN_TRANSIT" ? { shipmentId: s.shipmentId } : undefined,
+            };
+          });
+        }
+      } catch { }
+
+      // recent newsfeed activity
+      let newsActivity: Activity[] = [];
+      try {
+        const posts = await getNewsFeed(token);
+        if (Array.isArray(posts)) {
+          newsActivity = posts.map((p: any) => ({
+            id: `news-${p.postId}`,
+            icon: "newspaper-outline" as const,
+            color: colors.accent,
+            title: `${p.authorName || "Staff"} posted an update`,
+            sub: relativeTime(p.createdAt),
+            time: new Date(p.createdAt).getTime() || 0,
+            route: "/(manager)/newsfeed",
+          }));
+        }
+      } catch { }
+
+      // recent breakdown activity
+      let breakdownActivity: Activity[] = [];
+      try {
+        const logs = await getBreakdownLogs(token);
+        if (Array.isArray(logs)) {
+          breakdownActivity = logs.map((l: any) => ({
+            id: `breakdown-${l.id}`,
+            icon: "warning-outline" as const,
+            color: colors.danger,
+            title: `${l.machineName || "Machine"} breakdown${l.resolved ? " resolved" : ""}`,
+            sub: `${l.cause || l.message || "Reported"} · ${relativeTime(l.startTime)}`,
+            time: new Date(l.startTime).getTime() || 0,
+            route: "/(manager)/machine-history",
+            params: l.machineId ? { machineId: l.machineId, machineName: l.machineName || "Machine" } : undefined,
+          }));
+        }
+      } catch { }
+
+      const merged = [...prodActivity, ...shipActivity, ...newsActivity, ...breakdownActivity]
+        .sort((a, b) => b.time - a.time)
+        .slice(0, 5);
+      setActivity(merged);
+
+      // AI insight
+      try {
+        const res = await fetch(`${API_BASE_URL}/ai/suggestions`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setAiInsight(data.suggestion || "No insights available right now.");
+        } else {
+          setAiInsight("No insights available right now.");
+        }
+      } catch {
+        setAiInsight("No insights available right now.");
+      }
+    } catch (e) {
+      console.log("Dashboard load error", e);
+    }
+  }, []);
 
   useFocusEffect(
     React.useCallback(() => {
-      (async () => {
-        try {
-          const token = await getToken();
-          if (!token) return;
-
-
-          // real logged-in user
-          try {
-            const { API_BASE_URL } = await import("../../services/api.config");
-            const res = await fetch(`${API_BASE_URL}/profile`, {
-              headers: { Authorization: `Bearer ${token}` },
-            });
-            if (res.ok) {
-              const p = await res.json();
-              setUsername(p.name || "");
-              setInitials(
-                (p.name || "?")
-                  .split(" ")
-                  .map((n: string) => n[0])
-                  .join("")
-                  .substring(0, 2)
-                  .toUpperCase()
-              );
-            }
-          } catch { }
-          // materials
-          try {
-            const mats = await getMaterials(token);
-            if (Array.isArray(mats)) {
-              setMaterialCount(mats.length);
-              setLowStockCount(mats.filter((m: any) => m.lowStock).length);
-            }
-          } catch { }
-
-          // machines
-          try {
-            const machines = await getMachines(token);
-            if (Array.isArray(machines)) setMachineCount(machines.length);
-          } catch { }
-
-          // AI insight
-          try {
-            const res = await fetch(
-              `${(await import("../../services/api.config")).API_BASE_URL}/ai/suggestions`,
-              { headers: { Authorization: `Bearer ${token}` } }
-            );
-            if (res.ok) {
-              const data = await res.json();
-              setAiInsight(data.suggestion || "No insights available right now.");
-            } else {
-              setAiInsight("No insights available right now.");
-            }
-          } catch {
-            setAiInsight("No insights available right now.");
-          }
-        } catch (e) {
-          console.log("Dashboard load error", e);
-        }
-      })();
-    }, [])
+      load();
+      const t = setInterval(load, 30000);
+      return () => clearInterval(t);
+    }, [load])
   );
 
   return (
@@ -87,9 +223,14 @@ export default function DashboardScreen() {
 
           <View style={styles.header}>
             <View style={styles.subheader}>
-              <View>
-                <Text style={styles.greeting}>Good morning</Text>
-                <Text style={styles.username}>{username}</Text>
+              <View style={styles.headerLeft}>
+                <TouchableOpacity style={styles.menuBtn} onPress={() => setSidebarOpen(true)}>
+                  <Ionicons name="menu-outline" size={26} color={colors.white} />
+                </TouchableOpacity>
+                <View>
+                  <Text style={styles.greeting}>Good morning</Text>
+                  <Text style={styles.username}>{username}</Text>
+                </View>
               </View>
               <TouchableOpacity style={styles.avatar} onPress={() => router.push("/(manager)/profile")}>
                 <Text style={styles.avatarText}>{initials}</Text>
@@ -98,7 +239,9 @@ export default function DashboardScreen() {
             <View style={styles.productionCard}>
               <Text style={styles.productionLabel}>Today's production</Text>
               <Text style={styles.productionRow}>
-                <Text style={styles.productionNumber}>1,240 </Text>
+                <Text style={styles.productionNumber}>
+                  {todayProduction === null ? "…" : todayProduction.toLocaleString()}{" "}
+                </Text>
                 <Text style={styles.productionUnit}>units</Text>
               </Text>
             </View>
@@ -119,8 +262,8 @@ export default function DashboardScreen() {
               </View>
               <View style={styles.statCard}>
                 <Text style={styles.statLabel}>Workers</Text>
-                <Text style={styles.statNumber}>—</Text>
-                <Text style={styles.statSub}>On shift</Text>
+                <Text style={styles.statNumber}>{workerCount === null ? "—" : workerCount}</Text>
+                <Text style={styles.statSub}>Total</Text>
               </View>
             </View>
 
@@ -154,26 +297,38 @@ export default function DashboardScreen() {
 
             <Text style={styles.sectionTitle}>Recent activity</Text>
 
-            <View style={styles.activityItem}>
-              <View style={styles.activityIcon}>
-                <Ionicons name="checkmark-circle-outline" size={20} color={colors.success} />
+            {activity.length === 0 && (
+              <View style={styles.activityItem}>
+                <View style={styles.activityIcon}>
+                  <Ionicons name="time-outline" size={20} color={colors.textMuted} />
+                </View>
+                <View style={styles.activityContent}>
+                  <Text style={styles.activityTitle}>No recent activity</Text>
+                  <Text style={styles.activitySub}>Updates will appear here</Text>
+                </View>
               </View>
-              <View style={styles.activityContent}>
-                <Text style={styles.activityTitle}>Production entry submitted</Text>
-                <Text style={styles.activitySub}>Cutting dept · 2h ago</Text>
-              </View>
-              <View style={styles.badgeGreen}>
-                <Text style={styles.badgeGreenText}>Done</Text>
-              </View>
-            </View>
+            )}
 
-            <View style={styles.weatherCard}>
-              <Ionicons name="partly-sunny-outline" size={20} color={colors.primary} />
-              <View style={{ flex: 1, marginLeft: 10 }}>
-                <Text style={styles.weatherTitle}>Weather alert</Text>
-                <Text style={styles.weatherText}>Heavy rain expected in Kumasi tomorrow. Secure outdoor materials.</Text>
-              </View>
-            </View>
+            {activity.map((a) => (
+              <TouchableOpacity
+                key={a.id}
+                style={styles.activityItem}
+                activeOpacity={a.route ? 0.6 : 1}
+                disabled={!a.route}
+                onPress={() => {
+                  if (a.route) router.push(a.params ? { pathname: a.route as any, params: a.params } : (a.route as any));
+                }}
+              >
+                <View style={styles.activityIcon}>
+                  <Ionicons name={a.icon} size={20} color={a.color} />
+                </View>
+                <View style={styles.activityContent}>
+                  <Text style={styles.activityTitle}>{a.title}</Text>
+                  <Text style={styles.activitySub}>{a.sub}</Text>
+                </View>
+                {a.route && <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />}
+              </TouchableOpacity>
+            ))}
 
           </View>
         </ScrollView>
@@ -197,6 +352,8 @@ export default function DashboardScreen() {
           </TouchableOpacity>
         </View>
 
+        <ManagerSidebar visible={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+
       </SafeAreaView>
     </SafeAreaProvider>
   );
@@ -206,10 +363,12 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   header: { backgroundColor: colors.primary, paddingHorizontal: 20, paddingTop: 16, paddingBottom: 24 },
   subheader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%", marginBottom: 16 },
+  headerLeft: { flexDirection: "row", alignItems: "center", gap: 10 },
+  menuBtn: { width: 38, height: 38, borderRadius: 19, backgroundColor: "rgba(255,255,255,0.15)", justifyContent: "center", alignItems: "center" },
   greeting: { fontSize: 13, color: colors.headerSubtitle },
   username: { fontSize: 20, fontWeight: "500", color: colors.white, marginTop: 2 },
-  avatar: { width: 42, height: 42, borderRadius: 21, backgroundColor: colors.primary, justifyContent: "center", alignItems: "center" },
-  avatarText: { fontSize: 15, fontWeight: "500", color: colors.headerSubtitle },
+  avatar: { width: 42, height: 42, borderRadius: 21, backgroundColor: colors.white, justifyContent: "center", alignItems: "center" },
+  avatarText: { fontSize: 15, fontWeight: "500", color: colors.primary },
   productionCard: { backgroundColor: "rgba(255,255,255,0.15)", borderRadius: 10, padding: 14, width: "100%" },
   productionLabel: { fontSize: 11, color: colors.headerSubtitle },
   productionRow: { marginTop: 4 },
@@ -238,9 +397,6 @@ const styles = StyleSheet.create({
   activitySub: { fontSize: 10, color: colors.textMuted, marginTop: 2 },
   badgeGreen: { backgroundColor: colors.successBg, borderRadius: 20, paddingHorizontal: 8, paddingVertical: 3 },
   badgeGreenText: { fontSize: 10, color: colors.success },
-  weatherCard: { flexDirection: "row", alignItems: "flex-start", backgroundColor: colors.blueTint, borderRadius: 10, padding: 14, marginTop: 6, marginBottom: 20 },
-  weatherTitle: { fontSize: 12, fontWeight: "500", color: colors.primary },
-  weatherText: { fontSize: 11, color: colors.primary, marginTop: 2, lineHeight: 16 },
   bottomNav: { flexDirection: "row", justifyContent: "space-around", paddingVertical: 10, borderTopWidth: 0.5, borderTopColor: colors.border, backgroundColor: colors.white },
   navItem: { alignItems: "center", gap: 3 },
   navTextActive: { fontSize: 10, color: colors.accent },

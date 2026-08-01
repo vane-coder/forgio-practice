@@ -1,5 +1,6 @@
+import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { Colors } from "../constants/Colors";
+import { colors } from "../constants/Colors";
 
 interface MapViewProps {
   latitude?: number;
@@ -18,6 +19,6 @@ export default function ForwardMapView({ latitude, longitude }: MapViewProps) {
 }
 
 const styles = StyleSheet.create({
-  placeholder: { height: 300, backgroundColor: Colors.primaryLight, borderRadius: 12, justifyContent: "center", alignItems: "center" },
-  text: { color: Colors.primary, fontSize: 14 },
+  placeholder: { height: 300, backgroundColor: colors.primaryLight, borderRadius: 12, justifyContent: "center", alignItems: "center" },
+  text: { color: colors.primary, fontSize: 14 },
 });

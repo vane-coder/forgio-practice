@@ -122,6 +122,19 @@ export default function ShipmentAssignmentScreen() {
               </View>
             </View>
 
+            {Array.isArray(shipment.items) && shipment.items.length > 0 && (
+              <View style={styles.cargoCard}>
+                <Text style={styles.cargoHeading}>Cargo</Text>
+                {shipment.items.map((it: any, i: number) => (
+                  <View key={it.materialId || i} style={styles.cargoLine}>
+                    <Ionicons name="cube-outline" size={14} color={colors.textMuted} />
+                    <Text style={styles.cargoLineText}>{it.materialName}</Text>
+                    <Text style={styles.cargoLineQty}>{it.quantity} {it.unit}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+
             {shipment.notes ? (
               <View style={styles.assignedCard}>
                 <Ionicons name="document-text-outline" size={16} color={colors.textMuted} />
@@ -172,6 +185,11 @@ const styles = StyleSheet.create({
   routeStop: { gap: 2 },
   routeLabel: { fontSize: 10, color: colors.textMuted },
   routeName: { fontSize: 16, fontWeight: "500", color: colors.textDark },
+  cargoCard: { backgroundColor: colors.white, borderRadius: 12, borderWidth: 0.5, borderColor: colors.border, padding: 14, marginBottom: 14 },
+  cargoHeading: { fontSize: 10, fontWeight: "500", color: colors.textMuted, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 },
+  cargoLine: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 6 },
+  cargoLineText: { flex: 1, fontSize: 14, color: colors.textDark },
+  cargoLineQty: { fontSize: 13, color: colors.textMuted, fontWeight: "500" },
   assignedCard: { flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: "#F5F5F5", borderRadius: 10, padding: 12, marginBottom: 16 },
   assignedText: { fontSize: 13, color: colors.textMuted, flex: 1 },
   updateStatusBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: colors.accent, borderRadius: 10, padding: 14, marginBottom: 10 },

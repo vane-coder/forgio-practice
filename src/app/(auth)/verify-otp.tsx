@@ -106,7 +106,7 @@ export default function VerifyOtpScreen() {
         await saveToken(res.accessToken);
         if (res.role === "MANAGER") router.replace("/(manager)/dashboard");
         else if (res.role === "WORKER") router.replace("/(worker)/home");
-        else if (res.role === "DRIVER") router.replace("/(driver)/shipment-assignment");
+        else if (res.role === "DRIVER") router.replace("/(driver)/home" as any);
       } else if (flow === "password-reset") {
         router.push({
           pathname: "/(auth)/reset-password",

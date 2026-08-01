@@ -13,6 +13,7 @@ export const createShipment = async (token: string, data: {
   toBranchId: string;
   driverId?: string;
   notes?: string;
+  items?: { materialId: string; quantity: number }[];
 }) => {
   const response = await fetch(`${API_BASE_URL}/shipments`, {
     method: "POST",

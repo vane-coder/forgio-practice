@@ -73,6 +73,10 @@ export default function RootLayout() {
         name="(manager)/ai-assistant"
         options={{ headerShown: false }}
       />
+      <Stack.Screen
+        name="(manager)/machine-history"
+        options={{ headerShown: false }}
+      />
 
       {/* Worker screens */}
       <Stack.Screen
@@ -105,6 +109,13 @@ export default function RootLayout() {
         name="(driver)/update-status"
         options={{ headerShown: false }}
       />
+      <Stack.Screen name="(driver)/home" options={{ headerShown: false }} />
+      <Stack.Screen name="(driver)/profile" options={{ headerShown: false }} />
+      <Stack.Screen name="(driver)/edit-profile" options={{ headerShown: false }} />
+      <Stack.Screen name="(driver)/change-password" options={{ headerShown: false }} />
+      <Stack.Screen name="(driver)/notifications" options={{ headerShown: false }} />
+      <Stack.Screen name="(driver)/newsfeed" options={{ headerShown: false }} />
+      <Stack.Screen name="(driver)/help" options={{ headerShown: false }} />
       <Stack.Screen 
       name="(manager)/profile"
        options={{ headerShown: false }} 
@@ -139,6 +150,9 @@ export default function RootLayout() {
 <Stack.Screen name="(worker)/help" options={{ headerShown: false }} />
 <Stack.Screen name="(worker)/notifications" options={{ headerShown: false }} />
 <Stack.Screen name="(worker)/newsfeed" options={{ headerShown: false }} />
+<Stack.Screen name="(worker)/marketplace" options={{ headerShown: false }} />
+<Stack.Screen name="(worker)/record-sale" options={{ headerShown: false }} />
+<Stack.Screen name="(manager)/sales" options={{ headerShown: false }} />
 
     </Stack>
   );

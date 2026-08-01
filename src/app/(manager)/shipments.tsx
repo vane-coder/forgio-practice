@@ -6,6 +6,8 @@ import { router } from "expo-router";
 import { getToken } from "../../auth";
 import { getShipments, createShipment } from "../../services/shipment.service";
 import { getBranches } from "../../services/branches.service";
+import { getMaterials } from "../../services/materials.service";
+import { getWorkersWithPermissions } from "../../services/permissions.service";
 import { colors } from "../../constants/Colors";
 
 const getStatusStyle = (status: string) => {
@@ -27,17 +29,29 @@ export default function ShipmentsScreen() {
   const [notes, setNotes] = useState("");
   const [creating, setCreating] = useState(false);
 
+  const [materials, setMaterials] = useState<any[]>([]);
+  const [cargo, setCargo] = useState<{ materialId: string; materialName: string; unit: string; quantity: string }[]>([]);
+  const [selectedMaterialId, setSelectedMaterialId] = useState("");
+  const [cargoQty, setCargoQty] = useState("");
+
+  const [drivers, setDrivers] = useState<any[]>([]);
+  const [driverId, setDriverId] = useState("");
+
   useEffect(() => {
     (async () => {
       try {
         const token = await getToken();
         if (token) {
-          const [shipData, branchData] = await Promise.all([
+          const [shipData, branchData, materialData, workerData] = await Promise.all([
             getShipments(token).catch(() => []),
             getBranches(token).catch(() => []),
+            getMaterials(token).catch(() => []),
+            getWorkersWithPermissions(token).catch(() => []),
           ]);
           setShipments(Array.isArray(shipData) ? shipData : []);
           setBranches(Array.isArray(branchData) ? branchData : []);
+          setMaterials(Array.isArray(materialData) ? materialData : []);
+          setDrivers(Array.isArray(workerData) ? workerData.filter((w: any) => w.role === "DRIVER") : []);
         }
       } catch (e) { console.log("shipments load failed", e); }
       finally { setLoading(false); }
@@ -46,17 +60,40 @@ export default function ShipmentsScreen() {
 
   const filtered = shipments.filter((s) => filter === "ALL" || s.status === filter);
 
+  const addCargoLine = () => {
+    if (!selectedMaterialId) { Alert.alert("Missing", "Select a material."); return; }
+    const qty = parseFloat(cargoQty);
+    if (!qty || qty <= 0) { Alert.alert("Invalid", "Enter a quantity greater than zero."); return; }
+    if (cargo.some((c) => c.materialId === selectedMaterialId)) { Alert.alert("Duplicate", "That material is already in the cargo list."); return; }
+    const mat = materials.find((m) => m.materialId === selectedMaterialId);
+    if (!mat) return;
+    setCargo((prev) => [...prev, { materialId: mat.materialId, materialName: mat.name, unit: mat.unit, quantity: cargoQty }]);
+    setSelectedMaterialId(""); setCargoQty("");
+  };
+
+  const removeCargoLine = (materialId: string) => {
+    setCargo((prev) => prev.filter((c) => c.materialId !== materialId));
+  };
+
+  const resetForm = () => {
+    setFromBranchId(""); setToBranchId(""); setNotes("");
+    setCargo([]); setSelectedMaterialId(""); setCargoQty("");
+    setDriverId("");
+  };
+
   const handleCreate = async () => {
-    if (!fromBranchId || !toBranchId) { Alert.alert("Missing", "Select origin and destination branches."); return; }
-    if (fromBranchId === toBranchId) { Alert.alert("Invalid", "Origin and destination must differ."); return; }
+    if (!fromBranchId || !toBranchId) { Alert.alert("Missing", "Select origin warehouse and destination."); return; }
+    if (fromBranchId === toBranchId) { Alert.alert("Invalid", "Warehouse and destination must differ."); return; }
+    if (cargo.length === 0) { Alert.alert("Missing", "Add at least one cargo item."); return; }
     setCreating(true);
     try {
       const token = await getToken();
       if (token) {
-        const result = await createShipment(token, { fromBranchId, toBranchId, notes: notes.trim() || undefined });
+        const items = cargo.map((c) => ({ materialId: c.materialId, quantity: parseFloat(c.quantity) }));
+        const result = await createShipment(token, { fromBranchId, toBranchId, driverId: driverId || undefined, notes: notes.trim() || undefined, items });
         setShipments((prev) => [result, ...prev]);
         Alert.alert("Created", "Shipment created successfully.");
-        setShowModal(false); setFromBranchId(""); setToBranchId(""); setNotes("");
+        setShowModal(false); resetForm();
       }
     } catch { Alert.alert("Error", "Failed to create shipment."); }
     finally { setCreating(false); }
@@ -121,15 +158,28 @@ export default function ShipmentsScreen() {
                     </View>
                     <View style={styles.routeLabels}>
                       <View style={{ marginBottom: 14 }}>
-                        <Text style={styles.routeCaption}>From</Text>
+                        <Text style={styles.routeCaption}>Warehouse</Text>
                         <Text style={styles.routeText}>{s.fromBranchName}</Text>
                       </View>
                       <View>
-                        <Text style={styles.routeCaption}>To</Text>
+                        <Text style={styles.routeCaption}>Destination</Text>
                         <Text style={styles.routeText}>{s.toBranchName}</Text>
                       </View>
                     </View>
                   </View>
+
+                  {Array.isArray(s.items) && s.items.length > 0 && (
+                    <View style={styles.cargoBox}>
+                      <Text style={styles.cargoHeading}>Cargo</Text>
+                      {s.items.map((it: any, i: number) => (
+                        <View key={it.materialId || i} style={styles.cargoLine}>
+                          <Ionicons name="cube-outline" size={12} color={colors.textMuted} />
+                          <Text style={styles.cargoLineText}>{it.materialName}</Text>
+                          <Text style={styles.cargoLineQty}>{it.quantity} {it.unit}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
 
                   <View style={styles.divider} />
 
@@ -170,28 +220,70 @@ export default function ShipmentsScreen() {
           <View style={styles.modalOverlay}>
             <View style={styles.modalCard}>
               <Text style={styles.modalTitle}>New shipment</Text>
-              <Text style={styles.label}>From branch</Text>
-              <ScrollView style={{ maxHeight: 100, marginBottom: 12 }}>
+              <ScrollView style={{ maxHeight: 460 }} showsVerticalScrollIndicator={false}>
+              <Text style={styles.label}>From warehouse</Text>
+              <ScrollView style={{ maxHeight: 100, marginBottom: 12 }} nestedScrollEnabled>
                 {branches.map((b) => (
                   <TouchableOpacity key={b.branchId} style={[styles.branchOption, fromBranchId === b.branchId && styles.branchOptionActive]} onPress={() => setFromBranchId(b.branchId)}>
                     <Text style={[styles.branchOptionText, fromBranchId === b.branchId && { color: colors.white }]}>{b.name}</Text>
                   </TouchableOpacity>
                 ))}
               </ScrollView>
-              <Text style={styles.label}>To branch</Text>
-              <ScrollView style={{ maxHeight: 100, marginBottom: 12 }}>
+              <Text style={styles.label}>To destination</Text>
+              <ScrollView style={{ maxHeight: 100, marginBottom: 12 }} nestedScrollEnabled>
                 {branches.map((b) => (
                   <TouchableOpacity key={b.branchId} style={[styles.branchOption, toBranchId === b.branchId && styles.branchOptionActive]} onPress={() => setToBranchId(b.branchId)}>
                     <Text style={[styles.branchOptionText, toBranchId === b.branchId && { color: colors.white }]}>{b.name}</Text>
                   </TouchableOpacity>
                 ))}
               </ScrollView>
-              <Text style={styles.label}>Notes (optional)</Text>
+
+              <Text style={styles.label}>Driver (optional)</Text>
+              <ScrollView style={{ maxHeight: 100, marginBottom: 12 }} nestedScrollEnabled>
+                {drivers.length === 0 && (
+                  <Text style={{ fontSize: 12, color: colors.textMuted, paddingVertical: 6 }}>No drivers available</Text>
+                )}
+                {drivers.map((d) => (
+                  <TouchableOpacity key={d.userId} style={[styles.branchOption, driverId === d.userId && styles.branchOptionActive]} onPress={() => setDriverId(driverId === d.userId ? "" : d.userId)}>
+                    <Text style={[styles.branchOptionText, driverId === d.userId && { color: colors.white }]}>{d.userName}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+
+              <Text style={styles.label}>Cargo</Text>
+              <ScrollView style={{ maxHeight: 100, marginBottom: 8 }} nestedScrollEnabled>
+                {materials.length === 0 && (
+                  <Text style={{ fontSize: 12, color: colors.textMuted, paddingVertical: 6 }}>No materials available</Text>
+                )}
+                {materials.map((m) => (
+                  <TouchableOpacity key={m.materialId} style={[styles.branchOption, selectedMaterialId === m.materialId && styles.branchOptionActive]} onPress={() => setSelectedMaterialId(m.materialId)}>
+                    <Text style={[styles.branchOptionText, selectedMaterialId === m.materialId && { color: colors.white }]}>{m.name} ({m.unit})</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+              <View style={styles.cargoAddRow}>
+                <TextInput style={styles.cargoQtyInput} value={cargoQty} onChangeText={setCargoQty} placeholder="Qty" placeholderTextColor={colors.textMuted} keyboardType="numeric" />
+                <TouchableOpacity style={styles.addCargoBtn} onPress={addCargoLine}>
+                  <Ionicons name="add" size={16} color={colors.white} />
+                  <Text style={styles.addCargoBtnText}>Add</Text>
+                </TouchableOpacity>
+              </View>
+              {cargo.map((c) => (
+                <View key={c.materialId} style={styles.cargoEditLine}>
+                  <Text style={styles.cargoEditText}>{c.materialName} — {c.quantity} {c.unit}</Text>
+                  <TouchableOpacity onPress={() => removeCargoLine(c.materialId)} hitSlop={8}>
+                    <Ionicons name="close-circle" size={18} color={colors.textMuted} />
+                  </TouchableOpacity>
+                </View>
+              ))}
+
+              <Text style={[styles.label, { marginTop: 12 }]}>Notes (optional)</Text>
               <TextInput style={styles.input} value={notes} onChangeText={setNotes} placeholder="Any notes..." placeholderTextColor={colors.textMuted} multiline />
+              </ScrollView>
               <TouchableOpacity style={styles.confirmBtn} onPress={handleCreate} disabled={creating}>
                 {creating ? <ActivityIndicator color={colors.white} /> : <Text style={styles.confirmBtnText}>Create shipment</Text>}
               </TouchableOpacity>
-              <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowModal(false)}>
+              <TouchableOpacity style={styles.cancelBtn} onPress={() => { setShowModal(false); resetForm(); }}>
                 <Text style={styles.cancelBtnText}>Cancel</Text>
               </TouchableOpacity>
             </View>
@@ -253,4 +345,15 @@ const styles = StyleSheet.create({
   routeCaption: { fontSize: 10, color: colors.textMuted, marginBottom: 1 },
   notesBox: { flexDirection: "row", alignItems: "flex-start", gap: 6, backgroundColor: colors.background, borderRadius: 8, padding: 10, marginTop: 10 },
   notesText: { flex: 1, fontSize: 11, color: colors.textMuted, lineHeight: 16 },
+  cargoBox: { backgroundColor: colors.background, borderRadius: 8, padding: 10, marginBottom: 10 },
+  cargoHeading: { fontSize: 10, fontWeight: "500", color: colors.textMuted, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5 },
+  cargoLine: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 4 },
+  cargoLineText: { flex: 1, fontSize: 12, color: colors.textDark },
+  cargoLineQty: { fontSize: 12, color: colors.textMuted, fontWeight: "500" },
+  cargoAddRow: { flexDirection: "row", gap: 8, marginBottom: 8 },
+  cargoQtyInput: { flex: 1, backgroundColor: colors.background, borderRadius: 10, borderWidth: 0.5, borderColor: colors.border, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, color: colors.textDark },
+  addCargoBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 4, backgroundColor: colors.accent, borderRadius: 10, paddingHorizontal: 16 },
+  addCargoBtnText: { fontSize: 13, color: colors.white, fontWeight: "500" },
+  cargoEditLine: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: colors.background, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, marginBottom: 4 },
+  cargoEditText: { flex: 1, fontSize: 12, color: colors.textDark },
 });

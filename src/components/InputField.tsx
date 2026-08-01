@@ -1,5 +1,6 @@
+import React from "react";
 import { View, Text, TextInput, StyleSheet } from "react-native";
-import { Colors } from "../constants/Colors";
+import { colors } from "../constants/Colors";
 
 interface InputFieldProps {
   label: string;
@@ -28,6 +29,6 @@ export default function InputField({ label, value, onChangeText, placeholder, se
 
 const styles = StyleSheet.create({
   container: { marginBottom: 16 },
-  label: { fontSize: 14, color: Colors.grey, marginBottom: 6 },
-  input: { borderWidth: 1, borderColor: Colors.border, borderRadius: 8, padding: 12, fontSize: 16 },
+  label: { fontSize: 14, color: colors.textMuted, marginBottom: 6 },
+  input: { borderWidth: 1, borderColor: colors.border, borderRadius: 8, padding: 12, fontSize: 16 },
 });

@@ -30,7 +30,7 @@ export default function BranchesScreen() {
 
   const handleAdd = async () => {
     if (!newName.trim()) {
-      Alert.alert("Missing name", "Please enter a branch name.");
+      Alert.alert("Missing name", "Please enter a warehouse name.");
       return;
     }
     setSaving(true);
@@ -44,7 +44,7 @@ export default function BranchesScreen() {
         await loadBranches();
       }
     } catch (e) {
-      Alert.alert("Failed", "Could not create branch.");
+      Alert.alert("Failed", "Could not create warehouse.");
     } finally { setSaving(false); }
   };
 
@@ -59,7 +59,7 @@ export default function BranchesScreen() {
             </TouchableOpacity>
             <View style={styles.headerRow}>
               <View>
-                <Text style={styles.headerTitle}>Branches</Text>
+                <Text style={styles.headerTitle}>Warehouses</Text>
                 <Text style={styles.headerSub}>{branches.length} locations</Text>
               </View>
               <TouchableOpacity style={styles.addBtn} onPress={() => setShowModal(true)}>
@@ -74,7 +74,7 @@ export default function BranchesScreen() {
             {loading && <ActivityIndicator size="large" color={colors.primary} style={{ marginVertical: 30 }} />}
             {!loading && branches.length === 0 && (
               <Text style={{ textAlign: "center", color: colors.textMuted, marginVertical: 30 }}>
-                No branches yet. Add your first one.
+                No warehouses yet. Add your first one.
               </Text>
             )}
 
@@ -96,7 +96,7 @@ export default function BranchesScreen() {
                       styles.tagText,
                       branch.isMain ? { color: colors.success } : { color: colors.primary }
                     ]}>
-                      {branch.isMain ? "Main" : "Branch"}
+                      {branch.isMain ? "Main" : "Warehouse"}
                     </Text>
                   </View>
                 </View>
@@ -149,12 +149,12 @@ export default function BranchesScreen() {
         <Modal visible={showModal} transparent animationType="slide">
           <View style={styles.modalOverlay}>
             <View style={styles.modalCard}>
-              <Text style={styles.modalTitle}>Add new branch</Text>
+              <Text style={styles.modalTitle}>Add new warehouse</Text>
 
-              <Text style={styles.modalLabel}>Branch name</Text>
+              <Text style={styles.modalLabel}>Warehouse name</Text>
               <TextInput
                 style={styles.modalInput}
-                placeholder="e.g. Accra Branch"
+                placeholder="e.g. Accra Warehouse"
                 placeholderTextColor={colors.textMuted}
                 value={newName}
                 onChangeText={setNewName}
@@ -174,7 +174,7 @@ export default function BranchesScreen() {
                   <Text style={styles.modalCancelText}>Cancel</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.modalSave} onPress={handleAdd} disabled={saving}>
-                  <Text style={styles.modalSaveText}>{saving ? "Adding..." : "Add branch"}</Text>
+                  <Text style={styles.modalSaveText}>{saving ? "Adding..." : "Add warehouse"}</Text>
                 </TouchableOpacity>
               </View>
             </View>

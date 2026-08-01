@@ -7,7 +7,7 @@ import { getToken } from "../../auth";
 import { API_BASE_URL } from "../../services/api.config";
 import { colors } from "../../constants/Colors";
 
-export default function WorkerEditProfileScreen() {
+export default function DriverEditProfileScreen() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(true);

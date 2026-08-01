@@ -28,3 +28,14 @@ export const updateMaterial = async (token: string, id: string, data: Partial<Ra
   if (!response.ok) throw new Error("Failed to update material");
   return response.json();
 };
+
+/** Worker-facing: record consumption of a material (deducts stock). */
+export const consumeMaterial = async (token: string, id: string, quantity: number) => {
+  const response = await fetch(`${API_BASE_URL}/materials/${id}/consume`, {
+    method: "PATCH",
+    headers: getHeaders(token),
+    body: JSON.stringify({ quantity }),
+  });
+  if (!response.ok) throw new Error("Failed to record material usage");
+  return response.json();
+};

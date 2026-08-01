@@ -15,7 +15,7 @@ export default function BranchDetailsScreen() {
     isMain?: string;
   }>();
 
-  const name = params.name || "Branch";
+  const name = params.name || "Warehouse";
   const location = params.location || "No location set";
   const workerCount = params.workerCount || "0";
   const machineCount = params.machineCount || "0";
@@ -40,7 +40,7 @@ export default function BranchDetailsScreen() {
               </View>
               <View style={[styles.tag, isMain ? { backgroundColor: colors.successBg } : { backgroundColor: colors.blueTint }]}>
                 <Text style={[styles.tagText, isMain ? { color: colors.success } : { color: colors.primary }]}>
-                  {isMain ? "Main" : "Branch"}
+                  {isMain ? "Main" : "Warehouse"}
                 </Text>
               </View>
             </View>
@@ -81,7 +81,7 @@ export default function BranchDetailsScreen() {
               <View style={styles.detailRow}>
                 <Ionicons name="git-branch-outline" size={16} color={colors.textMuted} />
                 <Text style={styles.detailLabel}>Type</Text>
-                <Text style={styles.detailValue}>{isMain ? "Main branch" : "Branch"}</Text>
+                <Text style={styles.detailValue}>{isMain ? "Main warehouse" : "Warehouse"}</Text>
               </View>
             </View>
 

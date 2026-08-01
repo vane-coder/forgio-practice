@@ -132,7 +132,10 @@ export default function MachinesScreen() {
                       <Ionicons name="swap-horizontal-outline" size={14} color={colors.primary} />
                       <Text style={styles.actionBtnText}>Update status</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.actionBtn}>
+                    <TouchableOpacity
+                      style={styles.actionBtn}
+                      onPress={() => router.push({ pathname: "/(manager)/machine-history" as any, params: { machineId: machine.machineId, machineName: machine.name } })}
+                    >
                       <Ionicons name="time-outline" size={14} color={colors.primary} />
                       <Text style={styles.actionBtnText}>View history</Text>
                     </TouchableOpacity>

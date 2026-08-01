@@ -44,6 +44,7 @@ export interface ProductionEntry {
   productName: string;
   quantityProduced: number;
   shift: string;
+  notes?: string;
 }
 
 export interface Machine {

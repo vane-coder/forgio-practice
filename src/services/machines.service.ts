@@ -41,3 +41,12 @@ export const updateMachineStatus = async (token: string, machineId: string, stat
   if (!response.ok) throw new Error("Failed to update machine status");
   return response.json();
 };
+
+/** Manager-facing: all breakdown logs for the factory (machine name, cause, timestamps). */
+export const getBreakdownLogs = async (token: string) => {
+  const response = await fetch(`${API_BASE_URL}/breakdown-logs`, {
+    headers: getHeaders(token),
+  });
+  if (!response.ok) throw new Error("Failed to fetch breakdown logs");
+  return response.json();
+};

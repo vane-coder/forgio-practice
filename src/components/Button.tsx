@@ -1,5 +1,6 @@
+import React from "react";
 import { TouchableOpacity, Text, StyleSheet } from "react-native";
-import { Colors } from "../constants/Colors";
+import { colors } from "../constants/Colors";
 
 interface ButtonProps {
   title: string;
@@ -21,8 +22,8 @@ export default function Button({ title, onPress, variant = "primary" }: ButtonPr
 }
 
 const styles = StyleSheet.create({
-  button: { backgroundColor: Colors.primary, padding: 14, borderRadius: 8, alignItems: "center" },
-  outline: { backgroundColor: "transparent", borderWidth: 1, borderColor: Colors.primary },
-  text: { color: Colors.white, fontSize: 16, fontWeight: "bold" },
-  outlineText: { color: Colors.primary },
+  button: { backgroundColor: colors.primary, padding: 14, borderRadius: 8, alignItems: "center" },
+  outline: { backgroundColor: "transparent", borderWidth: 1, borderColor: colors.primary },
+  text: { color: colors.white, fontSize: 16, fontWeight: "bold" },
+  outlineText: { color: colors.primary },
 });

@@ -10,6 +10,7 @@ import { colors } from "../../constants/Colors";
 const getRoleBadge = (role: string) => {
   if (role === "DEPT_HEAD") return { bg: colors.blueTint, color: colors.primary, label: "Dept Head" };
   if (role === "MANAGER") return { bg: colors.successBg, color: colors.success, label: "Manager" };
+  if (role === "DRIVER") return { bg: colors.warningBg, color: colors.warning, label: "Driver" };
   return { bg: "#F3E5F5", color: "#4A148C", label: "Worker" };
 };
 

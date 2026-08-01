@@ -14,7 +14,7 @@ const getTypeStyle = (type: string) => {
   return { bg: colors.blueTint, color: colors.primary, icon: "notifications-outline", label: "Info" };
 };
 
-export default function WorkerNotificationsScreen() {
+export default function DriverNotificationsScreen() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -26,7 +26,7 @@ export default function WorkerNotificationsScreen() {
           const data = await getMyNotifications(token);
           setNotifications(Array.isArray(data) ? data : []);
         }
-      } catch (e) { console.log("worker notifications failed", e); }
+      } catch (e) { console.log("driver notifications failed", e); }
       finally { setLoading(false); }
     })();
   }, []);
@@ -35,17 +35,12 @@ export default function WorkerNotificationsScreen() {
     <SafeAreaProvider>
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.primary }}>
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-
           <View style={styles.header}>
             <TouchableOpacity onPress={() => router.back()} style={{ marginBottom: 8 }}>
               <Ionicons name="arrow-back" size={20} color={colors.white} />
             </TouchableOpacity>
-            <View style={styles.headerRow}>
-              <View>
-                <Text style={styles.headerTitle}>Notifications</Text>
-                <Text style={styles.headerSub}>{notifications.length} new messages</Text>
-              </View>
-            </View>
+            <Text style={styles.headerTitle}>Notifications</Text>
+            <Text style={styles.headerSub}>{notifications.length} new messages</Text>
           </View>
 
           <View style={styles.body}>
@@ -95,7 +90,6 @@ export default function WorkerNotificationsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   header: { backgroundColor: colors.primary, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16 },
-  headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   headerTitle: { fontSize: 18, fontWeight: "500", color: colors.white },
   headerSub: { fontSize: 11, color: colors.headerSubtitle, marginTop: 2 },
   body: { padding: 16 },
