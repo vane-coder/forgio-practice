@@ -8,6 +8,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { getToken } from "../../auth";
 import { getMaterials, addMaterial } from "../../services/materials.service";
+import { getDepartments } from "../../services/departments.service";
 import { colors } from "../../constants/Colors";
 
 const getStatusStyle = (lowStock: boolean) => {
@@ -28,7 +29,9 @@ export default function MaterialsScreen() {
   const [newUnit, setNewUnit] = useState("");
   const [newStock, setNewStock] = useState("");
   const [newCost, setNewCost] = useState("");
+  const [newDeptId, setNewDeptId] = useState<string | null>(null);
 
+  const [departments, setDepartments] = useState<any[]>([]);
   const [materials, setMaterials] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -49,6 +52,17 @@ export default function MaterialsScreen() {
 
   useEffect(() => {
     loadMaterials();
+    (async () => {
+      try {
+        const token = await getToken();
+        if (token) {
+          const depts = await getDepartments(token);
+          setDepartments(Array.isArray(depts) ? depts : []);
+        }
+      } catch (e) {
+        console.log("Failed to load departments", e);
+      }
+    })();
   }, []);
 
   const handleAdd = async () => {
@@ -66,9 +80,10 @@ export default function MaterialsScreen() {
           quantityInStock: Number(newStock),
           reorderLevel: 0,
           costPerUnit: Number(newCost) || 0,
+          departmentId: newDeptId,
         } as any);
         setShowModal(false);
-        setNewName(""); setNewUnit(""); setNewStock(""); setNewCost("");
+        setNewName(""); setNewUnit(""); setNewStock(""); setNewCost(""); setNewDeptId(null);
         setLoading(true);
         await loadMaterials();
       }
@@ -152,6 +167,7 @@ export default function MaterialsScreen() {
                           <Text style={styles.itemStock}>
                             {mat.quantityInStock}{mat.unit} remaining · GHS {mat.costPerUnit}/{mat.unit}
                           </Text>
+                          <Text style={styles.itemDept}>{mat.departmentName || "All departments"}</Text>
                         </View>
                         <View style={[styles.badge, { backgroundColor: badge.bg }]}>
                           <Text style={[styles.badgeText, { color: badge.color }]}>{badge.label}</Text>
@@ -210,6 +226,26 @@ export default function MaterialsScreen() {
               <Text style={styles.modalLabel}>Cost per unit (GHS)</Text>
               <TextInput style={styles.modalInput} placeholder="e.g. 12" placeholderTextColor={colors.textMuted} value={newCost} onChangeText={setNewCost} keyboardType="numeric" />
 
+              <Text style={styles.modalLabel}>Department</Text>
+              <Text style={styles.modalHint}>Leave as "All departments" to share this material factory-wide.</Text>
+              <View style={styles.deptChips}>
+                <TouchableOpacity
+                  style={[styles.deptChip, newDeptId === null && styles.deptChipActive]}
+                  onPress={() => setNewDeptId(null)}
+                >
+                  <Text style={[styles.deptChipText, newDeptId === null && styles.deptChipTextActive]}>All departments</Text>
+                </TouchableOpacity>
+                {departments.map((d) => (
+                  <TouchableOpacity
+                    key={d.deptId}
+                    style={[styles.deptChip, newDeptId === d.deptId && styles.deptChipActive]}
+                    onPress={() => setNewDeptId(d.deptId)}
+                  >
+                    <Text style={[styles.deptChipText, newDeptId === d.deptId && styles.deptChipTextActive]}>{d.name}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
               <View style={styles.modalButtons}>
                 <TouchableOpacity style={styles.modalCancel} onPress={() => setShowModal(false)}>
                   <Text style={styles.modalCancelText}>Cancel</Text>
@@ -247,6 +283,7 @@ const styles = StyleSheet.create({
   itemInfo: { flex: 1 },
   itemName: { fontSize: 13, fontWeight: "500", color: colors.textDark },
   itemStock: { fontSize: 10, color: colors.textMuted, marginTop: 2 },
+  itemDept: { fontSize: 9, color: colors.accent, marginTop: 2, fontWeight: "500" },
   badge: { borderRadius: 20, paddingHorizontal: 8, paddingVertical: 3 },
   badgeText: { fontSize: 10, fontWeight: "500" },
   progressTrack: { height: 4, backgroundColor: colors.border, borderRadius: 4, marginBottom: 4 },
@@ -259,6 +296,12 @@ const styles = StyleSheet.create({
   modalTitle: { fontSize: 16, fontWeight: "500", color: colors.textDark, marginBottom: 16 },
   modalLabel: { fontSize: 12, fontWeight: "500", color: colors.textDark, marginBottom: 6 },
   modalInput: { backgroundColor: colors.background, borderRadius: 8, borderWidth: 0.5, borderColor: colors.border, padding: 11, fontSize: 13, color: colors.textDark, marginBottom: 14 },
+  modalHint: { fontSize: 11, color: colors.textMuted, marginBottom: 8 },
+  deptChips: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 14 },
+  deptChip: { borderWidth: 1, borderColor: colors.border, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 7 },
+  deptChipActive: { backgroundColor: colors.accentLight, borderColor: colors.accent },
+  deptChipText: { fontSize: 12, color: colors.textMuted, fontWeight: "500" },
+  deptChipTextActive: { color: colors.accent },
   modalButtons: { flexDirection: "row", gap: 10, marginTop: 6 },
   modalCancel: { flex: 1, backgroundColor: colors.background, borderRadius: 8, padding: 13, alignItems: "center" },
   modalCancelText: { fontSize: 14, color: colors.textMuted, fontWeight: "500" },

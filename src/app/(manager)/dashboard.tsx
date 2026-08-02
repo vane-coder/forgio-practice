@@ -113,7 +113,7 @@ export default function DashboardScreen() {
         const entries = await getProductionByFactory(token);
         if (Array.isArray(entries)) {
           const total = entries
-            .filter((e: any) => isToday(e.date))
+            .filter((e: any) => isToday(e.entryDate))
             .reduce((sum: number, e: any) => sum + (Number(e.quantityProduced) || 0), 0);
           setTodayProduction(total);
           prodActivity = entries.map((e: any) => ({
@@ -121,8 +121,8 @@ export default function DashboardScreen() {
             icon: "cube-outline" as const,
             color: colors.success,
             title: `${e.quantityProduced} ${e.productName || "units"} produced`,
-            sub: relativeTime(e.date),
-            time: new Date(e.date).getTime() || 0,
+            sub: relativeTime(e.entryDate),
+            time: new Date(e.entryDate).getTime() || 0,
             route: "/(manager)/reports",
           }));
         }

@@ -4,7 +4,7 @@ import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { getToken } from "../../auth";
-import { getShipments, createShipment } from "../../services/shipment.service";
+import { getShipments, createShipment, assignShipmentDriver } from "../../services/shipment.service";
 import { getBranches } from "../../services/branches.service";
 import { getMaterials } from "../../services/materials.service";
 import { getWorkersWithPermissions } from "../../services/permissions.service";
@@ -36,6 +36,10 @@ export default function ShipmentsScreen() {
 
   const [drivers, setDrivers] = useState<any[]>([]);
   const [driverId, setDriverId] = useState("");
+
+  // assign-driver-to-existing-shipment modal
+  const [assignShipment, setAssignShipment] = useState<any | null>(null);
+  const [assigning, setAssigning] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -97,6 +101,20 @@ export default function ShipmentsScreen() {
       }
     } catch { Alert.alert("Error", "Failed to create shipment."); }
     finally { setCreating(false); }
+  };
+
+  const handleAssignDriver = async (newDriverId: string | null) => {
+    if (!assignShipment) return;
+    setAssigning(true);
+    try {
+      const token = await getToken();
+      if (token) {
+        const updated = await assignShipmentDriver(token, assignShipment.shipmentId, newDriverId);
+        setShipments((prev) => prev.map((s) => s.shipmentId === updated.shipmentId ? updated : s));
+        setAssignShipment(null);
+      }
+    } catch { Alert.alert("Error", "Failed to assign driver."); }
+    finally { setAssigning(false); }
   };
 
   return (
@@ -184,10 +202,17 @@ export default function ShipmentsScreen() {
                   <View style={styles.divider} />
 
                   <View style={styles.cardFooter}>
-                    <View style={styles.footerItem}>
+                    <TouchableOpacity
+                      style={styles.footerItem}
+                      disabled={s.status === "ARRIVED"}
+                      onPress={() => setAssignShipment(s)}
+                    >
                       <Ionicons name="person-circle-outline" size={15} color={colors.textMuted} />
                       <Text style={styles.footerText}>{s.driverName || "Unassigned"}</Text>
-                    </View>
+                      {s.status !== "ARRIVED" && (
+                        <Ionicons name="chevron-forward" size={12} color={colors.accent} />
+                      )}
+                    </TouchableOpacity>
                     <View style={styles.footerItem}>
                       <Ionicons name="calendar-outline" size={13} color={colors.textMuted} />
                       <Text style={styles.footerText}>{s.createdAt ? new Date(s.createdAt).toLocaleDateString() : ""}</Text>
@@ -289,6 +314,51 @@ export default function ShipmentsScreen() {
             </View>
           </View>
         </Modal>
+
+        {/* Assign-driver-to-existing-shipment modal */}
+        <Modal visible={assignShipment !== null} transparent animationType="slide">
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalCard}>
+              <Text style={styles.modalTitle}>Assign driver</Text>
+              {assignShipment && (
+                <Text style={[styles.label, { marginBottom: 12 }]}>
+                  Shipment #{assignShipment.shipmentId.substring(0, 8).toUpperCase()}
+                </Text>
+              )}
+              <ScrollView style={{ maxHeight: 260, marginBottom: 12 }} nestedScrollEnabled>
+                {drivers.length === 0 && (
+                  <Text style={{ fontSize: 12, color: colors.textMuted, paddingVertical: 6 }}>No drivers available</Text>
+                )}
+                {drivers.map((d) => {
+                  const isCurrent = assignShipment?.driverId === d.userId;
+                  return (
+                    <TouchableOpacity
+                      key={d.userId}
+                      style={[styles.branchOption, isCurrent && styles.branchOptionActive]}
+                      disabled={assigning}
+                      onPress={() => handleAssignDriver(d.userId)}
+                    >
+                      <Text style={[styles.branchOptionText, isCurrent && { color: colors.white }]}>{d.userName}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+              {assignShipment?.driverId && (
+                <TouchableOpacity
+                  style={styles.unassignBtn}
+                  disabled={assigning}
+                  onPress={() => handleAssignDriver(null)}
+                >
+                  <Text style={styles.unassignBtnText}>Unassign driver</Text>
+                </TouchableOpacity>
+              )}
+              {assigning && <ActivityIndicator color={colors.accent} style={{ marginVertical: 8 }} />}
+              <TouchableOpacity style={styles.cancelBtn} onPress={() => setAssignShipment(null)}>
+                <Text style={styles.cancelBtnText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </SafeAreaView>
     </SafeAreaProvider>
   );
@@ -331,6 +401,8 @@ const styles = StyleSheet.create({
   confirmBtnText: { fontSize: 14, fontWeight: "500", color: colors.white },
   cancelBtn: { backgroundColor: colors.background, borderRadius: 10, padding: 14, alignItems: "center" },
   cancelBtnText: { fontSize: 14, color: colors.textMuted, fontWeight: "500" },
+  unassignBtn: { backgroundColor: colors.dangerBg, borderRadius: 10, padding: 12, alignItems: "center", marginBottom: 8 },
+  unassignBtnText: { fontSize: 13, color: colors.danger, fontWeight: "500" },
   branchOption: { borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 4, backgroundColor: colors.background },
   branchOptionActive: { backgroundColor: colors.accent },
   branchOptionText: { fontSize: 13, color: colors.textDark },

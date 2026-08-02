@@ -78,9 +78,7 @@ export default function WorkerNotificationsScreen() {
                       </View>
                     </View>
                     <Text style={styles.notifMessage}>{n.message}</Text>
-                    {n.sentByName && (
-                      <Text style={styles.notifSender}>From {n.sentByName}</Text>
-                    )}
+                    <Text style={styles.notifSender}>From manager</Text>
                   </View>
                 </View>
               );

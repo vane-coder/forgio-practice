@@ -13,6 +13,7 @@ export const createWorker = async (token: string, data: {
   phone: string;
   password: string;
   role?: string;
+  departmentId?: string;
 }) => {
   const response = await fetch(`${API_BASE_URL}/permissions/workers`, {
     method: "POST",

@@ -19,3 +19,12 @@ export const getProductionByFactory = async (token: string) => {
   return response.json();
 };
 
+/** A worker's own production entries — no manager/dept-head role required. */
+export const getMyProduction = async (token: string) => {
+  const response = await fetch(`${API_BASE_URL}/production/me`, {
+    headers: getHeaders(token),
+  });
+  if (!response.ok) throw new Error("Failed to fetch your production records");
+  return response.json();
+};
+

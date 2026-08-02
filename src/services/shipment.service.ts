@@ -33,3 +33,14 @@ export const updateShipmentStatus = async (token: string, id: string, status: st
   if (!response.ok) throw new Error("Failed to update shipment status");
   return response.json();
 };
+
+/** Manager assigns (or clears) the driver on an existing shipment. */
+export const assignShipmentDriver = async (token: string, id: string, driverId: string | null) => {
+  const response = await fetch(`${API_BASE_URL}/shipments/${id}/driver`, {
+    method: "PATCH",
+    headers: getHeaders(token),
+    body: JSON.stringify({ driverId: driverId ?? "" }),
+  });
+  if (!response.ok) throw new Error("Failed to assign driver");
+  return response.json();
+};

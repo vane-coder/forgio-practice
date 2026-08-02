@@ -4,8 +4,7 @@ import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { getToken } from "../../auth";
-import { API_BASE_URL } from "../../services/api.config";
-import { getProductionByFactory } from "../../services/production.service";
+import { getMyProduction } from "../../services/production.service";
 import { colors } from "../../constants/Colors";
 
 export default function MyRecordsScreen() {
@@ -18,15 +17,8 @@ export default function MyRecordsScreen() {
         const token = await getToken();
         if (!token) return;
 
-        const [profileRes, production] = await Promise.all([
-          fetch(`${API_BASE_URL}/profile`, { headers: { Authorization: `Bearer ${token}` } }).then((r) => r.json()),
-          getProductionByFactory(token).catch(() => []),
-        ]);
-
-        const myRecords = Array.isArray(production)
-          ? production.filter((entry: any) => entry.workerId === profileRes?.userId)
-          : [];
-        setRecords(myRecords);
+        const production = await getMyProduction(token).catch(() => []);
+        setRecords(Array.isArray(production) ? production : []);
       } catch (e) {
         console.log("my-records load failed", e);
       } finally {
@@ -89,7 +81,7 @@ export default function MyRecordsScreen() {
                           <View style={styles.itemLeft}>
                             <Text style={styles.itemProduct}>{r.productName}</Text>
                             <Text style={styles.itemMeta}>
-                              {new Date(r.date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })} · {r.shift} shift
+                              {new Date(r.entryDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })} · {r.shift} shift
                             </Text>
                           </View>
                           <View style={styles.itemRight}>

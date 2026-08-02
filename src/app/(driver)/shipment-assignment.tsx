@@ -56,11 +56,28 @@ export default function ShipmentAssignmentScreen() {
       <SafeAreaProvider>
         <SafeAreaView style={{ flex: 1, backgroundColor: colors.primary }}>
           <View style={styles.header}>
-            <Text style={styles.headerTitle}>My Shipment</Text>
+            <View style={styles.headerRow}>
+              <View>
+                <Text style={styles.headerTitle}>My Shipment</Text>
+                <Text style={styles.headerSub}>No delivery in progress</Text>
+              </View>
+            </View>
           </View>
-          <View style={[styles.body, { alignItems: "center", paddingTop: 60 }]}>
-            <Ionicons name="cube-outline" size={48} color={colors.border} />
-            <Text style={{ color: colors.textMuted, marginTop: 12 }}>No active shipment assigned right now.</Text>
+          <View style={styles.emptyWrap}>
+            <View style={styles.emptyCard}>
+              <View style={styles.emptyIconCircle}>
+                <Ionicons name="cube-outline" size={40} color={colors.primary} />
+              </View>
+              <Text style={styles.emptyTitle}>No active shipment</Text>
+              <Text style={styles.emptyText}>
+                You have no delivery assigned right now. When your manager assigns one,
+                it'll show up here with the route and cargo.
+              </Text>
+              <TouchableOpacity style={styles.refreshBtn} onPress={() => { setLoading(true); load(); }}>
+                <Ionicons name="refresh-outline" size={16} color={colors.white} />
+                <Text style={styles.refreshBtnText}>Refresh</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </SafeAreaView>
       </SafeAreaProvider>
@@ -175,6 +192,13 @@ const styles = StyleSheet.create({
   statusBadge: { borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
   statusText: { fontSize: 11, fontWeight: "500" },
   body: { padding: 16 },
+  emptyWrap: { flex: 1, backgroundColor: colors.background, padding: 16, justifyContent: "center" },
+  emptyCard: { backgroundColor: colors.white, borderRadius: 16, borderWidth: 0.5, borderColor: colors.border, padding: 28, alignItems: "center" },
+  emptyIconCircle: { width: 80, height: 80, borderRadius: 40, backgroundColor: colors.blueTint, justifyContent: "center", alignItems: "center", marginBottom: 16 },
+  emptyTitle: { fontSize: 17, fontWeight: "500", color: colors.textDark, marginBottom: 8 },
+  emptyText: { fontSize: 13, color: colors.textMuted, textAlign: "center", lineHeight: 19, marginBottom: 20 },
+  refreshBtn: { flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: colors.accent, borderRadius: 10, paddingHorizontal: 20, paddingVertical: 12 },
+  refreshBtnText: { fontSize: 14, fontWeight: "500", color: colors.white },
   routeCard: { backgroundColor: colors.white, borderRadius: 12, borderWidth: 0.5, borderColor: colors.border, padding: 14, marginBottom: 14 },
   routeRow: { flexDirection: "row", gap: 12 },
   routeIconCol: { alignItems: "center", paddingTop: 4 },

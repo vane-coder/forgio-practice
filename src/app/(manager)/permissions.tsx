@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { getToken } from "../../auth";
 import { getWorkersWithPermissions, assignPermission, createWorker } from "../../services/permissions.service";
+import { getDepartments } from "../../services/departments.service";
 import { colors } from "../../constants/Colors";
 
 const getRoleBadge = (role: string) => {
@@ -26,6 +27,8 @@ export default function PermissionsScreen() {
   const [wPhone, setWPhone] = useState("");
   const [wPassword, setWPassword] = useState("");
   const [wRole, setWRole] = useState("WORKER");
+  const [wDeptId, setWDeptId] = useState<string | null>(null);
+  const [departments, setDepartments] = useState<any[]>([]);
   const [creating, setCreating] = useState(false);
 
   const handleAddWorker = async () => {
@@ -42,9 +45,10 @@ export default function PermissionsScreen() {
           phone: wPhone.trim(),
           password: wPassword,
           role: wRole,
+          departmentId: wDeptId ?? undefined,
         });
         setWorkers((prev) => [...prev, created]);
-        setWName(""); setWPhone(""); setWPassword(""); setWRole("WORKER");
+        setWName(""); setWPhone(""); setWPassword(""); setWRole("WORKER"); setWDeptId(null);
         setShowAddModal(false);
       }
     } catch (e: any) {
@@ -59,8 +63,12 @@ export default function PermissionsScreen() {
       try {
         const token = await getToken();
         if (token) {
-          const data = await getWorkersWithPermissions(token);
+          const [data, depts] = await Promise.all([
+            getWorkersWithPermissions(token),
+            getDepartments(token).catch(() => []),
+          ]);
           setWorkers(Array.isArray(data) ? data : []);
+          setDepartments(Array.isArray(depts) ? depts : []);
         }
       } catch (e) { console.log("permissions load failed", e); }
       finally { setLoading(false); }
@@ -206,6 +214,29 @@ export default function PermissionsScreen() {
                 ))}
               </View>
 
+              {wRole !== "DRIVER" && (
+                <>
+                  <Text style={styles.inputLabel}>Department</Text>
+                  {departments.length === 0 ? (
+                    <Text style={styles.deptEmpty}>No departments yet. Create one first.</Text>
+                  ) : (
+                    <View style={styles.deptWrap}>
+                      {departments.map((d) => (
+                        <TouchableOpacity
+                          key={d.deptId}
+                          style={[styles.deptChip, wDeptId === d.deptId && styles.deptChipActive]}
+                          onPress={() => setWDeptId(wDeptId === d.deptId ? null : d.deptId)}
+                        >
+                          <Text style={[styles.deptChipText, wDeptId === d.deptId && styles.deptChipTextActive]}>
+                            {d.name}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  )}
+                </>
+              )}
+
               <TouchableOpacity
                 style={[styles.saveBtn, creating && { opacity: 0.6 }]}
                 onPress={handleAddWorker}
@@ -263,6 +294,12 @@ const styles = StyleSheet.create({
   roleChipActive: { backgroundColor: colors.accentLight, borderColor: colors.accent },
   roleChipText: { fontSize: 12, color: colors.textMuted, fontWeight: "500" },
   roleChipTextActive: { color: colors.accent },
+  deptWrap: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 2 },
+  deptChip: { borderWidth: 1, borderColor: colors.border, borderRadius: 8, paddingVertical: 8, paddingHorizontal: 12 },
+  deptChipActive: { backgroundColor: colors.accentLight, borderColor: colors.accent },
+  deptChipText: { fontSize: 12, color: colors.textMuted, fontWeight: "500" },
+  deptChipTextActive: { color: colors.accent },
+  deptEmpty: { fontSize: 12, color: colors.textMuted, marginTop: 4 },
   saveBtn: { backgroundColor: colors.accent, borderRadius: 10, padding: 14, alignItems: "center", marginTop: 16 },
   saveBtnText: { fontSize: 14, color: colors.white, fontWeight: "600" },
   cancelBtn: { backgroundColor: colors.background, borderRadius: 10, padding: 14, alignItems: "center", marginTop: 8 },
