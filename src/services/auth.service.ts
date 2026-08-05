@@ -1,11 +1,11 @@
 import { API_BASE_URL } from "./api.config";
 import { AuthResponse, LoginChallengeResponse, OtpSentResponse } from "../types";
 
-export const sendRegistrationCode = async (phone: string): Promise<OtpSentResponse> => {
+export const sendRegistrationCode = async (phone: string, email: string): Promise<OtpSentResponse> => {
   const response = await fetch(`${API_BASE_URL}/auth/register/send-code`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ phone }),
+    body: JSON.stringify({ phone, email }),
   });
   if (!response.ok) {
     const err = await response.json().catch(() => null);
@@ -16,6 +16,7 @@ export const sendRegistrationCode = async (phone: string): Promise<OtpSentRespon
 
 export const verifyAndRegister = async (data: {
   phone: string;
+  email: string;
   code: string;
   managerName: string;
   password: string;

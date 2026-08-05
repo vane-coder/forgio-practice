@@ -22,12 +22,20 @@ export const createListing = async (token: string, data: {
   return response.json();
 };
 
-export const buyFromMarketplace = async (token: string, data: { listingId: string; quantity: number }) => {
-  const response = await fetch(`${API_BASE_URL}/marketplace/buy`, {
+export const purchaseListing = async (
+  token: string,
+  listingId: string,
+  quantity: number,
+  destinationBranchId: string
+): Promise<{ authorizationUrl: string; reference: string }> => {
+  const response = await fetch(`${API_BASE_URL}/marketplace/listings/${listingId}/purchase`, {
     method: "POST",
     headers: getHeaders(token),
-    body: JSON.stringify(data),
+    body: JSON.stringify({ quantity, destinationBranchId }),
   });
-  if (!response.ok) throw new Error("Purchase failed");
+  if (!response.ok) {
+    const err = await response.json().catch(() => null);
+    throw new Error(err?.message || "Purchase failed");
+  }
   return response.json();
 };

@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useCallback } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router ,useFocusEffect} from "expo-router";
 import { getToken } from "../../auth";
 import { API_BASE_URL } from "../../services/api.config";
 import { getMyNotifications } from "../../services/notifications.service";
@@ -25,7 +25,8 @@ export default function WorkerHomeScreen() {
   const [listings, setListings] = useState<any[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  useEffect(() => {
+  useFocusEffect(
+  useCallback(() => {
     (async () => {
       try {
         const token = await getToken();
@@ -42,7 +43,7 @@ export default function WorkerHomeScreen() {
         if (Array.isArray(market)) setListings(market.slice(0, 5));
       } catch (e) { console.log("home load failed", e); }
     })();
-  }, []);
+  }, []));
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";

@@ -11,6 +11,7 @@ export const getWorkersWithPermissions = async (token: string) => {
 export const createWorker = async (token: string, data: {
   name: string;
   phone: string;
+  email?: string;
   password: string;
   role?: string;
   departmentId?: string;
@@ -20,7 +21,10 @@ export const createWorker = async (token: string, data: {
     headers: getHeaders(token),
     body: JSON.stringify(data),
   });
-  if (!response.ok) throw new Error("Failed to create worker");
+  if (!response.ok) {
+    const err = await response.json().catch(() => null);
+    throw new Error(err?.message || "Failed to create worker");
+  }
   return response.json();
 };
 
@@ -35,6 +39,9 @@ export const assignPermission = async (token: string, data: {
     headers: getHeaders(token),
     body: JSON.stringify(data),
   });
-  if (!response.ok) throw new Error("Failed to assign permissions");
+  if (!response.ok) {
+    const err = await response.json().catch(() => null);
+    throw new Error(err?.message || "Failed to assign permissions");
+  }
   return response.json();
 };

@@ -78,6 +78,15 @@ export default function RootLayout() {
         options={{ headerShown: false }}
       />
 
+      <Stack.Screen
+        name="(manager)/shipment-track"
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen name="(manager)/marketplace-checkout"
+       options={{ headerShown: false }}
+        />
+
+
       {/* Worker screens */}
       <Stack.Screen
         name="(worker)/home"

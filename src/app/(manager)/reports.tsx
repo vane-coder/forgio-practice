@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useCallback } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router ,useFocusEffect} from "expo-router";
 import { getToken } from "../../auth";
 import { getReports, generateReport } from "../../services/reports.service";
 import { colors } from "../../constants/Colors";
@@ -27,7 +27,8 @@ export default function ReportsScreen() {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
 
-  useEffect(() => {
+  useFocusEffect(
+  useCallback(() => {
     (async () => {
       try {
         const token = await getToken();
@@ -38,7 +39,7 @@ export default function ReportsScreen() {
       } catch (e) { console.log("reports load failed", e); }
       finally { setLoading(false); }
     })();
-  }, []);
+  }, []));
 
   const handleGenerate = async () => {
     setGenerating(true);

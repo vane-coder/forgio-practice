@@ -1,9 +1,8 @@
-import React, { useState } from "react";
+import React, { useState ,useCallback} from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, TextInput, Alert } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
-import { useEffect } from "react";
+import { router ,useFocusEffect} from "expo-router";
 import { ActivityIndicator } from "react-native";
 import { getToken } from "../../auth";
 import { getMachines, updateMachineStatus, createMachine } from "../../services/machines.service";
@@ -51,7 +50,8 @@ export default function MachinesScreen() {
     }
   };
 
-  useEffect(() => {
+  useFocusEffect(
+  useCallback(() => {
     (async () => {
       try {
         const token = await getToken();
@@ -62,7 +62,7 @@ export default function MachinesScreen() {
       } catch (e) { console.log("machines load failed", e); }
       finally { setLoading(false); }
     })();
-  }, []);
+  }, []));
 
   const stoppedCount = machines.filter((m) => m.status === "STOPPED").length;
 

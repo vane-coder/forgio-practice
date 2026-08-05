@@ -1,18 +1,21 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
+import * as Location from 'expo-location';
 import { getToken } from "../../auth";
 import { getShipments } from "../../services/shipment.service";
+import { postGPSCoordinates } from "../../services/gps.service";
 import { API_BASE_URL } from "../../services/api.config";
 import { colors } from "../../constants/Colors";
 
 export default function ShipmentAssignmentScreen() {
   const [shipment, setShipment] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const watchSub = useRef<Location.LocationSubscription | null>(null);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       const token = await getToken();
       if (!token) return;
@@ -37,9 +40,41 @@ export default function ShipmentAssignmentScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  useEffect(() => { load(); }, []);
+  useFocusEffect(useCallback(() => { load(); }, [load]));
+
+  // Start/stop GPS reporting based on the shipment's live status.
+  useEffect(() => {
+    const shouldTrack = shipment && (shipment.status === "DEPARTED" || shipment.status === "IN_TRANSIT");
+
+    const start = async () => {
+      if (watchSub.current) return; // already watching
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") return;
+
+      watchSub.current = await Location.watchPositionAsync(
+        { accuracy: Location.Accuracy.High, timeInterval: 15000, distanceInterval: 20 },
+        async (loc) => {
+          try {
+            const token = await getToken();
+            if (!token) return;
+            await postGPSCoordinates(token, shipment.shipmentId, loc.coords.latitude, loc.coords.longitude);
+          } catch (e) {
+            console.log("gps post failed", e);
+          }
+        }
+      );
+    };
+
+    const stop = () => {
+      watchSub.current?.remove();
+      watchSub.current = null;
+    };
+
+    if (shouldTrack) start(); else stop();
+    return () => stop();
+  }, [shipment?.shipmentId, shipment?.status]);
 
   if (loading) {
     return (
@@ -119,6 +154,13 @@ export default function ShipmentAssignmentScreen() {
 
           <View style={styles.body}>
 
+            {(status === "DEPARTED" || status === "IN_TRANSIT") && (
+              <View style={styles.gpsCard}>
+                <Ionicons name="navigate-circle-outline" size={16} color={colors.primary} />
+                <Text style={styles.gpsText}>Sharing your live location with the manager</Text>
+              </View>
+            )}
+
             <View style={styles.routeCard}>
               <View style={styles.routeRow}>
                 <View style={styles.routeIconCol}>
@@ -192,6 +234,8 @@ const styles = StyleSheet.create({
   statusBadge: { borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
   statusText: { fontSize: 11, fontWeight: "500" },
   body: { padding: 16 },
+  gpsCard: { flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: colors.blueTint, borderRadius: 10, padding: 12, marginBottom: 14 },
+  gpsText: { fontSize: 12, color: colors.primary, flex: 1 },
   emptyWrap: { flex: 1, backgroundColor: colors.background, padding: 16, justifyContent: "center" },
   emptyCard: { backgroundColor: colors.white, borderRadius: 16, borderWidth: 0.5, borderColor: colors.border, padding: 28, alignItems: "center" },
   emptyIconCircle: { width: 80, height: 80, borderRadius: 40, backgroundColor: colors.blueTint, justifyContent: "center", alignItems: "center", marginBottom: 16 },

@@ -12,14 +12,19 @@ import { colors } from "../../constants/Colors";
 export default function RegisterScreen() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [factoryName, setFactoryName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
-    if (!name || !phone || !password || !factoryName) {
+    if (!name || !phone || !email || !password || !factoryName) {
       Alert.alert("Missing fields", "Please fill in all fields.");
+      return;
+    }
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+      Alert.alert("Invalid email", "Please enter a valid email address.");
       return;
     }
     if (password.length < 6) {
@@ -28,12 +33,13 @@ export default function RegisterScreen() {
     }
     setLoading(true);
     try {
-      const res = await sendRegistrationCode(phone);
+      const res = await sendRegistrationCode(phone, email);
       router.push({
         pathname: "/(auth)/verify-otp",
         params: {
           flow: "registration",
           phone,
+          email,
           verificationId: res.verificationId ?? "",
           managerName: name,
           password,
@@ -63,6 +69,9 @@ export default function RegisterScreen() {
 
       <Text style={styles.label}>Phone number</Text>
       <TextInput style={styles.input} placeholder="e.g. 0244000000" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
+
+      <Text style={styles.label}>Email</Text>
+      <TextInput style={styles.input} placeholder="e.g. vanessa@example.com" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
 
       <Text style={styles.label}>Factory name</Text>
       <TextInput style={styles.input} placeholder="e.g. Kate Best Company Ltd" value={factoryName} onChangeText={setFactoryName} />

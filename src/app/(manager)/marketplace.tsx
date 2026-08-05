@@ -4,8 +4,9 @@ import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { getToken } from "../../auth";
-import { getListings, buyFromMarketplace, createListing } from "../../services/marketplace.service";
+import { getListings, purchaseListing, createListing } from "../../services/marketplace.service";
 import { getMaterials } from "../../services/materials.service";
+import { getBranches } from "../../services/branches.service";
 import { colors } from "../../constants/Colors";
 
 const categories = ["ALL", "FABRIC", "CHEMICAL", "PACKAGING"];
@@ -19,6 +20,8 @@ export default function MarketplaceScreen() {
   const [buyModal, setBuyModal] = useState<any>(null);
   const [buyQty, setBuyQty] = useState("1");
   const [buying, setBuying] = useState(false);
+  const [branches, setBranches] = useState<any[]>([]);
+  const [destinationBranchId, setDestinationBranchId] = useState("");
 
   const [sellModal, setSellModal] = useState(false);
   const [materials, setMaterials] = useState<any[]>([]);
@@ -32,12 +35,14 @@ export default function MarketplaceScreen() {
       try {
         const token = await getToken();
         if (token) {
-          const [listData, matData] = await Promise.all([
+          const [listData, matData, branchData] = await Promise.all([
             getListings(token).catch(() => []),
             getMaterials(token).catch(() => []),
+            getBranches(token).catch(() => []),
           ]);
           setListings(Array.isArray(listData) ? listData : []);
           setMaterials(Array.isArray(matData) ? matData : []);
+          setBranches(Array.isArray(branchData) ? branchData : []);
         }
       } catch (e) { console.log("marketplace load failed", e); }
       finally { setLoading(false); }
@@ -53,16 +58,19 @@ export default function MarketplaceScreen() {
     if (!buyModal) return;
     const qty = parseInt(buyQty, 10);
     if (!qty || qty < 1) { Alert.alert("Invalid", "Enter a valid quantity."); return; }
+    if (!destinationBranchId) { Alert.alert("Missing", "Select which branch the goods should be sent to."); return; }
     setBuying(true);
     try {
       const token = await getToken();
       if (token) {
-        await buyFromMarketplace(token, { listingId: buyModal.listingId, quantity: qty });
-        setListings((prev) => prev.filter((l) => l.listingId !== buyModal.listingId));
-        Alert.alert("Purchased", "Order placed successfully.");
+        const { authorizationUrl } = await purchaseListing(token, buyModal.listingId, qty, destinationBranchId);
         setBuyModal(null);
+        router.push({
+          pathname: "/(manager)/marketplace-checkout",
+          params: { authorizationUrl: encodeURIComponent(authorizationUrl) },
+        });
       }
-    } catch { Alert.alert("Error", "Purchase failed."); }
+    } catch (e: any) { Alert.alert("Error", e.message || "Could not start payment."); }
     finally { setBuying(false); }
   };
 
@@ -144,7 +152,7 @@ export default function MarketplaceScreen() {
                     <Ionicons name="pricetag-outline" size={12} color={colors.textMuted} />
                     <Text style={styles.locationText}>{item.category || "Material"}</Text>
                   </View>
-                  <TouchableOpacity style={styles.buyBtn} onPress={() => { setBuyModal(item); setBuyQty("1"); }}>
+                  <TouchableOpacity style={styles.buyBtn} onPress={() => { setBuyModal(item); setBuyQty("1"); setDestinationBranchId(""); }}>
                     <Text style={styles.buyBtnText}>Buy now</Text>
                   </TouchableOpacity>
                 </View>
@@ -178,8 +186,27 @@ export default function MarketplaceScreen() {
               <Text style={styles.modalSub}>GHS {buyModal?.pricePerUnit} per unit · {buyModal?.quantity} available</Text>
               <Text style={styles.label}>Quantity</Text>
               <TextInput style={styles.input} value={buyQty} onChangeText={setBuyQty} keyboardType="numeric" placeholder="1" placeholderTextColor={colors.textMuted} />
+
+              <Text style={styles.label}>Deliver to branch</Text>
+              <ScrollView style={{ maxHeight: 140, marginBottom: 16 }} nestedScrollEnabled>
+                {branches.length === 0 && (
+                  <Text style={{ fontSize: 12, color: colors.textMuted, paddingVertical: 6 }}>
+                    No branches set up yet — add one under Departments/Branches first.
+                  </Text>
+                )}
+                {branches.map((b) => (
+                  <TouchableOpacity
+                    key={b.branchId}
+                    style={[styles.matOption, destinationBranchId === b.branchId && styles.matOptionActive]}
+                    onPress={() => setDestinationBranchId(b.branchId)}
+                  >
+                    <Text style={[styles.matOptionText, destinationBranchId === b.branchId && { color: colors.white }]}>{b.name}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+
               <TouchableOpacity style={styles.confirmBtn} onPress={handleBuy} disabled={buying}>
-                {buying ? <ActivityIndicator color={colors.white} /> : <Text style={styles.confirmBtnText}>Confirm purchase</Text>}
+                {buying ? <ActivityIndicator color={colors.white} /> : <Text style={styles.confirmBtnText}>Continue to payment</Text>}
               </TouchableOpacity>
               <TouchableOpacity style={styles.cancelBtn} onPress={() => setBuyModal(null)}>
                 <Text style={styles.cancelBtnText}>Cancel</Text>

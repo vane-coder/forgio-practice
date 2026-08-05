@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useCallback } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Modal, Alert, TextInput } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { getToken } from "../../auth";
 import { getShipments, createShipment, assignShipmentDriver } from "../../services/shipment.service";
 import { getBranches } from "../../services/branches.service";
@@ -41,26 +41,26 @@ export default function ShipmentsScreen() {
   const [assignShipment, setAssignShipment] = useState<any | null>(null);
   const [assigning, setAssigning] = useState(false);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const token = await getToken();
-        if (token) {
-          const [shipData, branchData, materialData, workerData] = await Promise.all([
-            getShipments(token).catch(() => []),
-            getBranches(token).catch(() => []),
-            getMaterials(token).catch(() => []),
-            getWorkersWithPermissions(token).catch(() => []),
-          ]);
-          setShipments(Array.isArray(shipData) ? shipData : []);
-          setBranches(Array.isArray(branchData) ? branchData : []);
-          setMaterials(Array.isArray(materialData) ? materialData : []);
-          setDrivers(Array.isArray(workerData) ? workerData.filter((w: any) => w.role === "DRIVER") : []);
-        }
-      } catch (e) { console.log("shipments load failed", e); }
-      finally { setLoading(false); }
-    })();
+  const loadData = useCallback(async () => {
+    try {
+      const token = await getToken();
+      if (token) {
+        const [shipData, branchData, materialData, workerData] = await Promise.all([
+          getShipments(token).catch(() => []),
+          getBranches(token).catch(() => []),
+          getMaterials(token).catch(() => []),
+          getWorkersWithPermissions(token).catch(() => []),
+        ]);
+        setShipments(Array.isArray(shipData) ? shipData : []);
+        setBranches(Array.isArray(branchData) ? branchData : []);
+        setMaterials(Array.isArray(materialData) ? materialData : []);
+        setDrivers(Array.isArray(workerData) ? workerData.filter((w: any) => w.role === "DRIVER") : []);
+      }
+    } catch (e) { console.log("shipments load failed", e); }
+    finally { setLoading(false); }
   }, []);
+
+  useFocusEffect(useCallback(() => { loadData(); }, [loadData]));
 
   const filtered = shipments.filter((s) => filter === "ALL" || s.status === filter);
 

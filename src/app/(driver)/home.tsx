@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useCallback } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router ,useFocusEffect} from "expo-router";
 import { getToken } from "../../auth";
 import { API_BASE_URL } from "../../services/api.config";
 import { getMyNotifications } from "../../services/notifications.service";
@@ -23,7 +23,8 @@ export default function DriverHomeScreen() {
   const [latestPost, setLatestPost] = useState<any>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  useEffect(() => {
+  useFocusEffect(
+  useCallback(() => {
     (async () => {
       try {
         const token = await getToken();
@@ -38,7 +39,7 @@ export default function DriverHomeScreen() {
         if (Array.isArray(feed) && feed.length > 0) setLatestPost(feed[0]);
       } catch (e) { console.log("driver home load failed", e); }
     })();
-  }, []);
+  }, []));
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";

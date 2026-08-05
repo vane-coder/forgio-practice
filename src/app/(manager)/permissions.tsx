@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useCallback } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Alert, Modal } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { getToken } from "../../auth";
 import { getWorkersWithPermissions, assignPermission, createWorker } from "../../services/permissions.service";
 import { getDepartments } from "../../services/departments.service";
@@ -25,8 +25,9 @@ export default function PermissionsScreen() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [wName, setWName] = useState("");
   const [wPhone, setWPhone] = useState("");
+  const [wEmail, setWEmail] = useState("");
   const [wPassword, setWPassword] = useState("");
-  const [wRole, setWRole] = useState("WORKER");
+  const [wRole, setWRole] = useState("DEPT_HEAD");
   const [wDeptId, setWDeptId] = useState<string | null>(null);
   const [departments, setDepartments] = useState<any[]>([]);
   const [creating, setCreating] = useState(false);
@@ -43,12 +44,13 @@ export default function PermissionsScreen() {
         const created = await createWorker(token, {
           name: wName.trim(),
           phone: wPhone.trim(),
+          email: wEmail.trim() || undefined,
           password: wPassword,
           role: wRole,
           departmentId: wDeptId ?? undefined,
         });
         setWorkers((prev) => [...prev, created]);
-        setWName(""); setWPhone(""); setWPassword(""); setWRole("WORKER"); setWDeptId(null);
+        setWName(""); setWPhone(""); setWEmail(""); setWPassword(""); setWRole("DEPT_HEAD"); setWDeptId(null);
         setShowAddModal(false);
       }
     } catch (e: any) {
@@ -58,22 +60,22 @@ export default function PermissionsScreen() {
     }
   };
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const token = await getToken();
-        if (token) {
-          const [data, depts] = await Promise.all([
-            getWorkersWithPermissions(token),
-            getDepartments(token).catch(() => []),
-          ]);
-          setWorkers(Array.isArray(data) ? data : []);
-          setDepartments(Array.isArray(depts) ? depts : []);
-        }
-      } catch (e) { console.log("permissions load failed", e); }
-      finally { setLoading(false); }
-    })();
+  const loadData = useCallback(async () => {
+    try {
+      const token = await getToken();
+      if (token) {
+        const [data, depts] = await Promise.all([
+          getWorkersWithPermissions(token),
+          getDepartments(token).catch(() => []),
+        ]);
+        setWorkers(Array.isArray(data) ? data : []);
+        setDepartments(Array.isArray(depts) ? depts : []);
+      }
+    } catch (e) { console.log("permissions load failed", e); }
+    finally { setLoading(false); }
   }, []);
+
+  useFocusEffect(useCallback(() => { loadData(); }, [loadData]));
 
   const toggle = async (worker: any, field: "viewReports" | "enterData" | "admin") => {
     const token = await getToken();
@@ -126,7 +128,7 @@ export default function PermissionsScreen() {
 
             <View style={styles.list}>
               {filtered.map((worker, index) => {
-                const badge = getRoleBadge(worker.role ?? "WORKER");
+                const badge = getRoleBadge(worker.role ?? "DEPT_HEAD");
                 return (
                   <View key={worker.userId} style={[styles.workerItem, index === filtered.length - 1 && { borderBottomWidth: 0 }]}>
                     <View style={styles.workerRow}>
@@ -135,6 +137,9 @@ export default function PermissionsScreen() {
                       </View>
                       <View style={styles.workerInfo}>
                         <Text style={styles.workerName}>{worker.userName}</Text>
+                        {worker.departmentName && (
+                          <Text style={styles.workerDept}>{worker.departmentName}</Text>
+                        )}
                       </View>
                       <View style={[styles.roleBadge, { backgroundColor: badge.bg }]}>
                         <Text style={[styles.roleBadgeText, { color: badge.color }]}>{badge.label}</Text>
@@ -150,8 +155,8 @@ export default function PermissionsScreen() {
                         >
                           <Text style={[styles.permTagText, { color: worker[field] ? colors.success : colors.danger }]}>
                             {field === "viewReports" ? (worker[field] ? "View reports" : "No reports") :
-                             field === "enterData" ? (worker[field] ? "Enter data" : "No data entry") :
-                             (worker[field] ? "Admin" : "No admin")}
+                              field === "enterData" ? (worker[field] ? "Enter data" : "No data entry") :
+                                (worker[field] ? "Admin" : "No admin")}
                           </Text>
                         </TouchableOpacity>
                       ))}
@@ -189,6 +194,17 @@ export default function PermissionsScreen() {
                 onChangeText={setWPhone}
               />
 
+              <Text style={styles.inputLabel}>Email (optional — for login codes)</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="e.g. kwame@example.com"
+                placeholderTextColor={colors.textMuted}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                value={wEmail}
+                onChangeText={setWEmail}
+              />
+
               <Text style={styles.inputLabel}>Temporary password</Text>
               <TextInput
                 style={styles.input}
@@ -201,14 +217,14 @@ export default function PermissionsScreen() {
 
               <Text style={styles.inputLabel}>Role</Text>
               <View style={styles.roleRow}>
-                {["WORKER", "DEPT_HEAD", "DRIVER"].map((r) => (
+                {["DEPT_HEAD", "DRIVER"].map((r) => (
                   <TouchableOpacity
                     key={r}
                     style={[styles.roleChip, wRole === r && styles.roleChipActive]}
                     onPress={() => setWRole(r)}
                   >
                     <Text style={[styles.roleChipText, wRole === r && styles.roleChipTextActive]}>
-                      {r === "DEPT_HEAD" ? "Dept Head" : r === "DRIVER" ? "Driver" : "Worker"}
+                      {r === "DEPT_HEAD" ? "Dept Head" : "Driver"}
                     </Text>
                   </TouchableOpacity>
                 ))}
@@ -278,6 +294,7 @@ const styles = StyleSheet.create({
   avatarText: { fontSize: 14, fontWeight: "500", color: colors.primary },
   workerInfo: { flex: 1 },
   workerName: { fontSize: 14, fontWeight: "500", color: colors.textDark },
+  workerDept: { fontSize: 11, color: colors.textMuted, marginTop: 2 },
   roleBadge: { borderRadius: 20, paddingHorizontal: 8, paddingVertical: 3 },
   roleBadgeText: { fontSize: 11, fontWeight: "500" },
   permissionRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, alignItems: "center" },

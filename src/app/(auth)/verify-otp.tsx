@@ -26,6 +26,7 @@ export default function VerifyOtpScreen() {
   const params = useLocalSearchParams<{
     flow: OtpFlow;
     phone: string;
+    email?: string;
     verificationId: string;
     managerName?: string;
     password?: string;
@@ -34,7 +35,7 @@ export default function VerifyOtpScreen() {
     industry?: string;
   }>();
 
-  const { flow, phone, managerName, password, factoryName, location, industry } = params;
+  const { flow, phone, email, managerName, password, factoryName, location, industry } = params;
   const [verificationId, setVerificationId] = useState(params.verificationId);
   const [code, setCode] = useState<string[]>(Array(CODE_LENGTH).fill(""));
   const [loading, setLoading] = useState(false);
@@ -92,6 +93,7 @@ export default function VerifyOtpScreen() {
       if (flow === "registration") {
         const res = await verifyAndRegister({
           phone,
+          email: email!,
           code: fullCode,
           managerName: managerName!,
           password: password!,
@@ -105,7 +107,7 @@ export default function VerifyOtpScreen() {
         const res = await verifyLogin(phone, fullCode, verificationId);
         await saveToken(res.accessToken);
         if (res.role === "MANAGER") router.replace("/(manager)/dashboard");
-        else if (res.role === "WORKER") router.replace("/(worker)/home");
+        else if (res.role === "DEPT_HEAD") router.replace("/(worker)/home");
         else if (res.role === "DRIVER") router.replace("/(driver)/home" as any);
       } else if (flow === "password-reset") {
         router.push({
@@ -127,7 +129,7 @@ export default function VerifyOtpScreen() {
     try {
       let newId: string | null = null;
       if (flow === "registration") {
-        const res = await sendRegistrationCode(phone);
+        const res = await sendRegistrationCode(phone, email!);
         newId = res.verificationId;
       } else if (flow === "login") {
         const res = await loginApi(phone, password!);
@@ -140,21 +142,21 @@ export default function VerifyOtpScreen() {
       setResendTimer(RESEND_COOLDOWN);
       setCode(Array(CODE_LENGTH).fill(""));
       inputs.current[0]?.focus();
-      Alert.alert("Code resent", "A new verification code has been sent to your phone.");
+      Alert.alert("Code resent", "A new verification code has been sent.");
     } catch (e: any) {
       Alert.alert("Resend failed", e.message || "Could not resend code. Please try again.");
     }
   };
 
   const flowTitle: Record<OtpFlow, string> = {
-    registration: "Verify your phone",
+    registration: "Verify your account",
     login: "Two-step verification",
     "password-reset": "Verify your identity",
   };
 
   const flowSubtitle: Record<OtpFlow, string> = {
-    registration: `We sent a 6-digit code to ${phone}. Enter it below to complete your registration.`,
-    login: `We sent a 6-digit code to ${phone}. Enter it to sign in.`,
+    registration: `We sent a 6-digit code to ${email || phone}. Enter it below to complete your registration.`,
+    login: `We sent a 6-digit code to your phone or email. Enter it to sign in.`,
     "password-reset": `We sent a 6-digit code to ${phone}. Enter it to reset your password.`,
   };
 

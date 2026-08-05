@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useCallback} from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Alert } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router ,useFocusEffect} from "expo-router";
 import { getToken } from "../../auth";
 import { getDepartments, createDepartment } from "../../services/departments.service";
 import { colors } from "../../constants/Colors";
@@ -16,9 +16,10 @@ export default function DepartmentsScreen() {
   const [newDeptName, setNewDeptName] = useState("");
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
+  useFocusEffect(
+  useCallback(() => {
     load();
-  }, []);
+  }, []));
 
   const load = async () => {
     try {

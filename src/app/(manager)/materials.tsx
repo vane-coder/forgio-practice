@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useCallback} from "react";
 import {
   View, Text, StyleSheet, ScrollView,
   TouchableOpacity, TextInput, Modal, ActivityIndicator, Alert
 } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router ,useFocusEffect} from "expo-router";
 import { getToken } from "../../auth";
 import { getMaterials, addMaterial } from "../../services/materials.service";
 import { getDepartments } from "../../services/departments.service";
@@ -49,8 +49,8 @@ export default function MaterialsScreen() {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
+useFocusEffect(
+  useCallback(() => {
     loadMaterials();
     (async () => {
       try {
@@ -63,7 +63,8 @@ export default function MaterialsScreen() {
         console.log("Failed to load departments", e);
       }
     })();
-  }, []);
+  }, [])
+);
 
   const handleAdd = async () => {
     if (!newName || !newUnit || !newStock) {

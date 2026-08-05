@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useCallback} from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router ,useFocusEffect } from "expo-router";
 import { getToken } from "../../auth";
 import { getMyProduction } from "../../services/production.service";
 import { colors } from "../../constants/Colors";
@@ -11,7 +11,8 @@ export default function MyRecordsScreen() {
   const [records, setRecords] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  useFocusEffect(
+  useCallback(() => {
     (async () => {
       try {
         const token = await getToken();
@@ -25,7 +26,7 @@ export default function MyRecordsScreen() {
         setLoading(false);
       }
     })();
-  }, []);
+  }, []));
 
   const totalUnits = records.reduce((sum, r) => sum + (r.quantityProduced || 0), 0);
   const avgPerDay = records.length > 0 ? Math.round(totalUnits / records.length) : 0;

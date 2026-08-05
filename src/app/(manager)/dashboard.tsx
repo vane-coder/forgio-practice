@@ -25,6 +25,12 @@ type Activity = {
   params?: Record<string, string>;
 };
 
+type TodayProductLine = {
+  productName: string;
+  quantity: number;
+  departmentName?: string | null;
+};
+
 const isToday = (iso?: string) => {
   if (!iso) return false;
   const d = new Date(iso);
@@ -58,6 +64,7 @@ export default function DashboardScreen() {
   const [machineCount, setMachineCount] = useState(0);
   const [workerCount, setWorkerCount] = useState<number | null>(null);
   const [todayProduction, setTodayProduction] = useState<number | null>(null);
+  const [todayLines, setTodayLines] = useState<TodayProductLine[]>([]);
   const [activity, setActivity] = useState<Activity[]>([]);
   const [aiInsight, setAiInsight] = useState("Loading insights...");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -107,15 +114,34 @@ export default function DashboardScreen() {
         if (Array.isArray(workers)) setWorkerCount(workers.length);
       } catch { }
 
-      // today's production + recent production activity
+      // today's production total + breakdown by product + recent production activity
       let prodActivity: Activity[] = [];
       try {
         const entries = await getProductionByFactory(token);
         if (Array.isArray(entries)) {
-          const total = entries
-            .filter((e: any) => isToday(e.entryDate))
-            .reduce((sum: number, e: any) => sum + (Number(e.quantityProduced) || 0), 0);
+          const todays = entries.filter((e: any) => isToday(e.entryDate));
+
+          const total = todays.reduce((sum: number, e: any) => sum + (Number(e.quantityProduced) || 0), 0);
           setTodayProduction(total);
+
+          // group today's entries by product (+ department, so two departments making
+          // the same product show as separate lines rather than merging silently)
+          const grouped = new Map<string, TodayProductLine>();
+          todays.forEach((e: any) => {
+            const key = `${e.productName}|${e.departmentName ?? ""}`;
+            const existing = grouped.get(key);
+            if (existing) {
+              existing.quantity += Number(e.quantityProduced) || 0;
+            } else {
+              grouped.set(key, {
+                productName: e.productName || "Unnamed product",
+                quantity: Number(e.quantityProduced) || 0,
+                departmentName: e.departmentName ?? null,
+              });
+            }
+          });
+          setTodayLines(Array.from(grouped.values()).sort((a, b) => b.quantity - a.quantity));
+
           prodActivity = entries.map((e: any) => ({
             id: `prod-${e.entryId}`,
             icon: "cube-outline" as const,
@@ -244,6 +270,23 @@ export default function DashboardScreen() {
                 </Text>
                 <Text style={styles.productionUnit}>units</Text>
               </Text>
+
+              {todayLines.length > 0 && (
+                <View style={styles.productionBreakdown}>
+                  {todayLines.slice(0, 4).map((line, i) => (
+                    <View key={i} style={styles.productionLine}>
+                      <Text style={styles.productionLineText} numberOfLines={1}>
+                        {line.productName}
+                        {line.departmentName ? ` · ${line.departmentName}` : ""}
+                      </Text>
+                      <Text style={styles.productionLineQty}>{line.quantity.toLocaleString()}</Text>
+                    </View>
+                  ))}
+                  {todayLines.length > 4 && (
+                    <Text style={styles.productionMore}>+{todayLines.length - 4} more</Text>
+                  )}
+                </View>
+              )}
             </View>
           </View>
 
@@ -374,6 +417,11 @@ const styles = StyleSheet.create({
   productionRow: { marginTop: 4 },
   productionNumber: { fontSize: 28, fontWeight: "500", color: colors.white },
   productionUnit: { fontSize: 14, color: colors.headerSubtitle },
+  productionBreakdown: { marginTop: 10, borderTopWidth: 0.5, borderTopColor: "rgba(255,255,255,0.25)", paddingTop: 8, gap: 4 },
+  productionLine: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  productionLineText: { fontSize: 12, color: colors.white, flex: 1, marginRight: 8 },
+  productionLineQty: { fontSize: 12, fontWeight: "600", color: colors.white },
+  productionMore: { fontSize: 11, color: colors.headerSubtitle, marginTop: 2 },
   body: { padding: 16 },
   statRow: { flexDirection: "row", gap: 10, marginBottom: 14 },
   statCard: { flex: 1, backgroundColor: colors.blueTint, borderRadius: 10, padding: 12 },

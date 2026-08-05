@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import MapView, { Marker } from "react-native-maps";
+import { WebView } from "react-native-webview";
 import { router, useLocalSearchParams } from "expo-router";
 import { getToken } from "../../auth";
 import { trackShipment } from "../../services/gps.service";
@@ -12,7 +12,7 @@ import { colors } from "../../constants/Colors";
 export default function LiveTrackingScreen() {
   const params = useLocalSearchParams<{ shipmentId: string }>();
   const [selectedId, setSelectedId] = useState<string | undefined>(params.shipmentId);
-  const [tracking, setTracking] = useState<any>(null);
+  const [track, setTrack] = useState<any[]>([]);
   const [shipment, setShipment] = useState<any>(null);
   const [shipments, setShipments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,12 +30,11 @@ export default function LiveTrackingScreen() {
 
         if (shipmentId) {
           const gpsData = await trackShipment(token, shipmentId).catch(() => []);
-          const logs = Array.isArray(gpsData) ? gpsData : [];
-          setTracking(logs.length > 0 ? logs[logs.length - 1] : null);
+          setTrack(Array.isArray(gpsData) ? gpsData : []);
           const match = all.find((s: any) => s.shipmentId === shipmentId) ?? null;
           setShipment(match);
         } else {
-          setTracking(null);
+          setTrack([]);
           setShipment(null);
         }
       }
@@ -44,6 +43,13 @@ export default function LiveTrackingScreen() {
   };
 
   useEffect(() => { setLoading(true); load(); }, [shipmentId]);
+
+  // Refresh every 10s while a shipment is selected, so the trail moves as the driver does.
+  useEffect(() => {
+    if (!shipmentId) return;
+    const interval = setInterval(load, 10000);
+    return () => clearInterval(interval);
+  }, [shipmentId]);
 
   const handleMarkArrived = async () => {
     if (!shipmentId) return;
@@ -59,11 +65,37 @@ export default function LiveTrackingScreen() {
     finally { setMarking(false); }
   };
 
-  const currentLat = tracking?.latitude ? parseFloat(tracking.latitude) : 6.2;
-  const currentLng = tracking?.longitude ? parseFloat(tracking.longitude) : -0.8;
   const fromName = shipment?.fromBranchName ?? "Origin";
   const toName = shipment?.toBranchName ?? "Destination";
   const status = shipment?.status ?? "IN_TRANSIT";
+
+  const coords = track.map((p) => [parseFloat(p.latitude), parseFloat(p.longitude)]);
+  const fallback = [6.2, -0.8]; // rough Ghana-wide fallback if no points yet
+
+  const mapHtml = `
+    <!DOCTYPE html><html><head>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+      <style>html,body,#map{height:100%;margin:0;padding:0}</style>
+    </head><body>
+      <div id="map"></div>
+      <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+      <script>
+        const points = ${JSON.stringify(coords)};
+        const start = points.length ? points[points.length - 1] : ${JSON.stringify(fallback)};
+        const map = L.map('map').setView(start, points.length ? 13 : 7);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; OpenStreetMap contributors',
+          maxZoom: 19
+        }).addTo(map);
+        if (points.length) {
+          const line = L.polyline(points, { color: '#1D4ED8', weight: 4 }).addTo(map);
+          L.marker(points[points.length - 1]).addTo(map).bindPopup('Current location').openPopup();
+          if (points.length > 1) map.fitBounds(line.getBounds(), { padding: [30, 30] });
+        }
+      </script>
+    </body></html>
+  `;
 
   return (
     <SafeAreaProvider>
@@ -111,12 +143,7 @@ export default function LiveTrackingScreen() {
             ) : (
               <>
                 <View style={styles.mapContainer}>
-                  <MapView
-                    style={styles.map}
-                    initialRegion={{ latitude: currentLat, longitude: currentLng, latitudeDelta: 2.5, longitudeDelta: 2.5 }}
-                  >
-                    <Marker coordinate={{ latitude: currentLat, longitude: currentLng }} title="Current location" pinColor={colors.warning} />
-                  </MapView>
+                  <WebView originWhitelist={["*"]} source={{ html: mapHtml }} style={styles.map} />
                 </View>
 
                 <View style={styles.card}>

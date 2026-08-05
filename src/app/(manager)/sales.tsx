@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useCallback } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router ,useFocusEffect} from "expo-router";
 import { getToken } from "../../auth";
 import { getSales } from "../../services/sales.service";
 import { colors } from "../../constants/Colors";
@@ -11,7 +11,8 @@ export default function SalesScreen() {
   const [sales, setSales] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  useFocusEffect(
+  useCallback(() => {
     (async () => {
       try {
         const token = await getToken();
@@ -22,7 +23,7 @@ export default function SalesScreen() {
       } catch (e) { console.log("sales load failed", e); }
       finally { setLoading(false); }
     })();
-  }, []);
+  }, []));
 
   const totalRevenue = sales.reduce((sum, s) => sum + (parseFloat(s.total) || 0), 0);
 
